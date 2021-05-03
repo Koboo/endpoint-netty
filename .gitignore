@@ -6,6 +6,6 @@
 /netty-client/build/
 /netty-client/out/
 /netty-core/out/
+/netty-core/build/
 /netty-server/build/
 /netty-server/out/
-/netty-core/build/

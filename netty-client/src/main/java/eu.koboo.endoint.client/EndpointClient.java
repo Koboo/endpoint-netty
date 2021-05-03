@@ -42,7 +42,6 @@ public class EndpointClient extends AbstractClient {
                 .group(this.group)
                 .channel(nettyType.clientClass())
                 .handler(new EndpointInitializer(this, null))
-                .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 
         // Check for extra epoll-options
@@ -129,6 +128,11 @@ public class EndpointClient extends AbstractClient {
         // Close the Channel if it's already connected
         if (isConnected()) {
             onException(getClass(), new IllegalStateException("Connection is already established!"));
+            return false;
+        }
+
+        if(!super.initialize()) {
+            onException(getClass(), new IllegalStateException("Initialization not successful!"));
             return false;
         }
 

@@ -72,6 +72,12 @@ public class EndpointServer extends AbstractServer {
             onException(getClass(), new RuntimeException("port is not set!"));
             return false;
         }
+
+        if (!super.initialize()) {
+            onException(getClass(), new IllegalStateException("Initialization not successful!"));
+            return false;
+        }
+
         try {
             // Start the server and wait for socket to be bind to the given port
             this.channel = serverBootstrap.bind(new InetSocketAddress(getPort())).sync().channel();
@@ -165,7 +171,7 @@ public class EndpointServer extends AbstractServer {
      * @param object
      */
     public void sendAll(Object object) {
-        for(Channel channel : channels) {
+        for (Channel channel : channels) {
             send(channel, object);
         }
     }
