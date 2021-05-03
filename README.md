@@ -1,36 +1,37 @@
 ![Binflux-Netty](binflux-netty.png)
 
-Endpoint-Netty allows the use of different serialization libraries 
-to automatically and efficiently transfer object graphs across the network by using [Netty](http://netty.io/).
-The [original project](https://github.com/EsotericSoftware/kryonetty) was a fork of 
-[KryoNetty](https://github.com/Koboo/kryonetty), with the goal of creating a production-ready & more modular version.
+Endpoint-Netty allows the use of different serialization libraries or 
+native read/write calls to automatically and efficiently transfer object 
+graphs across the network by using [Netty](http://netty.io/).
 
 Simply explained: Send (almost) every object back and forth between client or server.
 
+## History 
+
+The original project was [original project](https://github.com/EsotericSoftware/kryonetty)
+developed by [EsotericSoftware](https://github.com/EsotericSoftware).
+Since some changes on the official repository were
+not accepted and [Koboo](https://github.com/Koboo) had explicit changes take place,
+he had created a [fork](https://github.com/BinfluxDev/binflux-netty) to make his customization.
+After some time and through more special projects,
+Koboo had decided to release a private customized version and continue working on it.
+
+Now the project is called EndpointNetty and is at the current state at version 2.0
 
 ## Overview
 
 This overview offers a simple step by step guide to get started with binflux-netty.
 
-#### Endpoint
+#### Endpoints
   * [EndpointBuilder](#what-is-the-endpointbuilder)
-    * [Basic](#basic-options)
-    * [IdleState](#idlestate-options)
-    * [Netty](#netty-options)
-    * [Serialization](#serializer-options)
-  * [Endpoints](#building-the-endpoints)
-    * [Build Endpoints](#building-the-endpoints)
-    * [Server](#how-to-start-the-server)
-    * [Client](#how-to-start-the-client)
-    * [Reconnect](#reconnecting-with-endpointclient)
-    * [Channel-Pool](#connection-pooling)
-
-#### Events
+  * [Basic](#basic-options)
+  * [Timeouts](#timeout-options)
+  * [Serialization](#serializer-options)
+#### Usage
+  * [Build Endpoints](#how-to-build-the-endpoints)
+  * [Start Endpoints](#how-to-start-the-endpoints)
+  * [Reconnect](#reconnecting-with-endpointclient)
   * [Default Events](#default-events)
-  * [Register Events](#register-events)
-  * [Create Events](#creating-events)
-  * [Handle Events](#throwing-and-consuming-events)
-
 #### Build and Download
   * [Download](#add-as-dependency)  
   * [Build From Source](#build-from-source)
@@ -60,7 +61,7 @@ EndpointBuilder builder = EndpointBuilder.newBuilder();
     * Choose between modes `SYNC`, `SERVICE`, `EVENT_LOOP`
     * default: `ErrorMode.SERVICE`
 
-#### IdleState options:
+#### Timeout options:
 * `idleState(int readTimeout, int writeTimeout)`
     * enables initialization of `NettyIdleHandler.class`
     * default: disabled 
@@ -84,48 +85,37 @@ from the server to the client, a ReadTimeout is thrown.
 
 #### Serializer options:
 * `serializer(SerializerPool pool)` 
-    * sets the specific `SerializerPool` with `Serialization`
-    * default: `KryoSerialization`
-
-For better performance the serializations are pooled with a `SerializerPool`. 
+    * sets the specific `SerializerPool` with a `Serialization`-class
+    * default: `JavaSerialization`
 
 Example usage:
 ```java
 endpointBuilder.serializer(new SerializerPool(KryoSerialization.class));
 ```
 
-See more about serialization: [serilization](https://github.com/Koboo/serilization)
+All serialization is based on [Serialization](https://github.com/Koboo/serilization). 
+More documentation in the project there
 
-## Building the endpoints:
+## How to build the Endpoints:
 
-To build the client:
+To build the `EndpointServer` or `EndpointClient`:
 ```java
 EndpointClient client = new EndpointClient(endpointBuilder, String host, int port);
-```
-    
-To build the server:
-```java
+
 EndpointServer server = new EndpointServer(endpointBuilder, int port);
 ```
+    
+## How to start the Endpoints
 
-## How to start the server
-
-To start the `EndpointServer` call `start()`. 
+To start the `EndpointServer` or `EndpointClient` call `start()`. 
 
 ```java
 EndpointServer server = new EndpointServer(endpointBuilder, 54321);
 server.start();
-```
 
-## How to start the client
-
-To start the `EndpointClient` call `start()`.
-
-```java
 EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
 client.start();
 ```
-
 
 ## Reconnecting with EndpointClient
 
@@ -171,114 +161,8 @@ The event system is completely `Consumer<T>` based. There are some default event
     * endpoint: the endpoint
     * action: start, stop, close, initialize
 
-## Register Events
-
-Create a new listener by using a `EventListener<? extends CallableEvent>`:
-
-```java
-public class ConnectionListener implements EventListener<ChannelActionEvent> {
-    @Override
-    public void onEvent(ChannelActionEvent connectEvent) {
-        if(connectEvent.getAction == ChannelActionEvent.Actionn.CONNECT) {
-            Channel channel = event.getChannel();
-            System.out.println("Server: Client connected: " + channel.remoteAddress());
-        }
-    }
-}
-```
-
-Register an event to an endpoint:
-
-```java
-server.eventHandler().register(new ConnectionConsumer());
-```
-
-Syntax of `register`:
-* `register(EventListener<? extends CallableEvent> eventListener)`
-* `register(EventPriority priority, Consumer<? extends CallableEvent> consumer)`
-* `register(Consumer<? extends CallableEvent> consumer)`
-
-Pass consumer directly into method:
-
-```java
-server.eventHandler().register((ChannelActionEvent) event -> {
-    if(event.getAction == ChannelActionEvent.Action.CONNECT) {
-        Channel channel = event.getChannel();
-        System.out.println("Server: Client connected: " + channel.remoteAddress());
-    }
-});
-```
-
-Example-consumer of `SerializableReceiveEvent`:
-
-```java
-public class ReceiveConsumer implements EventListener<SerializableReceiveEvent> {
-    @Override
-    public void onEvent(SerializableReceiveEvent event) {
-        Channel channel = event.getChannel();
-        SerializablePacket object = event.getTypeObject();
-        System.out.println("Server: Client received: " + channel.remoteAddress() + "/" + object);
-        if (object instanceof Boolean) {
-            Boolean result = (Boolean) object;
-            System.out.println("Result is: " + result);
-        }
-    }
-}
-```
-
-
-## Creating Events
-
-If you want to create your own event and let the clients or servers handle it, an event could look like this:
-
-```java
-public class SampleEvent implements CallableEvent {
-
-    private String string;
-    private Integer value;
-    private Long timeStamp;
-
-    public SampleEvent(String string, Integer value, Long timeStamp) {
-        this.string = string;
-        this.value = value;
-        this.timeStamp = timeStamp;
-    } 
-    
-    public String getString() {
-        return this.string;
-    }
-
-    public Integer getValue() {
-        return this.value;
-    }
-
-    public Long getTimeStamp() {
-        return this.timeStamp;
-    }   
-
-    @Override
-    public String toString() {
-        return "SampleEvent(string=" + this.string + "; " +
-         "value=" + this.value + "; " +
-          "timeStamp=" + this.timeStamp + ")";
-    }
-}
-```
-
-
-## Throwing and Consuming Events
-
-To call the consumers of the event, you can pass the event to the `EventHandler` in an `Endpoint`.
-
-Throw events:
-```java
-endpoint.eventHandler().callEvent(new SampleEvent("SampleString", 100, System.currentTimeMillis()));
-```
-
-Consume/Register events:
-```java
-endpoint.eventHandler().register((SampleEvent) event -> System.out.println(event.toString()));
-```
+The entire event system is based on the [EventBus](https://github.com/Koboo/event-bus).
+For further documentation see the project there.
 
 ## Add as dependency
 
@@ -296,7 +180,6 @@ dependencies {
     compile 'eu.koboo:endpoint-netty:2.0'
 }
 ```
-
 
 ## Build from source
 
