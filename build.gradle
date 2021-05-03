@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+}
+
+group 'eu.koboo'
+version '2.0'
+
+allprojects {
+    repositories {
+        mavenCentral()
+        maven {
+            url 'http://repo.koboo.eu/releases'
+        }
+    }
+}
+
+dependencies {
+
+    testCompile group: 'junit', name: 'junit', version: '4.13.1'
+    testCompile group: 'com.carrotsearch', name: 'junit-benchmarks', version: '0.7.2'
+
+    testCompile group: 'eu.koboo', name: 'serial-elsa', version: '1.2.1'
+    testCompile group: 'eu.koboo', name: 'serial-fst', version: '1.2.1'
+    testCompile group: 'eu.koboo', name: 'serial-hessian', version: '1.2.1'
+    testCompile group: 'eu.koboo', name: 'serial-kryo', version: '1.2.1'
+
+    compile project('netty-client')
+    compile project('netty-server')
+}
+
+subprojects {
+
+    apply plugin: 'java'
+    apply plugin: 'maven-publish'
+
+    publishing {
+        repositories {
+            maven {
+                url = 'http://repo.koboo.eu/releases'
+                credentials {
+                    username = System.getenv('REPO_USER')
+                    password = System.getenv('REPO_TOKEN')
+                }
+            }
+        }
+        publications {
+            maven(MavenPublication) {
+                from components.java
+            }
+        }
+    }
+}

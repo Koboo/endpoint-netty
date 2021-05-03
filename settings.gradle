@@ -1,0 +1,5 @@
+rootProject.name = 'endpoint-netty'
+include 'netty-client'
+include 'netty-core'
+include 'netty-server'
+

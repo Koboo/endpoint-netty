@@ -1,0 +1,6 @@
+dependencies {
+    compile 'eu.koboo:event-bus:2.2.1'
+    compile 'eu.koboo:netty-utils:0.4'
+    compile 'eu.koboo:serial-core:1.2.1'
+    compile 'io.netty:netty-all:4.1.63.Final'
+}
