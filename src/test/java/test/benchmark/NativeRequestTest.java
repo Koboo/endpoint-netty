@@ -2,8 +2,6 @@
 package test.benchmark;
 
 import com.carrotsearch.junitbenchmarks.AbstractBenchmark;
-import eu.binflux.serial.core.SerializerPool;
-import eu.binflux.serial.fst.FSTSerialization;
 import eu.koboo.endoint.client.EndpointClient;
 import eu.koboo.endpoint.core.builder.param.Protocol;
 import eu.koboo.endpoint.core.protocols.natives.NativePacket;
@@ -34,7 +32,7 @@ public class NativeRequestTest extends AbstractBenchmark {
         System.out.println("== Test NativeRequest/Sec Behaviour == ");
 
         StaticTest.BUILDER
-                .protocol(Protocol.NATIVE_NETTY);
+                .protocol(Protocol.NATIVE);
 
         server = new EndpointServer(StaticTest.BUILDER, 54321);
         server.eventHandler().register(new EventListener<NativeReceiveEvent>() {

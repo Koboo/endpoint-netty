@@ -1,6 +1,6 @@
 ![Binflux-Netty](binflux-netty.png)
 
-Binflux-Netty allows the use of different serialization libraries 
+Endpoint-Netty allows the use of different serialization libraries 
 to automatically and efficiently transfer object graphs across the network by using [Netty](http://netty.io/).
 The [original project](https://github.com/EsotericSoftware/kryonetty) was a fork of 
 [KryoNetty](https://github.com/Koboo/kryonetty), with the goal of creating a production-ready & more modular version.
@@ -47,15 +47,18 @@ EndpointBuilder builder = EndpointBuilder.newBuilder();
 * `logging(boolean value)` 
     * enables/disables netty-built-in `LoggingHandler.class` (helpful for debugging)
     * default: disabled
-* `packetProtocol(boolean value)` 
-    * enables/disables built-in packet-protocol
-    * default: disabled
-* `eventExecutor(int threadPoolSize)` 
-    * enables `EventExecutorGroup.class`
-    * thread-pooledSerializer-size * cores
-    * default: disabled
-    
-`eventExecutor` allow asynchronous processing of the handler on client & server side and its size. 
+* `protocol(Protocol protocol)` 
+    * Choose between `SERIALIZABLE`, `NATIVE`
+    * default: Protocol.SERIALIZABLE
+* `compression(Compression compression)`
+    * Choose between compressions `GZIP`, `ZLIB`, `SNAPPY`
+    * default: `Compression.GZIP`
+* `errorMode(ErrorMode errorMode)`
+    * Choose between modes `SILENT`, `STACK_TRACE`, `EVENT`
+    * default: `ErrorMode.STACK_TRACE`
+* `eventMode(EventMode eventMode)`
+    * Choose between modes `SYNC`, `SERVICE`, `EVENT_LOOP`
+    * default: `ErrorMode.SERVICE`
 
 #### IdleState options:
 * `idleState(int readTimeout, int writeTimeout)`
@@ -79,19 +82,6 @@ from the server to the client, a ReadTimeout is thrown.
 
 (Note: only the client throws this events.)
 
-#### Netty options:
-* `clientWorkerSize(int workerSize)` 
-    * sets the threads per core to worker-group of the client 
-    * default: 2 
-* `serverBossSize(int bossSize)` 
-    * sets the threads per core to boss-group of the server  
-    * default: 1
-* `serverWorkerSize(int workerSize)` 
-    * sets the threads per core to worker-group of the server  
-    * default: 5 
-    
-If you have no idea what you are doing with this, you should leave it set by default.
-
 #### Serializer options:
 * `serializer(SerializerPool pool)` 
     * sets the specific `SerializerPool` with `Serialization`
@@ -104,28 +94,26 @@ Example usage:
 endpointBuilder.serializer(new SerializerPool(KryoSerialization.class));
 ```
 
-See more about serialization: [binflux-serilization](https://github.com/BinfluxDev/binflux-serilization)
+See more about serialization: [serilization](https://github.com/Koboo/serilization)
 
 ## Building the endpoints:
 
 To build the client:
-* `build(String host, int port)`
-    * Endpoint: `EndpointClient` (`extends AbstractClient`)
-* `build(String host, int port, int poolSize)`
-    * Endpoint: `PooledClient` (`extends AbstractClient`)
+```java
+EndpointClient client = new EndpointClient(endpointBuilder, String host, int port);
+```
     
 To build the server:
-* `build(int port)`
-    * Endpoint: `EndpointServer` (`extends AbstractServer`)
-* `build(int port, int poolSize)`
-    * Endpoint: `PooledServer` (`extends AbstractServer`)
+```java
+EndpointServer server = new EndpointServer(endpointBuilder, int port);
+```
 
 ## How to start the server
 
-To start the `EndpointServer` call`start()`. 
+To start the `EndpointServer` call `start()`. 
 
 ```java
-EndpointServer server = builder.build(54321);
+EndpointServer server = new EndpointServer(endpointBuilder, 54321);
 server.start();
 ```
 
@@ -134,7 +122,7 @@ server.start();
 To start the `EndpointClient` call `start()`.
 
 ```java
-EndpointClient client = builder.build("localhost", 54321);
+EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
 client.start();
 ```
 
@@ -143,12 +131,12 @@ client.start();
 
 If you want to reconnect a `EndpointClient`, do this:
 
-* Connect Endpoint
+* Initial connect the client
 ```java
-EndpointClient client = builder.build("localhost", 54321);
+EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
 client.start(); 
 ```
-* Close it - not `stop()`
+* Close/disconnect the client - do not call `stop()`
 ```java
 client.close();
 ```
@@ -162,77 +150,39 @@ client.setAddress("localhost", 12345);
 client.start();
 ```
 
-## Connection-Pooling
-
-The `PooledClient` opens N (`= poolSize`) channels to the server.
-
-```java
-int poolSize = 10; // 10 client-to-server connections
-PooledClient client = builder.build("localhost", 54321, poolSize);
-```
-
-By using the `start()`-call, the `PooledClient` fills the channel pool with 
-the maximum number of channels. As soon as a channel is closed and needed again (many `send`-calls) 
-the client restarts the channel automatically.
-
-```java
-int poolSize = 10; // 10 client-to-server connections
-PooledClient client = builder.build("localhost", 54321, poolSize);
-client.start();
-```
-
-The events are combined on the `PooledServer` & `PooledClient`. 
-If an event is registered, it will be thrown from all pooled channels.
-
-The `PooledServer` works differently from the `PooledClient`. 
-It opens multiple server sockets on one address:port `(e.g. 192.168.0.2:6666)` using the ChannelOptions `SO_REUSEPORT` & `SO_REUSEADDRESS`. 
-This has the consequence that the `PooledServer` works only under OSes with `Epoll`-transport. 
-(Attention: Tested Debian 8, 9 & 10. Please check the "Epoll" support of your operating system) 
-Behind this address:port the desired number of server sockets listen for new connections.
-
-```java
-int poolSize = 10; // 10 server-sockets listening
-PooledServer server = new PooledServer(builder, 54321, poolSize);
-server.start();
-```
-
 ## Default Events
 
 The event system is completely `Consumer<T>` based. There are some default events:
 
-* `ConnectEvent`
-    * server/client: channel connects 
-* `DisconnectEvent`
-    * server/client: channel disconnects
-* `ReceiveEvent`
-    * server/client: receives object from client/server
+* `ChannelActionEvent`
+    * server/client: channel connects/disconnects
+    
+* `NativeReceiveEvent`/`SerializableEvent`
+    * server/client: receives object from client/server by the specific protocol
+    
 * `ErrorEvent`
     * server/client: exception occured
-* `ReadTimeoutEvent` 
-    * client: read-timeout
-* `WriteTimeoutEvent`
-    * client: write-timeout 
     
-* `EndpointStartEvent`
-    * server/client: started
-* `EndpointInitializeEvent`
-    * server/client: initialized
-* `EndpointStopEvent`
-    * server/client: stopped
-* `EndpointClosedEvent`
-    * server/client: closed
-
+* `TimeoutEvent` 
+    * client: read-/write-timeout
+    * type: read or write
+    
+* `EndpointEvent`
+    * endpoint: the endpoint
+    * action: start, stop, close, initialize
 
 ## Register Events
 
-Register an `ConsumerEvent` by using a `Consumer<ConnectEvent>`:
+Create a new listener by using a `EventListener<? extends CallableEvent>`:
 
 ```java
-public class ConnectionConsumer implements Consumer<ConnectEvent> {
+public class ConnectionListener implements EventListener<ChannelActionEvent> {
     @Override
-    public void onEvent(ConnectEvent connectEvent) {
-        ChannelHandlerContext ctx = event.getCtx();
-        System.out.println("Server: Client connected: " + ctx.channel().remoteAddress());
+    public void onEvent(ChannelActionEvent connectEvent) {
+        if(connectEvent.getAction == ChannelActionEvent.Actionn.CONNECT) {
+            Channel channel = event.getChannel();
+            System.out.println("Server: Client connected: " + channel.remoteAddress());
+        }
     }
 }
 ```
@@ -240,31 +190,35 @@ public class ConnectionConsumer implements Consumer<ConnectEvent> {
 Register an event to an endpoint:
 
 ```java
-server.eventHandler().registerConsumer(ConnectEvent.class, new ConnectionConsumer());
+server.eventHandler().register(new ConnectionConsumer());
 ```
 
-Syntax of `registerConsumer`:
-* `registerConsumer(Class<? implements ConsumerEvent> class, Consumer<ConsumerEvent> consumer)`
+Syntax of `register`:
+* `register(EventListener<? extends CallableEvent> eventListener)`
+* `register(EventPriority priority, Consumer<? extends CallableEvent> consumer)`
+* `register(Consumer<? extends CallableEvent> consumer)`
 
 Pass consumer directly into method:
 
 ```java
-server.eventHandler().registerConsumer(ConnectEvent.class, (event) -> {
-   ChannelHandlerContext ctx = event.getCtx();
-   System.out.println("Server: Client connected: " + ctx.channel().remoteAddress());
+server.eventHandler().register((ChannelActionEvent) event -> {
+    if(event.getAction == ChannelActionEvent.Action.CONNECT) {
+        Channel channel = event.getChannel();
+        System.out.println("Server: Client connected: " + channel.remoteAddress());
+    }
 });
 ```
 
-Example-consumer of `ReceiveEvent`:
+Example-consumer of `SerializableReceiveEvent`:
 
 ```java
-public class ReceiveConsumer implements Consumer<ReceiveEvent> {
+public class ReceiveConsumer implements EventListener<SerializableReceiveEvent> {
     @Override
-    public void onEvent(ReceiveEvent event) {
-        ChannelHandlerContext ctx = event.getCtx();
-        Object object = event.getObject();
-        System.out.println("Server: Client received: " + ctx.channel().remoteAddress() + "/" + object);
-        if(object instanceof Boolean) {
+    public void onEvent(SerializableReceiveEvent event) {
+        Channel channel = event.getChannel();
+        SerializablePacket object = event.getTypeObject();
+        System.out.println("Server: Client received: " + channel.remoteAddress() + "/" + object);
+        if (object instanceof Boolean) {
             Boolean result = (Boolean) object;
             System.out.println("Result is: " + result);
         }
@@ -278,7 +232,7 @@ public class ReceiveConsumer implements Consumer<ReceiveEvent> {
 If you want to create your own event and let the clients or servers handle it, an event could look like this:
 
 ```java
-public class SampleEvent implements ConsumerEvent {
+public class SampleEvent implements CallableEvent {
 
     private String string;
     private Integer value;
@@ -318,17 +272,17 @@ To call the consumers of the event, you can pass the event to the `EventHandler`
 
 Throw events:
 ```java
-endpoint.eventHandler().handleEvent(new SampleEvent("SampleString", 100, System.currentTimeMillis()));
+endpoint.eventHandler().callEvent(new SampleEvent("SampleString", 100, System.currentTimeMillis()));
 ```
 
 Consume/Register events:
 ```java
-endpoint.eventHandler().registerConsumer(SampleEvent.class, (event) -> System.out.println(event.toString()));
+endpoint.eventHandler().register((SampleEvent) event -> System.out.println(event.toString()));
 ```
 
 ## Add as dependency
 
-Add `repo.levenproxy.eu` as repository. 
+Add `repo.koboo.eu` as repository. 
 
 ```java
 repositories {
@@ -336,10 +290,10 @@ repositories {
 }
 ```
 
-And add it as dependency. (e.g. `1.0` is the release-version)
+And add it as dependency. (e.g. `2.0` is the release-version)
 ```java
 dependencies {
-    compile 'eu.binflux:binflux-netty:1.0'
+    compile 'eu.koboo:endpoint-netty:2.0'
 }
 ```
 
@@ -348,5 +302,5 @@ dependencies {
 
 * Clone repository
 * Run `./gradlew buildApp`
-* Output `/build/libs/binflux-netty-{version}-all.jar`
-* Build task [build.gradle](https://github.com/BinfluxDev/binflux-netty/blob/master/build.gradle)
+* Output `/build/libs/endpoint-netty-{version}-all.jar`
+* Build task [build.gradle](https://github.com/Koboo/endpoint-netty/blob/master/build.gradle)
