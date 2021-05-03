@@ -23,7 +23,6 @@ public class EndpointEvent implements CallableEvent {
 
     public static enum Action {
 
-        INITIALIZE,
         START,
         STOP,
         CLOSE;

@@ -17,6 +17,9 @@ public interface Endpoint {
      */
     EventBus eventHandler();
 
+    /**
+     * @return Returns the Endpoint-ExecutorService instance
+     */
     ExecutorService executor();
 
     /**
@@ -33,11 +36,6 @@ public interface Endpoint {
      * @return closes the Endpoint-connection and returns true if was successful
      */
     boolean close();
-
-    /**
-     * @return initializes the Endpoint and returns true if was successful
-     */
-    boolean initialize();
 
     /**
      * @return true if Endpoint is client

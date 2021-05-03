@@ -131,11 +131,6 @@ public class EndpointClient extends AbstractClient {
             return false;
         }
 
-        if(!super.initialize()) {
-            onException(getClass(), new IllegalStateException("Initialization not successful!"));
-            return false;
-        }
-
         // Start the client and wait for the connection to be established.
         try {
             this.channel = this.bootstrap.connect(new InetSocketAddress(getHost(), getPort())).sync().channel();

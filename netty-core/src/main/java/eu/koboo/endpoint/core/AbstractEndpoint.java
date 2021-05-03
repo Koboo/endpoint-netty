@@ -23,12 +23,6 @@ public abstract class AbstractEndpoint implements Endpoint {
     }
 
     @Override
-    public boolean initialize() {
-        eventBus.callEvent(new EndpointEvent(this, EndpointEvent.Action.INITIALIZE));
-        return true;
-    }
-
-    @Override
     public boolean start() {
         eventBus.callEvent(new EndpointEvent(this, EndpointEvent.Action.START));
         return true;

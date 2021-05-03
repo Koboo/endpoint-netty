@@ -73,11 +73,6 @@ public class EndpointServer extends AbstractServer {
             return false;
         }
 
-        if (!super.initialize()) {
-            onException(getClass(), new IllegalStateException("Initialization not successful!"));
-            return false;
-        }
-
         try {
             // Start the server and wait for socket to be bind to the given port
             this.channel = serverBootstrap.bind(new InetSocketAddress(getPort())).sync().channel();
