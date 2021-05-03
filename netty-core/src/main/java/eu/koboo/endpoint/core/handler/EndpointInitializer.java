@@ -47,7 +47,7 @@ public class EndpointInitializer extends ChannelInitializer<SocketChannel> {
         }
 
         // Add the ByteToMessageCodec<Object>
-        if (endpoint.builder().getProtocol() == Protocol.NATIVE_NETTY)
+        if (endpoint.builder().getProtocol() == Protocol.NATIVE)
             pipeline.addLast("packet-codec", new NativeCodec(endpoint));
         else
             pipeline.addLast("packet-codec", new SerializableCodec(endpoint));
