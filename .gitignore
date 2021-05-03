@@ -5,7 +5,7 @@
 /out/
 /netty-client/build/
 /netty-client/out/
-/netty-core/build/*
 /netty-core/out/
 /netty-server/build/
 /netty-server/out/
+/netty-core/build/
