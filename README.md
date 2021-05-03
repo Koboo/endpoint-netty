@@ -177,7 +177,14 @@ repositories {
 And add it as dependency. (e.g. `2.0` is the release-version)
 ```java
 dependencies {
-    compile 'eu.koboo:endpoint-netty:2.0'
+    // !Always needed! 
+    compile 'eu.koboo:netty-core:2.0'
+    
+    // client-related     
+    compile 'eu.koboo:netty-client:2.0'
+        
+    // server-related     
+    compile 'eu.koboo:netty-server:2.0'
 }
 ```
 
