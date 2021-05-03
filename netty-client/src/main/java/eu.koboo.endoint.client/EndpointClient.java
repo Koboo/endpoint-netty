@@ -28,8 +28,6 @@ public class EndpointClient extends AbstractClient {
     public EndpointClient(EndpointBuilder endpointBuilder, String host, int port) {
         super(endpointBuilder, host, port);
 
-        // Note: We don't support KQueue.
-
         this.nettyType = NettyType.prepareType();
 
         // Get cores to calculate the event-loop-group sizes
@@ -43,7 +41,7 @@ public class EndpointClient extends AbstractClient {
         this.bootstrap = new Bootstrap()
                 .group(this.group)
                 .channel(nettyType.clientClass())
-                .handler(new EndpointInitializer(this))
+                .handler(new EndpointInitializer(this, null))
                 .option(ChannelOption.TCP_NODELAY, true)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 

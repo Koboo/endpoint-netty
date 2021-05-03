@@ -2,7 +2,8 @@ package eu.koboo.endpoint.server;
 
 import eu.koboo.endpoint.core.AbstractEndpoint;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
-import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.Channel;
+import io.netty.channel.group.ChannelGroup;
 
 public abstract class AbstractServer extends AbstractEndpoint {
 
@@ -16,10 +17,17 @@ public abstract class AbstractServer extends AbstractEndpoint {
         this.port = port;
     }
 
+    public abstract ChannelGroup getChannelGroup();
+
     /**
      * @param object Send object to client
      */
-    public abstract void send(ChannelHandlerContext channelHandlerContext, Object object, boolean sync);
+    public abstract void send(Channel channel, Object object, boolean sync);
+
+    /**
+     * @param object Send object to all clients
+     */
+    public abstract void sendAll(Object object, boolean sync);
 
     /**
      * @return returns false, because server

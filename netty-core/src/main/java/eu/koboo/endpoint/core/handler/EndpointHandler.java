@@ -9,20 +9,25 @@ import eu.koboo.endpoint.core.protocols.serializable.SerializablePacket;
 import eu.koboo.endpoint.core.protocols.serializable.SerializableReceiveEvent;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.group.ChannelGroup;
 import io.netty.util.ReferenceCountUtil;
 
 public class EndpointHandler extends ChannelInboundHandlerAdapter {
 
     private final Endpoint endpoint;
+    private final ChannelGroup channels;
 
-    public EndpointHandler(Endpoint endpoint) {
+    public EndpointHandler(Endpoint endpoint, ChannelGroup channels) {
         this.endpoint = endpoint;
+        this.channels = channels;
     }
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         try {
             super.channelActive(ctx);
+            if(!endpoint.isClient() && channels != null)
+                channels.add(ctx.channel());
             endpoint.eventHandler().callEvent(new ChannelActionEvent(ctx.channel(), ChannelActionEvent.Action.CONNECT));
         } catch (Exception e) {
             endpoint.onException(EndpointHandler.class, e);
@@ -33,6 +38,8 @@ public class EndpointHandler extends ChannelInboundHandlerAdapter {
     public void channelInactive(ChannelHandlerContext ctx) {
         try {
             super.channelInactive(ctx);
+            if(!endpoint.isClient() && channels != null)
+                channels.remove(ctx.channel());
             endpoint.eventHandler().callEvent(new ChannelActionEvent(ctx.channel(), ChannelActionEvent.Action.DISCONNECT));
         } catch (Exception e) {
             endpoint.onException(EndpointHandler.class, e);

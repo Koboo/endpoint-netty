@@ -7,11 +7,12 @@ import eu.koboo.nettyutils.NettyType;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.*;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.net.InetSocketAddress;
 
@@ -21,14 +22,14 @@ public class EndpointServer extends AbstractServer {
     private final ServerBootstrap serverBootstrap;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
+    private final ChannelGroup channels;
     private Channel channel;
 
     public EndpointServer(EndpointBuilder endpointBuilder, int port) {
         super(endpointBuilder, port);
 
-        // Note: We don't support KQueue.
-
         this.nettyType = NettyType.prepareType();
+
 
         // Get cores to calculate the event-loop-group sizes
         int cores = Runtime.getRuntime().availableProcessors();
@@ -39,11 +40,13 @@ public class EndpointServer extends AbstractServer {
         this.bossGroup = nettyType.eventLoopGroup(bossSize, new LocalThreadFactory("EndpointServerBoss"));
         this.workerGroup = nettyType.eventLoopGroup(workerSize, new LocalThreadFactory("EndpointServerWorker"));
 
+        this.channels = new DefaultChannelGroup("EndpointServerConnected", GlobalEventExecutor.INSTANCE);
+
         // Create ServerBootstrap
         this.serverBootstrap = new ServerBootstrap()
                 .group(bossGroup, workerGroup)
-                .channel(Epoll.isAvailable() ? EpollServerSocketChannel.class : NioServerSocketChannel.class)
-                .childHandler(new EndpointInitializer(this))
+                .channel(nettyType.serverChannel())
+                .childHandler(new EndpointInitializer(this, this.channels))
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childOption(ChannelOption.IP_TOS, 24)
@@ -115,32 +118,63 @@ public class EndpointServer extends AbstractServer {
     }
 
     /**
-     * Write the given object to the channel. This will be processed async
-     *
-     * @param object
-     */
-    public void send(ChannelHandlerContext ctx, Object object) {
-        // use send-method, default-behaviour: async
-        send(ctx, object, false);
-    }
-
-    /**
      * Write the given object to the channel.
      *
      * @param object
      * @param sync
      */
     @Override
-    public void send(ChannelHandlerContext ctx, Object object, boolean sync) {
+    public void send(Channel channel, Object object, boolean sync) {
         if (sync)
             try {
-                ctx.writeAndFlush(object).sync();
+                channel.writeAndFlush(object).sync();
             } catch (InterruptedException e) {
                 onException(getClass(), e);
             }
         else
-            ctx.writeAndFlush(object);
+            channel.writeAndFlush(object);
+    }
+
+    /**
+     * Write the given object to the channel. This will be processed async
+     *
+     * @param object
+     */
+    public void send(Channel channel, Object object) {
+        // use send-method, default-behaviour: async
+        send(channel, object, false);
     }
 
 
+    /**
+     * Write the given object to all channels.
+     *
+     * @param object
+     * @param sync
+     */
+    @Override
+    public void sendAll(Object object, boolean sync) {
+        for (Channel channel : channels) {
+            send(channel, object, sync);
+        }
+    }
+
+    /**
+     * Write the given object to all channels. This will be processed async
+     *
+     * @param object
+     */
+    public void sendAll(Object object) {
+        for(Channel channel : channels) {
+            send(channel, object);
+        }
+    }
+
+    /**
+     * Get all channels connected to the server
+     */
+    @Override
+    public ChannelGroup getChannelGroup() {
+        return this.channels;
+    }
 }

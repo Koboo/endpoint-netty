@@ -6,6 +6,7 @@ import eu.koboo.endpoint.core.protocols.natives.NativeCodec;
 import eu.koboo.endpoint.core.protocols.serializable.SerializableCodec;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
@@ -18,15 +19,14 @@ public class EndpointInitializer extends ChannelInitializer<SocketChannel> {
     private final Endpoint endpoint;
     private final EndpointHandler endpointHandler;
     private final EventExecutorGroup executorGroup;
+    private final ChannelGroup channels;
 
-    public EndpointInitializer(Endpoint endpoint) {
+    public EndpointInitializer(Endpoint endpoint, ChannelGroup channels) {
         this.endpoint = endpoint;
-
-        this.endpointHandler = new EndpointHandler(endpoint);
-
+        this.endpointHandler = new EndpointHandler(endpoint, channels);
         int cores = Runtime.getRuntime().availableProcessors();
-
         this.executorGroup = new DefaultEventExecutorGroup(cores * 4);
+        this.channels = channels;
     }
 
     @Override
