@@ -91,7 +91,7 @@ public class EndpointClient extends AbstractClient {
         if (isConnected()) {
             try {
                 channel.close().sync();
-                return true;
+                return super.close();
             } catch (InterruptedException e) {
                 onException(getClass(), e);
             }
@@ -109,7 +109,7 @@ public class EndpointClient extends AbstractClient {
             group.shutdownGracefully();
 
             close();
-            return true;
+            return super.close();
         } catch (Exception e) {
             onException(getClass(), e);
         }
@@ -146,7 +146,7 @@ public class EndpointClient extends AbstractClient {
                 channel = bootstrap.connect(new InetSocketAddress(getHost(), getPort())).sync().channel();
             }
             channel.closeFuture().addListener((ChannelFuture future) -> future.channel().eventLoop().schedule((Runnable) this::start, 5, TimeUnit.SECONDS));
-            return true;
+            return super.start();
         } catch (InterruptedException e) {
             onException(getClass(), e);
         }
