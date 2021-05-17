@@ -22,11 +22,11 @@ public class NativeCodec extends ByteToMessageCodec<NativePacket> {
         try {
             ByteBuf payload = ctx.alloc().buffer();
 
-            String classPath = nativePacket.getClassPath();
+            int oid = endpoint.builder().getOID(nativePacket.getClass());
 
-            if (classPath != null) {
+            if (oid != -1) {
 
-                BufUtils.writeString(classPath, payload);
+                BufUtils.writeVarInt(oid, payload);
                 nativePacket.write(payload);
 
                 byte[] outArray = BufUtils.toArray(payload);
@@ -67,13 +67,15 @@ public class NativeCodec extends ByteToMessageCodec<NativePacket> {
             ByteBuf outBuf = ctx.alloc().buffer(contentLength);
             in.readBytes(outBuf);
 
-            String classPath = BufUtils.readString(outBuf);
+            int oid = BufUtils.readVarInt(outBuf);
 
-            Class<? extends NativePacket> clazz = (Class<? extends NativePacket>) Class.forName(classPath);
-            NativePacket nativePacket = clazz.newInstance();
-            nativePacket.read(outBuf);
+            Class<? extends NativePacket> clazz = endpoint.builder().getNativePacket(oid);
+            if(clazz != null) {
+                NativePacket nativePacket = clazz.newInstance();
+                nativePacket.read(outBuf);
 
-            out.add(nativePacket);
+                out.add(nativePacket);
+            }
 
             ReferenceCountUtil.release(outBuf);
         } catch (Exception e) {

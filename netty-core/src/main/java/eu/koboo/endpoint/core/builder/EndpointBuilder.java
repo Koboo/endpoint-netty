@@ -5,7 +5,11 @@ import eu.binflux.serial.core.SerializerPool;
 import eu.koboo.endpoint.core.builder.param.Protocol;
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
 import eu.koboo.endpoint.core.builder.param.EventMode;
+import eu.koboo.endpoint.core.protocols.natives.NativePacket;
 import eu.koboo.nettyutils.Compression;
+
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class EndpointBuilder {
 
@@ -26,6 +30,8 @@ public class EndpointBuilder {
 
     private boolean logging = false;
     private SerializerPool serializerPool = new SerializerPool(JavaSerialization.class);
+
+    private final Map<Integer, Class<? extends NativePacket>> nativePacketRegistry = new ConcurrentHashMap<>();
 
     private EndpointBuilder() {
     }
@@ -70,6 +76,26 @@ public class EndpointBuilder {
     public EndpointBuilder serializer(SerializerPool serializerPool) {
         this.serializerPool = serializerPool;
         return this;
+    }
+
+    public EndpointBuilder registerNative(int oid, Class<? extends NativePacket> clazz) {
+        if(nativePacketRegistry.containsKey(oid))
+            throw new IllegalArgumentException("Id already used, please choose another.");
+        nativePacketRegistry.put(oid, clazz);
+        return this;
+    }
+
+    public Class<? extends NativePacket> getNativePacket(int oid) {
+        return nativePacketRegistry.getOrDefault(oid, null);
+    }
+
+    public int getOID(Class<? extends NativePacket> clazz) {
+        for(Map.Entry<Integer, Class<? extends NativePacket>> entry : nativePacketRegistry.entrySet()) {
+            if(entry.getValue().getSimpleName().equalsIgnoreCase(clazz.getSimpleName())) {
+                return entry.getKey();
+            }
+        }
+        return -1;
     }
 
     public Protocol getProtocol() {
