@@ -8,7 +8,7 @@ Simply explained: Send (almost) every object back and forth between client or se
 
 ## History 
 
-The original project was [original project](https://github.com/EsotericSoftware/kryonetty)
+The [original project](https://github.com/EsotericSoftware/kryonetty) was
 developed by [EsotericSoftware](https://github.com/EsotericSoftware).
 Since some changes on the official repository were
 not accepted and [Koboo](https://github.com/Koboo) had explicit changes take place,
