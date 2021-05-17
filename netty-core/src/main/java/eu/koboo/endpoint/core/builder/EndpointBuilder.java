@@ -13,30 +13,21 @@ public class EndpointBuilder {
         return new EndpointBuilder();
     }
 
-    private Protocol protocol;
-    private Compression compression;
-    private ErrorMode errorMode;
-    private EventMode eventMode;
+    private Protocol protocol = Protocol.SERIALIZABLE;
+    private Compression compression = Compression.NONE;
+    private ErrorMode errorMode = ErrorMode.STACK_TRACE;
+    private EventMode eventMode = EventMode.EVENT_LOOP;
 
-    private boolean fireIdleStates;
-    private int writeTimeout;
-    private int readTimeout;
+    private String domainSocketFile;
 
-    private boolean logging;
-    private SerializerPool serializerPool;
+    private boolean fireIdleStates = false;
+    private int writeTimeout = 15;
+    private int readTimeout = 0;
+
+    private boolean logging = false;
+    private SerializerPool serializerPool = new SerializerPool(JavaSerialization.class);
 
     private EndpointBuilder() {
-        this.protocol = Protocol.SERIALIZABLE;
-        this.compression = Compression.GZIP;
-        this.errorMode = ErrorMode.STACK_TRACE;
-        this.eventMode = EventMode.EVENT_LOOP;
-
-        this.fireIdleStates = false;
-        this.writeTimeout = 15;
-        this.readTimeout = 0;
-
-        this.logging = false;
-        this.serializerPool = new SerializerPool(JavaSerialization.class);
     }
 
     public EndpointBuilder protocol(Protocol protocol) {
@@ -56,6 +47,11 @@ public class EndpointBuilder {
 
     public EndpointBuilder eventMode(EventMode eventMode) {
         this.eventMode = eventMode;
+        return this;
+    }
+
+    public EndpointBuilder setDomainSocket(String socketFile) {
+        this.domainSocketFile = socketFile;
         return this;
     }
 
@@ -90,6 +86,10 @@ public class EndpointBuilder {
 
     public EventMode getEventMode() {
         return eventMode;
+    }
+
+    public String getDomainSocket() {
+        return domainSocketFile;
     }
 
     public boolean isFireIdleStates() {

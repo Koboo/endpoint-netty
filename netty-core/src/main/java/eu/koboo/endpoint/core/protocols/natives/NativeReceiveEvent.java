@@ -5,7 +5,7 @@ import io.netty.channel.Channel;
 
 public class NativeReceiveEvent extends ReceiveEvent<NativePacket> {
 
-    public NativeReceiveEvent(Channel ctx, NativePacket object) {
-        super(ctx, object);
+    public NativeReceiveEvent(Channel channel, NativePacket object) {
+        super(channel, object);
     }
 }

@@ -2,7 +2,7 @@
 package test.benchmark;
 
 import com.carrotsearch.junitbenchmarks.AbstractBenchmark;
-import eu.koboo.endoint.client.EndpointClient;
+import eu.koboo.endpoint.client.EndpointClient;
 import eu.koboo.endpoint.core.builder.param.Protocol;
 import eu.koboo.endpoint.core.protocols.natives.NativePacket;
 import eu.koboo.endpoint.core.protocols.natives.NativeReceiveEvent;

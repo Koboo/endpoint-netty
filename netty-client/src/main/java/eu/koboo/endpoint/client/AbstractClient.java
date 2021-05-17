@@ -1,4 +1,4 @@
-package eu.koboo.endoint.client;
+package eu.koboo.endpoint.client;
 
 import eu.koboo.endpoint.core.AbstractEndpoint;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;

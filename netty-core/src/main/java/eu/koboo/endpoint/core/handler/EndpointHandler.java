@@ -52,6 +52,7 @@ public class EndpointHandler extends ChannelInboundHandlerAdapter {
         try {
             super.channelRead(ctx, msg);
             ReceiveEvent event = null;
+
             if (msg instanceof NativePacket)
                 event = new NativeReceiveEvent(ctx.channel(), (NativePacket) msg);
             else if (msg instanceof SerializablePacket)

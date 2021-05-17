@@ -5,8 +5,8 @@ import io.netty.channel.Channel;
 
 public class SerializableReceiveEvent extends ReceiveEvent<SerializablePacket> {
 
-    public SerializableReceiveEvent(Channel ctx, SerializablePacket object) {
-        super(ctx, object);
+    public SerializableReceiveEvent(Channel channel, SerializablePacket object) {
+        super(channel, object);
     }
 
 }

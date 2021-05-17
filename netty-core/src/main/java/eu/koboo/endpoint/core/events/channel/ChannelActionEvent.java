@@ -13,11 +13,11 @@ public class ChannelActionEvent implements CallableEvent {
         this.action = action;
     }
 
-    public Channel getCtx() {
+    public Channel getChannel() {
         return ctx;
     }
 
-    public Action getType() {
+    public Action getAction() {
         return action;
     }
 

@@ -4,7 +4,7 @@ package test.benchmark;
 import com.carrotsearch.junitbenchmarks.AbstractBenchmark;
 import eu.binflux.serial.core.SerializerPool;
 import eu.binflux.serial.fst.FSTSerialization;
-import eu.koboo.endoint.client.EndpointClient;
+import eu.koboo.endpoint.client.EndpointClient;
 import eu.koboo.endpoint.core.protocols.serializable.SerializablePacket;
 import eu.koboo.endpoint.core.protocols.serializable.SerializableReceiveEvent;
 import eu.koboo.endpoint.server.EndpointServer;

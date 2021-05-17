@@ -12,13 +12,5 @@ public interface NativePacket {
 
     void write(ByteBuf byteBuf);
 
-    default <T extends NativePacket> void readNative(NativePacket nativePacket, ByteBuf byteBuf) {
-        nativePacket.read(byteBuf);
-    }
-
-    default <T extends NativePacket> void writeNative(NativePacket nativePacket, ByteBuf byteBuf) {
-        nativePacket.write(byteBuf);
-    }
-
 }
 

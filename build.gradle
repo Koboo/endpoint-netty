@@ -1,11 +1,14 @@
 plugins {
-    id 'java'
+    id 'application'
 }
 
 allprojects {
 
     group 'eu.koboo'
-    version '2.2.1'
+    version '2.2.2'
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
 
     repositories {
         mavenCentral()
@@ -13,7 +16,14 @@ allprojects {
             url 'http://repo.koboo.eu/releases'
         }
     }
+
+    compileJava.options.encoding = 'UTF-8'
+    tasks.withType(JavaCompile) {
+        options.encoding = 'UTF-8'
+    }
 }
+
+mainClassName = "UDSTest"
 
 dependencies {
 
@@ -25,8 +35,26 @@ dependencies {
     testCompile group: 'eu.koboo', name: 'serial-hessian', version: '1.2.1'
     testCompile group: 'eu.koboo', name: 'serial-kryo', version: '1.2.1'
 
+    compile project('netty-core')
     compile project('netty-client')
     compile project('netty-server')
+}
+
+test {
+    exclude '*'
+}
+
+jar {
+    from {
+        configurations.compile.collect {
+            it.isDirectory() ? it : zipTree(it)
+        }
+    }
+    manifest {
+        attributes(
+                'Main-Class': mainClassName,
+        )
+    }
 }
 
 subprojects {

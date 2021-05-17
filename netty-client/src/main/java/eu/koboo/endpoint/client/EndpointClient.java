@@ -1,9 +1,8 @@
 
-package eu.koboo.endoint.client;
+package eu.koboo.endpoint.client;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
-import eu.koboo.nettyutils.LocalThreadFactory;
 import eu.koboo.nettyutils.NettyType;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -12,8 +11,7 @@ import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.*;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.channel.unix.DomainSocketAddress;
 
 import java.net.InetSocketAddress;
 import java.util.concurrent.TimeUnit;
@@ -25,27 +23,31 @@ public class EndpointClient extends AbstractClient {
     private final Bootstrap bootstrap;
     private Channel channel;
 
+    public EndpointClient(EndpointBuilder endpointBuilder) {
+        this(endpointBuilder, null, -1);
+    }
+
     public EndpointClient(EndpointBuilder endpointBuilder, String host, int port) {
         super(endpointBuilder, host, port);
 
-        this.nettyType = NettyType.prepareType();
+        nettyType = NettyType.prepareType(endpointBuilder.getDomainSocket() != null);
 
         // Get cores to calculate the event-loop-group sizes
         int cores = Runtime.getRuntime().availableProcessors();
         int workerSize = 4 * cores;
 
         // Check and initialize the event-loop-groups
-        this.group = nettyType.eventLoopGroup(workerSize, new LocalThreadFactory("EndpointClient"));
+        group = nettyType.eventLoopGroup(workerSize, "EndpointClient");
 
         // Create Bootstrap
-        this.bootstrap = new Bootstrap()
-                .group(this.group)
+        bootstrap = new Bootstrap()
+                .group(group)
                 .channel(nettyType.clientClass())
                 .handler(new EndpointInitializer(this, null))
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 
         // Check for extra epoll-options
-        if (nettyType.isEpoll()) {
+        if (nettyType.isEpoll() && !nettyType.isUds()) {
             bootstrap
                     .option(EpollChannelOption.EPOLL_MODE, EpollMode.LEVEL_TRIGGERED)
                     .option(ChannelOption.TCP_FASTOPEN_CONNECT, true);
@@ -78,7 +80,7 @@ public class EndpointClient extends AbstractClient {
      */
     @Override
     public boolean isConnected() {
-        return this.channel != null && this.channel.isOpen() && this.channel.isActive();
+        return channel != null && channel.isOpen() && channel.isActive();
     }
 
     /**
@@ -119,22 +121,31 @@ public class EndpointClient extends AbstractClient {
      */
     @Override
     public boolean start() {
+
+        if((getHost() == null || getPort() == -1) && !nettyType.isUds() && endpointBuilder.getDomainSocket() != null) {
+            onException(getClass(), new RuntimeException("Platform error! DomainSocket is set, but no native transport available.."));
+        }
+
         // Check if host and port is set
-        if (getHost() == null || getPort() == -1) {
-            onException(getClass(), new RuntimeException(getHost() == null ? "host-address is not set!" : "port is not set!"));
+        if ((getHost() == null || getPort() == -1) && !nettyType.isUds()) {
+            onException(getClass(), new RuntimeException("Connectivity error! " + (getHost() == null ? "host-address is not set!" : "port is not set!")));
             return false;
         }
 
         // Close the Channel if it's already connected
         if (isConnected()) {
-            onException(getClass(), new IllegalStateException("Connection is already established!"));
+            onException(getClass(), new IllegalStateException("Connectivity error! Connection is already established!"));
             return false;
         }
 
         // Start the client and wait for the connection to be established.
         try {
-            this.channel = this.bootstrap.connect(new InetSocketAddress(getHost(), getPort())).sync().channel();
-            this.channel.closeFuture().addListener((ChannelFuture future) -> future.channel().eventLoop().schedule((Runnable) this::start, 5, TimeUnit.SECONDS));
+            if(nettyType.isUds()) {
+                channel = bootstrap.connect(new DomainSocketAddress(endpointBuilder.getDomainSocket())).sync().channel();
+            } else {
+                channel = bootstrap.connect(new InetSocketAddress(getHost(), getPort())).sync().channel();
+            }
+            channel.closeFuture().addListener((ChannelFuture future) -> future.channel().eventLoop().schedule((Runnable) this::start, 5, TimeUnit.SECONDS));
             return true;
         } catch (InterruptedException e) {
             onException(getClass(), e);

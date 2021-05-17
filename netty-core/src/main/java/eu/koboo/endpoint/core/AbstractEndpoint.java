@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 
 public abstract class AbstractEndpoint implements Endpoint {
 
-    private final EndpointBuilder endpointBuilder;
+    protected final EndpointBuilder endpointBuilder;
     private final EventBus eventBus;
     private final ExecutorService executor;
 
