@@ -18,12 +18,12 @@ import io.netty.util.concurrent.EventExecutorGroup;
 public class EndpointInitializer extends ChannelInitializer<Channel> {
 
     private final Endpoint endpoint;
-    private final EndpointHandler endpointHandler;
+    private final ChannelGroup channels;
     private final EventExecutorGroup executorGroup;
 
     public EndpointInitializer(Endpoint endpoint, ChannelGroup channels) {
         this.endpoint = endpoint;
-        this.endpointHandler = new EndpointHandler(endpoint, channels);
+        this.channels = channels;
         int cores = Runtime.getRuntime().availableProcessors();
         this.executorGroup = new DefaultEventExecutorGroup(cores * 4);
     }
@@ -54,6 +54,6 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
             pipeline.addLast("packet-codec", new SerializableCodec(endpoint));
 
         // Add the business-logic handler with async executor.
-        pipeline.addLast(executorGroup, "netty-handler", endpointHandler);
+        pipeline.addLast(executorGroup, "netty-handler", new EndpointHandler(endpoint, channels));
     }
 }
