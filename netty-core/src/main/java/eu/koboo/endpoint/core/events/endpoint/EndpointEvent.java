@@ -24,6 +24,7 @@ public class EndpointEvent implements CallableEvent {
     public static enum Action {
 
         START,
+        RECONNECT,
         STOP,
         CLOSE;
 

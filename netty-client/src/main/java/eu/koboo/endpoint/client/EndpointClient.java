@@ -2,18 +2,19 @@
 package eu.koboo.endpoint.client;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
+import eu.koboo.endpoint.core.events.endpoint.EndpointEvent;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
 import eu.koboo.nettyutils.NettyType;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.epoll.*;
 import io.netty.channel.unix.DomainSocketAddress;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.concurrent.TimeUnit;
 
 public class EndpointClient extends AbstractClient {
@@ -122,7 +123,7 @@ public class EndpointClient extends AbstractClient {
     @Override
     public boolean start() {
 
-        if((getHost() == null || getPort() == -1) && !nettyType.isUds() && endpointBuilder.getDomainSocket() != null) {
+        if ((getHost() == null || getPort() == -1) && !nettyType.isUds() && endpointBuilder.getDomainSocket() != null) {
             onException(getClass(), new RuntimeException("Platform error! DomainSocket is set, but no native transport available.."));
         }
 
@@ -139,18 +140,45 @@ public class EndpointClient extends AbstractClient {
         }
 
         // Start the client and wait for the connection to be established.
-        try {
-            if(nettyType.isUds()) {
-                channel = bootstrap.connect(new DomainSocketAddress(endpointBuilder.getDomainSocket())).sync().channel();
+
+
+        SocketAddress address = nettyType.isUds() ?
+                new DomainSocketAddress(endpointBuilder.getDomainSocket()) :
+                new InetSocketAddress(getHost(), getPort());
+
+        ChannelFuture connectFuture = bootstrap.connect(address);
+
+        ChannelFutureListener connectListener = future -> {
+            if (!future.isSuccess()) {
+                future.channel().close();
+                start();
             } else {
-                channel = bootstrap.connect(new InetSocketAddress(getHost(), getPort())).sync().channel();
+                ChannelFutureListener closeListener = reconnectFuture -> scheduleReconnect(100);
+                channel = future.channel();
+                channel.closeFuture().addListener(closeListener);
             }
-            channel.closeFuture().addListener((ChannelFuture future) -> future.channel().eventLoop().schedule((Runnable) this::start, 5, TimeUnit.SECONDS));
+        };
+
+        try {
+            ChannelFuture future = connectFuture.addListener(connectListener).sync();
+            if(!future.isSuccess())
+                throw new IllegalStateException("Connectivity error! Connection is not established!");
             return super.start();
         } catch (InterruptedException e) {
-            onException(getClass(), e);
+            scheduleReconnect(1000);
         }
-        return false;
+
+        return super.start();
     }
+
+    private void scheduleReconnect(long millis) {
+        group.schedule(() -> {
+            if (!isConnected()) {
+                eventHandler().callEvent(new EndpointEvent(this, EndpointEvent.Action.RECONNECT));
+                start();
+            }
+        }, millis, TimeUnit.MILLISECONDS);
+    }
+
 
 }
