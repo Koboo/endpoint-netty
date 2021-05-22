@@ -7,6 +7,7 @@ import eu.koboo.endpoint.core.builder.param.ErrorMode;
 import eu.koboo.endpoint.core.builder.param.EventMode;
 import eu.koboo.endpoint.core.protocols.natives.NativePacket;
 import eu.koboo.nettyutils.Compression;
+import io.netty.channel.epoll.Epoll;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,7 +23,7 @@ public class EndpointBuilder {
     private ErrorMode errorMode = ErrorMode.STACK_TRACE;
     private EventMode eventMode = EventMode.EVENT_LOOP;
 
-    private String domainSocketFile;
+    private String udsFile = "/tmp/endpoint-netty/uds.sock";
 
     private boolean fireIdleStates = false;
     private int writeTimeout = 15;
@@ -56,8 +57,8 @@ public class EndpointBuilder {
         return this;
     }
 
-    public EndpointBuilder setDomainSocket(String socketFile) {
-        this.domainSocketFile = socketFile;
+    public EndpointBuilder isUsingUDS(String socketFile) {
+        this.udsFile = socketFile;
         return this;
     }
 
@@ -114,8 +115,12 @@ public class EndpointBuilder {
         return eventMode;
     }
 
-    public String getDomainSocket() {
-        return domainSocketFile;
+    public boolean isUsingUDS() {
+        return udsFile != null;
+    }
+
+    public String getUDSFile() {
+        return udsFile;
     }
 
     public boolean isFireIdleStates() {

@@ -10,8 +10,6 @@ import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
 import io.netty.channel.epoll.*;
 import io.netty.channel.unix.DomainSocketAddress;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -31,7 +29,7 @@ public class EndpointClient extends AbstractClient {
     public EndpointClient(EndpointBuilder endpointBuilder, String host, int port) {
         super(endpointBuilder, host, port);
 
-        nettyType = NettyType.prepareType(endpointBuilder.getDomainSocket() != null);
+        nettyType = NettyType.prepareType(endpointBuilder.isUsingUDS());
 
         // Get cores to calculate the event-loop-group sizes
         int cores = Runtime.getRuntime().availableProcessors();
@@ -123,12 +121,12 @@ public class EndpointClient extends AbstractClient {
     @Override
     public boolean start() {
 
-        if ((getHost() == null || getPort() == -1) && !nettyType.isUds() && endpointBuilder.getDomainSocket() != null) {
-            onException(getClass(), new RuntimeException("Platform error! DomainSocket is set, but no native transport available.."));
+        if (endpointBuilder.isUsingUDS() && !nettyType.isUds() && getHost() == null && getPort() == -1) {
+            onException(getClass(), new RuntimeException("Platform error! UnixDomainSocket is set, but no native transport available.."));
+            return false;
         }
 
-        // Check if host and port is set
-        if ((getHost() == null || getPort() == -1) && !nettyType.isUds()) {
+        if (!endpointBuilder.isUsingUDS() && (getHost() == null || getPort() == -1)) {
             onException(getClass(), new RuntimeException("Connectivity error! " + (getHost() == null ? "host-address is not set!" : "port is not set!")));
             return false;
         }
@@ -142,8 +140,8 @@ public class EndpointClient extends AbstractClient {
         // Start the client and wait for the connection to be established.
 
 
-        SocketAddress address = nettyType.isUds() ?
-                new DomainSocketAddress(endpointBuilder.getDomainSocket()) :
+        SocketAddress address = endpointBuilder.isUsingUDS() ?
+                new DomainSocketAddress(endpointBuilder.getUDSFile()) :
                 new InetSocketAddress(getHost(), getPort());
 
         ChannelFuture connectFuture = bootstrap.connect(address);
@@ -161,7 +159,7 @@ public class EndpointClient extends AbstractClient {
 
         try {
             ChannelFuture future = connectFuture.addListener(connectListener).sync();
-            if(!future.isSuccess())
+            if (!future.isSuccess())
                 throw new IllegalStateException("Connectivity error! Connection is not established!");
             return super.start();
         } catch (InterruptedException e) {
@@ -180,5 +178,9 @@ public class EndpointClient extends AbstractClient {
         }, millis, TimeUnit.MILLISECONDS);
     }
 
+    @Override
+    public NettyType nettyType() {
+        return nettyType;
+    }
 
 }

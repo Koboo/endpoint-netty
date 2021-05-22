@@ -15,6 +15,7 @@ import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 
 public class EndpointServer extends AbstractServer {
 
@@ -32,7 +33,7 @@ public class EndpointServer extends AbstractServer {
     public EndpointServer(EndpointBuilder endpointBuilder, int port) {
         super(endpointBuilder, port);
 
-        nettyType = NettyType.prepareType(endpointBuilder.getDomainSocket() != null);
+        nettyType = NettyType.prepareType(endpointBuilder.isUsingUDS());
 
         // Get cores to calculate the event-loop-group sizes
         int cores = Runtime.getRuntime().availableProcessors();
@@ -74,22 +75,24 @@ public class EndpointServer extends AbstractServer {
     @Override
     public boolean start() {
 
-        if(getPort() == -1 && !nettyType.isUds() && endpointBuilder.getDomainSocket() != null) {
-            onException(getClass(), new RuntimeException("Platform error! DomainSocket is set, but no native transport available.."));
+
+        if (endpointBuilder.isUsingUDS() && !nettyType.isUds() && getPort() == -1) {
+            onException(getClass(), new RuntimeException("Platform error! UnixDomainSocket is set, but no native transport available.."));
+            return false;
         }
 
-        if (getPort() == -1 && !nettyType.isUds()) {
-            onException(getClass(), new RuntimeException("Connectivity error! Port is not set!"));
+        if (!endpointBuilder.isUsingUDS() && getPort() == -1) {
+            onException(getClass(), new RuntimeException("Connectivity error! port is not set!"));
             return false;
         }
 
         try {
+            SocketAddress address = endpointBuilder.isUsingUDS() ?
+                new DomainSocketAddress(endpointBuilder.getUDSFile()) :
+                new InetSocketAddress(getPort());
+
             // Start the server and wait for socket to be bind to the given port
-            if (nettyType.isUds()) {
-                channel = serverBootstrap.bind(new DomainSocketAddress(endpointBuilder.getDomainSocket())).sync().channel();
-            } else {
-                channel = serverBootstrap.bind(new InetSocketAddress(getPort())).sync().channel();
-            }
+            channel = serverBootstrap.bind(address).sync().channel();
             return super.start();
         } catch (InterruptedException e) {
             onException(getClass(), e);
@@ -191,5 +194,10 @@ public class EndpointServer extends AbstractServer {
     @Override
     public ChannelGroup getChannelGroup() {
         return this.channelGroup;
+    }
+
+    @Override
+    public NettyType nettyType() {
+        return nettyType;
     }
 }

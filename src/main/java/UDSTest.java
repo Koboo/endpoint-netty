@@ -19,7 +19,7 @@ public class UDSTest {
                 .errorMode(ErrorMode.STACK_TRACE)
                 .eventMode(EventMode.SYNC)
                 .logging(false)
-                .setDomainSocket("/tmp/test.sock");
+                .isUsingUDS("/tmp/test.sock");
         System.out.println("Setting up builder..");
 
         System.out.println("Creating universal EventListener..");
