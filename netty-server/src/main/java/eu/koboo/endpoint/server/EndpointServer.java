@@ -87,7 +87,7 @@ public class EndpointServer extends AbstractServer {
         }
 
         try {
-            SocketAddress address = endpointBuilder.isUsingUDS() ?
+            SocketAddress address = endpointBuilder.isUsingUDS() && nettyType.isUds() ?
                 new DomainSocketAddress(endpointBuilder.getUDSFile()) :
                 new InetSocketAddress(getPort());
 

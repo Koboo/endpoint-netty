@@ -140,7 +140,7 @@ public class EndpointClient extends AbstractClient {
         // Start the client and wait for the connection to be established.
 
 
-        SocketAddress address = endpointBuilder.isUsingUDS() ?
+        SocketAddress address = endpointBuilder.isUsingUDS() && nettyType.isUds() ?
                 new DomainSocketAddress(endpointBuilder.getUDSFile()) :
                 new InetSocketAddress(getHost(), getPort());
 
