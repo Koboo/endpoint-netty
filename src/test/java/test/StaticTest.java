@@ -3,7 +3,6 @@ package test;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
 import eu.koboo.endpoint.core.builder.param.EventMode;
-import eu.koboo.endpoint.core.builder.param.Protocol;
 import test.benchmark.DataRequestTest;
 import test.benchmark.NativeRequestTest;
 import test.benchmark.RandomRequestTest;
@@ -27,7 +26,6 @@ public class StaticTest {
     static {
         BUILDER = EndpointBuilder.newBuilder()
                 .logging(false)
-                .protocol(Protocol.SERIALIZABLE)
                 .errorMode(ErrorMode.STACK_TRACE)
                 .eventMode(EventMode.SERVICE);
 

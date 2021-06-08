@@ -5,10 +5,10 @@ import com.carrotsearch.junitbenchmarks.AbstractBenchmark;
 import eu.binflux.serial.core.SerializerPool;
 import eu.binflux.serial.fst.FSTSerialization;
 import eu.koboo.endpoint.client.EndpointClient;
-import eu.koboo.endpoint.core.protocols.serializable.SerializablePacket;
-import eu.koboo.endpoint.core.protocols.serializable.SerializableReceiveEvent;
+import eu.koboo.endpoint.core.codec.serial.SerializableCodec;
+import eu.koboo.endpoint.core.codec.serial.SerializablePacket;
+import eu.koboo.endpoint.core.events.ReceiveEvent;
 import eu.koboo.endpoint.server.EndpointServer;
-import eu.koboo.event.listener.EventListener;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -16,7 +16,8 @@ import test.StaticTest;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class DataRequestTest extends AbstractBenchmark {
 
@@ -31,19 +32,19 @@ public class DataRequestTest extends AbstractBenchmark {
         System.out.println("== Test DataRequest/Sec Behaviour == ");
 
         StaticTest.BUILDER
+                .codec(SerializableCodec.class)
                 .serializer(new SerializerPool(FSTSerialization.class));
 
         server = new EndpointServer(StaticTest.BUILDER, 54321);
-        server.eventHandler().register(new EventListener<SerializableReceiveEvent>() {
-            @Override
-            public void onEvent(SerializableReceiveEvent event) {
-                if(event.getTypeObject() instanceof DataRequest) {
-                    DataRequest request = (DataRequest) event.getTypeObject();
-                    assertEquals(request.getString(), StaticTest.testString);
-                    assertEquals(request.gettLong(), StaticTest.testLong);
-                    assertEquals(request.gettInt(), StaticTest.testInt);
-                    counter.getAndIncrement();
-                }
+
+
+        server.eventHandler().register(ReceiveEvent.class, event -> {
+            if (event.getTypeObject() instanceof DataRequest) {
+                DataRequest request = (DataRequest) event.getTypeObject();
+                assertEquals(request.getString(), StaticTest.testString);
+                assertEquals(request.gettLong(), StaticTest.testLong);
+                assertEquals(request.gettInt(), StaticTest.testInt);
+                counter.getAndIncrement();
             }
         });
 
@@ -77,7 +78,7 @@ public class DataRequestTest extends AbstractBenchmark {
         final long time = (end - start);
         int packetsPerSec = StaticTest.getPacketsPerSec(amount, time);
         StaticTest.adjustAverage(average, packetsPerSec);
-        while(amount > counter.get()) {
+        while (amount > counter.get()) {
             Thread.sleep(200);
             System.out.println("Sleeping.. (" + counter.get() + "/" + amount + ")");
         }

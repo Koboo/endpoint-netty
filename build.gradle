@@ -33,9 +33,12 @@ dependencies {
     testCompile group: 'eu.koboo', name: 'serial-hessian', version: '1.4'
     testCompile group: 'eu.koboo', name: 'serial-kryo', version: '1.4'
 
-    compile project('netty-core')
-    compile project('netty-client')
-    compile project('netty-server')
+    compile project('endpoint-core')
+    compile project('endpoint-client')
+    compile project('endpoint-server')
+
+    compile project('endpoint-codec-serial')
+    compile project('endpoint-codec-native')
 }
 
 test {
