@@ -159,9 +159,6 @@ The event system is completely `Consumer<T>` based. There are some default event
     * endpoint: the endpoint
     * action: start, stop, close, initialize
 
-The entire event system is based on the [EventBus](https://github.com/Koboo/event-bus).
-For further documentation see the project there.
-
 ## Add as dependency
 
 Add `repo.koboo.eu` as repository. 
