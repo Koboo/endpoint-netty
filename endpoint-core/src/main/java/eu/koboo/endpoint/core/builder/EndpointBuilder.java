@@ -1,11 +1,9 @@
 package eu.koboo.endpoint.core.builder;
 
-import eu.binflux.serial.core.JavaSerialization;
-import eu.binflux.serial.core.SerializerPool;
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
 import eu.koboo.endpoint.core.builder.param.EventMode;
 import eu.koboo.endpoint.core.codec.AbstractEndpointCodec;
-import eu.koboo.nettyutils.Compression;
+import eu.koboo.endpoint.core.util.Compression;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +27,8 @@ public class EndpointBuilder {
     private int readTimeout = 0;
 
     private boolean logging = false;
-    private SerializerPool serializerPool = new SerializerPool(JavaSerialization.class);
+
+    private int autoReconnect = 3;
 
     private final Map<Integer, Class<?>> packetRegistry = new ConcurrentHashMap<>();
 
@@ -56,7 +55,7 @@ public class EndpointBuilder {
         return this;
     }
 
-    public EndpointBuilder isUsingUDS(String socketFile) {
+    public EndpointBuilder useUDS(String socketFile) {
         this.udsFile = socketFile;
         return this;
     }
@@ -73,8 +72,13 @@ public class EndpointBuilder {
         return this;
     }
 
-    public EndpointBuilder serializer(SerializerPool serializerPool) {
-        this.serializerPool = serializerPool;
+    public EndpointBuilder autoReconnect(int seconds) {
+        this.autoReconnect = seconds;
+        return this;
+    }
+
+    public EndpointBuilder disableReconnect() {
+        this.autoReconnect = -1;
         return this;
     }
 
@@ -138,7 +142,7 @@ public class EndpointBuilder {
         return logging;
     }
 
-    public SerializerPool getSerializerPool() {
-        return serializerPool;
+    public int getAutoReconnect() {
+        return autoReconnect;
     }
 }

@@ -2,7 +2,7 @@ package eu.koboo.endpoint.core.handler;
 
 import eu.koboo.endpoint.core.Endpoint;
 import eu.koboo.endpoint.core.codec.AbstractEndpointCodec;
-import eu.koboo.nettyutils.Compression;
+import eu.koboo.endpoint.core.util.Compression;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;

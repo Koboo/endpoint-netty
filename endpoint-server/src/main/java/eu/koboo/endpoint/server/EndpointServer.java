@@ -2,25 +2,27 @@ package eu.koboo.endpoint.server;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
-import eu.koboo.nettyutils.NettyType;
+import eu.koboo.endpoint.core.util.LocalThreadFactory;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.epoll.EpollChannelOption;
-import io.netty.channel.epoll.EpollMode;
+import io.netty.channel.ServerChannel;
+import io.netty.channel.epoll.*;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.concurrent.ThreadFactory;
 
 public class EndpointServer extends AbstractServer {
 
-    private final NettyType nettyType;
     private final ServerBootstrap serverBootstrap;
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
@@ -34,28 +36,39 @@ public class EndpointServer extends AbstractServer {
     public EndpointServer(EndpointBuilder endpointBuilder, int port) {
         super(endpointBuilder, port);
 
-        nettyType = NettyType.prepareType(endpointBuilder.isUsingUDS());
-
         // Get cores to calculate the event-loop-group sizes
         int cores = Runtime.getRuntime().availableProcessors();
         int bossSize = 2 * cores;
         int workerSize = 4 * cores;
 
-        // Check and initialize the event-loop-groups
-        bossGroup = nettyType.eventLoopGroup(bossSize, "EndpointServerBoss");
-        workerGroup = nettyType.eventLoopGroup(workerSize, "EndpointServerWorker");
+        ThreadFactory bossFactory = new LocalThreadFactory("EndpointServerBoss");
+        ThreadFactory workerFactory = new LocalThreadFactory("EndpointServerWorker");
+        Class<? extends ServerChannel> channelClass;
+        if(Epoll.isAvailable()) {
+            if(endpointBuilder.isUsingUDS()) {
+                channelClass = EpollServerDomainSocketChannel.class;
+            } else {
+                channelClass = EpollServerSocketChannel.class;
+            }
+            bossGroup = new EpollEventLoopGroup(bossSize, bossFactory);
+            workerGroup = new EpollEventLoopGroup(workerSize, workerFactory);
+        } else {
+            channelClass = NioServerSocketChannel.class;
+            bossGroup = new NioEventLoopGroup(bossSize, bossFactory);
+            workerGroup = new NioEventLoopGroup(workerSize, workerFactory);
+        }
 
         channelGroup = new DefaultChannelGroup("EndpointServerConnected", GlobalEventExecutor.INSTANCE);
 
         // Create ServerBootstrap
         serverBootstrap = new ServerBootstrap()
                 .group(bossGroup, workerGroup)
-                .channel(nettyType.serverChannel())
+                .channel(channelClass)
                 .childHandler(new EndpointInitializer(this, channelGroup))
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 
-        if (!nettyType.isUds()) {
+        if (!endpointBuilder.isUsingUDS()) {
             serverBootstrap
                     .childOption(ChannelOption.TCP_NODELAY, true)
                     .childOption(ChannelOption.SO_REUSEADDR, true)
@@ -63,10 +76,8 @@ public class EndpointServer extends AbstractServer {
         }
 
         // Check for extra epoll-options
-        if (nettyType.isEpoll() && !nettyType.isUds()) {
-            serverBootstrap
-                    .childOption(EpollChannelOption.EPOLL_MODE, EpollMode.LEVEL_TRIGGERED)
-                    .option(EpollChannelOption.TCP_FASTOPEN, 3);
+        if (Epoll.isAvailable()) {
+            serverBootstrap.childOption(EpollChannelOption.EPOLL_MODE, EpollMode.LEVEL_TRIGGERED);
         }
     }
 
@@ -77,7 +88,7 @@ public class EndpointServer extends AbstractServer {
     public boolean start() {
 
 
-        if (endpointBuilder.isUsingUDS() && !nettyType.isUds() && getPort() == -1) {
+        if (endpointBuilder.isUsingUDS() && !Epoll.isAvailable() && getPort() == -1) {
             onException(getClass(), new RuntimeException("Platform error! UnixDomainSocket is set, but no native transport available.."));
             return false;
         }
@@ -88,7 +99,7 @@ public class EndpointServer extends AbstractServer {
         }
 
         try {
-            SocketAddress address = endpointBuilder.isUsingUDS() && nettyType.isUds() ?
+            SocketAddress address = endpointBuilder.isUsingUDS() && Epoll.isAvailable() ?
                 new DomainSocketAddress(endpointBuilder.getUDSFile()) :
                 new InetSocketAddress(getPort());
 
@@ -197,8 +208,4 @@ public class EndpointServer extends AbstractServer {
         return this.channelGroup;
     }
 
-    @Override
-    public NettyType nettyType() {
-        return nettyType;
-    }
 }

@@ -4,21 +4,22 @@ package eu.koboo.endpoint.client;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.events.endpoint.EndpointEvent;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
-import eu.koboo.nettyutils.NettyType;
+import eu.koboo.endpoint.core.util.LocalThreadFactory;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
-import io.netty.channel.epoll.EpollChannelOption;
-import io.netty.channel.epoll.EpollMode;
+import io.netty.channel.epoll.*;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.channel.unix.DomainSocketAddress;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public class EndpointClient extends AbstractClient {
 
-    private final NettyType nettyType;
     private final EventLoopGroup group;
     private final Bootstrap bootstrap;
     private Channel channel;
@@ -30,27 +31,35 @@ public class EndpointClient extends AbstractClient {
     public EndpointClient(EndpointBuilder endpointBuilder, String host, int port) {
         super(endpointBuilder, host, port);
 
-        nettyType = NettyType.prepareType(endpointBuilder.isUsingUDS());
-
         // Get cores to calculate the event-loop-group sizes
         int cores = Runtime.getRuntime().availableProcessors();
         int workerSize = 4 * cores;
 
         // Check and initialize the event-loop-groups
-        group = nettyType.eventLoopGroup(workerSize, "EndpointClient");
+        ThreadFactory localFactory = new LocalThreadFactory("EndpointClient");
+        Class<? extends Channel> channelClass;
+        if (Epoll.isAvailable()) {
+            if (endpointBuilder.isUsingUDS()) {
+                channelClass = EpollDomainSocketChannel.class;
+            } else {
+                channelClass = EpollSocketChannel.class;
+            }
+            group = new EpollEventLoopGroup(workerSize, localFactory);
+        } else {
+            channelClass = NioSocketChannel.class;
+            group = new NioEventLoopGroup(workerSize, localFactory);
+        }
 
         // Create Bootstrap
         bootstrap = new Bootstrap()
                 .group(group)
-                .channel(nettyType.clientClass())
+                .channel(channelClass)
                 .handler(new EndpointInitializer(this, null))
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 
         // Check for extra epoll-options
-        if (nettyType.isEpoll() && !nettyType.isUds()) {
-            bootstrap
-                    .option(EpollChannelOption.EPOLL_MODE, EpollMode.LEVEL_TRIGGERED)
-                    .option(ChannelOption.TCP_FASTOPEN_CONNECT, true);
+        if (Epoll.isAvailable()) {
+            bootstrap.option(EpollChannelOption.EPOLL_MODE, EpollMode.LEVEL_TRIGGERED);
         }
     }
 
@@ -88,13 +97,12 @@ public class EndpointClient extends AbstractClient {
      */
     @Override
     public boolean close() {
-        if (isConnected()) {
-            try {
+        try {
+            if (channel != null && channel.isActive())
                 channel.close().sync();
-                return super.close();
-            } catch (InterruptedException e) {
-                onException(getClass(), e);
-            }
+            return super.close();
+        } catch (InterruptedException e) {
+            onException(getClass(), e);
         }
         return false;
     }
@@ -105,11 +113,9 @@ public class EndpointClient extends AbstractClient {
     @Override
     public boolean stop() {
         try {
-
             group.shutdownGracefully();
 
-            close();
-            return super.close();
+            return close();
         } catch (Exception e) {
             onException(getClass(), e);
         }
@@ -122,7 +128,7 @@ public class EndpointClient extends AbstractClient {
     @Override
     public boolean start() {
 
-        if (endpointBuilder.isUsingUDS() && !nettyType.isUds() && getHost() == null && getPort() == -1) {
+        if (endpointBuilder.isUsingUDS() && !Epoll.isAvailable() && getHost() == null && getPort() == -1) {
             onException(getClass(), new RuntimeException("Platform error! UnixDomainSocket is set, but no native transport available.."));
             return false;
         }
@@ -139,9 +145,7 @@ public class EndpointClient extends AbstractClient {
         }
 
         // Start the client and wait for the connection to be established.
-
-
-        SocketAddress address = endpointBuilder.isUsingUDS() && nettyType.isUds() ?
+        SocketAddress address = endpointBuilder.isUsingUDS() && Epoll.isAvailable() ?
                 new DomainSocketAddress(endpointBuilder.getUDSFile()) :
                 new InetSocketAddress(getHost(), getPort());
 
@@ -152,7 +156,7 @@ public class EndpointClient extends AbstractClient {
                 future.channel().close();
                 start();
             } else {
-                ChannelFutureListener closeListener = reconnectFuture -> scheduleReconnect(100);
+                ChannelFutureListener closeListener = reconnectFuture -> scheduleReconnect();
                 channel = future.channel();
                 channel.closeFuture().addListener(closeListener);
             }
@@ -164,24 +168,21 @@ public class EndpointClient extends AbstractClient {
                 throw new IllegalStateException("Connectivity error! Connection is not established!");
             return super.start();
         } catch (InterruptedException e) {
-            scheduleReconnect(1000);
+            scheduleReconnect();
         }
 
         return super.start();
     }
 
-    private void scheduleReconnect(long millis) {
-        group.schedule(() -> {
-            if (!isConnected()) {
-                eventHandler().handleEvent(new EndpointEvent(this, EndpointEvent.Action.RECONNECT));
-                start();
-            }
-        }, millis, TimeUnit.MILLISECONDS);
+    private void scheduleReconnect() {
+        if (builder().getAutoReconnect() != -1) {
+            long delay = TimeUnit.SECONDS.toMillis(builder().getAutoReconnect());
+            group.schedule(() -> {
+                if (!isConnected()) {
+                    eventHandler().handleEvent(new EndpointEvent(this, EndpointEvent.Action.RECONNECT));
+                    start();
+                }
+            }, delay, TimeUnit.MILLISECONDS);
+        }
     }
-
-    @Override
-    public NettyType nettyType() {
-        return nettyType;
-    }
-
 }
