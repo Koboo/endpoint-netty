@@ -5,10 +5,10 @@ import com.carrotsearch.junitbenchmarks.AbstractBenchmark;
 import eu.binflux.serial.core.SerializerPool;
 import eu.binflux.serial.fst.FSTSerialization;
 import eu.koboo.endpoint.client.EndpointClient;
-import eu.koboo.endpoint.core.protocols.serializable.SerializablePacket;
-import eu.koboo.endpoint.core.protocols.serializable.SerializableReceiveEvent;
+import eu.koboo.endpoint.core.codec.serial.SerializableCodec;
+import eu.koboo.endpoint.core.codec.serial.SerializablePacket;
+import eu.koboo.endpoint.core.events.ReceiveEvent;
 import eu.koboo.endpoint.server.EndpointServer;
-import eu.koboo.event.listener.EventListener;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -30,19 +30,17 @@ public class RandomRequestTest extends AbstractBenchmark {
     public static void setupClass() {
         System.out.println("== Test RandomRequest/Sec Behaviour == ");
 
-        StaticTest.BUILDER.serializer(new SerializerPool(FSTSerialization.class));
+        StaticTest.BUILDER
+                .codec(SerializableCodec.class);
 
         server = new EndpointServer(StaticTest.BUILDER, 54321);
-        server.eventHandler().register(new EventListener<SerializableReceiveEvent>() {
-            @Override
-            public void onEvent(SerializableReceiveEvent event) {
-                if(event.getTypeObject() instanceof RandomRequest) {
-                    RandomRequest request = (RandomRequest) event.getTypeObject();
-                    assertEquals(request.getTestString(), StaticTest.testString);
-                    assertEquals(request.getTestLong(), StaticTest.testLong);
-                    assertArrayEquals(request.getTestBytes(), StaticTest.testBytes);
-                    counter.getAndIncrement();
-                }
+        server.eventHandler().register(ReceiveEvent.class, event -> {
+            if (event.getTypeObject() instanceof RandomRequest) {
+                RandomRequest request = (RandomRequest) event.getTypeObject();
+                assertEquals(request.getTestString(), StaticTest.testString);
+                assertEquals(request.getTestLong(), StaticTest.testLong);
+                assertArrayEquals(request.getTestBytes(), StaticTest.testBytes);
+                counter.getAndIncrement();
             }
         });
 
@@ -76,7 +74,7 @@ public class RandomRequestTest extends AbstractBenchmark {
         final long time = (end - start);
         int packetsPerSec = StaticTest.getPacketsPerSec(amount, time);
         StaticTest.adjustAverage(average, packetsPerSec);
-        while(amount > counter.get()) {
+        while (amount > counter.get()) {
             Thread.sleep(200);
             System.out.println("Sleeping.. (" + counter.get() + "/" + amount + ")");
         }

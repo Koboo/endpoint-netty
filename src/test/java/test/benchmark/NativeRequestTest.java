@@ -3,12 +3,11 @@ package test.benchmark;
 
 import com.carrotsearch.junitbenchmarks.AbstractBenchmark;
 import eu.koboo.endpoint.client.EndpointClient;
-import eu.koboo.endpoint.core.builder.param.Protocol;
-import eu.koboo.endpoint.core.protocols.natives.NativePacket;
-import eu.koboo.endpoint.core.protocols.natives.NativeReceiveEvent;
+import eu.koboo.endpoint.core.codec.natives.NativeCodec;
+import eu.koboo.endpoint.core.codec.natives.NativePacket;
+import eu.koboo.endpoint.core.events.ReceiveEvent;
+import eu.koboo.endpoint.core.util.BufUtils;
 import eu.koboo.endpoint.server.EndpointServer;
-import eu.koboo.event.listener.EventListener;
-import eu.koboo.nettyutils.BufUtils;
 import io.netty.buffer.ByteBuf;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -32,19 +31,16 @@ public class NativeRequestTest extends AbstractBenchmark {
         System.out.println("== Test NativeRequest/Sec Behaviour == ");
 
         StaticTest.BUILDER
-                .protocol(Protocol.NATIVE);
+                .codec(NativeCodec.class);
 
         server = new EndpointServer(StaticTest.BUILDER, 54321);
-        server.eventHandler().register(new EventListener<NativeReceiveEvent>() {
-            @Override
-            public void onEvent(NativeReceiveEvent event) {
-                if(event.getTypeObject() instanceof NativeRequest) {
-                    NativeRequest request = (NativeRequest) event.getTypeObject();
-                    assertEquals(request.getTestString(), StaticTest.testString);
-                    assertEquals(request.getTestLong(), StaticTest.testLong);
-                    assertArrayEquals(request.getTestBytes(), StaticTest.testBytes);
-                    counter.getAndIncrement();
-                }
+        server.eventHandler().register(ReceiveEvent.class, event -> {
+            if (event.getTypeObject() instanceof NativeRequest) {
+                NativeRequest request = (NativeRequest) event.getTypeObject();
+                assertEquals(request.getTestString(), StaticTest.testString);
+                assertEquals(request.getTestLong(), StaticTest.testLong);
+                assertArrayEquals(request.getTestBytes(), StaticTest.testBytes);
+                counter.getAndIncrement();
             }
         });
 
@@ -78,7 +74,7 @@ public class NativeRequestTest extends AbstractBenchmark {
         final long time = (end - start);
         int packetsPerSec = StaticTest.getPacketsPerSec(amount, time);
         StaticTest.adjustAverage(average, packetsPerSec);
-        while(amount > counter.get()) {
+        while (amount > counter.get()) {
             Thread.sleep(200);
             System.out.println("Sleeping.. (" + counter.get() + "/" + amount + ")");
         }

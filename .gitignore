@@ -3,9 +3,9 @@
 /gradle/
 /.idea/
 /out/
-/netty-client/build/
-/netty-client/out/
-/netty-core/out/
-/netty-core/build/
-/netty-server/build/
-/netty-server/out/
+/endpoint-client/build
+/endpoint-codec-json/build
+/endpoint-codec-native/build
+/endpoint-codec-serial/build
+/endpoint-core/build
+/endpoint-server/build

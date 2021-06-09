@@ -1,5 +1,8 @@
 rootProject.name = 'endpoint-netty'
-include 'netty-client'
-include 'netty-core'
-include 'netty-server'
+include 'endpoint-client'
+include 'endpoint-core'
+include 'endpoint-server'
+include 'endpoint-codec-native'
+include 'endpoint-codec-serial'
+include 'endpoint-codec-json'
 
