@@ -2,8 +2,6 @@
 package test.benchmark;
 
 import com.carrotsearch.junitbenchmarks.AbstractBenchmark;
-import eu.binflux.serial.core.SerializerPool;
-import eu.binflux.serial.fst.FSTSerialization;
 import eu.koboo.endpoint.client.EndpointClient;
 import eu.koboo.endpoint.core.codec.serial.SerializableCodec;
 import eu.koboo.endpoint.core.codec.serial.SerializablePacket;
@@ -32,8 +30,7 @@ public class DataRequestTest extends AbstractBenchmark {
         System.out.println("== Test DataRequest/Sec Behaviour == ");
 
         StaticTest.BUILDER
-                .codec(SerializableCodec.class)
-                .serializer(new SerializerPool(FSTSerialization.class));
+                .codec(SerializableCodec.class);
 
         server = new EndpointServer(StaticTest.BUILDER, 54321);
 

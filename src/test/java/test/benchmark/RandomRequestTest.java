@@ -31,8 +31,7 @@ public class RandomRequestTest extends AbstractBenchmark {
         System.out.println("== Test RandomRequest/Sec Behaviour == ");
 
         StaticTest.BUILDER
-                .codec(SerializableCodec.class)
-                .serializer(new SerializerPool(FSTSerialization.class));
+                .codec(SerializableCodec.class);
 
         server = new EndpointServer(StaticTest.BUILDER, 54321);
         server.eventHandler().register(ReceiveEvent.class, event -> {
