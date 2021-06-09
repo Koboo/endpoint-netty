@@ -10,13 +10,11 @@ Simply explained: Send (almost) every object back and forth between client or se
 
 The [original project](https://github.com/EsotericSoftware/kryonetty) was
 developed by [EsotericSoftware](https://github.com/EsotericSoftware).
-Since some changes on the official repository were
-not accepted and [Koboo](https://github.com/Koboo) had explicit changes take place,
-he had created a [fork](https://github.com/BinfluxDev/binflux-netty) to make his customization.
+Since I made some explicit changes, I created a [fork](https://github.com/BinfluxDev/binflux-netty) to make my own customizations.
 After some time and through more special projects,
-Koboo had decided to release a private customized version and continue working on it.
+I've decided to release a private customized version and continue working on it.
 
-Now the project is called EndpointNetty and is at the current state at version 2.0
+Now the project is called EndpointNetty.
 
 ## Overview
 
