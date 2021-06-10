@@ -27,7 +27,6 @@ public class BufUtils {
         int integer = readVarInt(input);
         byte[] buffer = new byte[integer];
         input.readBytes(buffer, 0, integer);
-
         return new String(buffer, StandardCharsets.UTF_8);
     }
 
@@ -175,7 +174,6 @@ public class BufUtils {
         buf.readBytes(array);
         return array;
     }
-
 
     public static byte[] readArray(ByteBuf input) {
         int len = readVarInt(input);
