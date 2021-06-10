@@ -1,8 +1,8 @@
 ![Binflux-Netty](binflux-netty.png)
 
-Endpoint-Netty allows the use of different serialization libraries or 
-native read/write calls to automatically and efficiently transfer object 
-graphs across the network by using [Netty](http://netty.io/).
+Endpoint-Netty facilitates the integration of various serialization libraries into 
+an environment supported by Netty and also offers the possibility to implement own codecs. 
+By default, ``ByteBuf``, ``Serializable`` and ``JSONObject`` are supported by the respective codecs.
 
 Simply explained: Send (almost) every object back and forth between client or server.
 
@@ -24,7 +24,6 @@ This overview offers a simple step by step guide to get started with binflux-net
   * [EndpointBuilder](#what-is-the-endpointbuilder)
   * [Basic](#basic-options)
   * [Timeouts](#timeout-options)
-  * [Serialization](#serializer-options)
 #### Usage
   * [Build Endpoints](#how-to-build-the-endpoints)
   * [Start Endpoints](#how-to-start-the-endpoints)
