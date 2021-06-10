@@ -60,7 +60,7 @@ EndpointBuilder builder = EndpointBuilder.newBuilder();
     * default: `ErrorMode.SERVICE`
 * `autoReconnect(int seconds)`
     * Force the client to reconnect after given seconds
-    * default: '3 seconds'
+    * default: '-1 seconds' (disabled)
     * `-1` to disbale auto-reconnect
 
 #### Timeout options:
