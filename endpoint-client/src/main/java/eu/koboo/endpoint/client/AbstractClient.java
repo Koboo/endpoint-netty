@@ -2,6 +2,7 @@ package eu.koboo.endpoint.client;
 
 import eu.koboo.endpoint.core.AbstractEndpoint;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
+import io.netty.channel.ChannelFuture;
 
 public abstract class AbstractClient extends AbstractEndpoint {
 
@@ -18,25 +19,12 @@ public abstract class AbstractClient extends AbstractEndpoint {
     }
 
     /**
-     * @param object Send object to server
-     * @param sync Handle `send`-call sync or async
-     */
-    public abstract void send(Object object, boolean sync);
-
-    /**
-     * @param object Send object to server
-     */
-    public void send(Object object) {
-        send(object, false);
-    }
-
-    /**
      * @return Check if client is connected to server
      */
     public abstract boolean isConnected();
 
     /**
-     * @return returns true, because client
+     * @return true, because we are the client
      */
     @Override
     public boolean isClient() {
@@ -66,4 +54,15 @@ public abstract class AbstractClient extends AbstractEndpoint {
     public int getPort() {
         return port;
     }
+
+    /**
+     * @param object Send object to server
+     */
+    public abstract ChannelFuture send(Object object);
+
+    /**
+     * @param object Send object to server
+     */
+    public abstract void sendAndForget(Object object);
+
 }

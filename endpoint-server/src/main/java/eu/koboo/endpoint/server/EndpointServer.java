@@ -5,10 +5,7 @@ import eu.koboo.endpoint.core.handler.EndpointInitializer;
 import eu.koboo.endpoint.core.util.LocalThreadFactory;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
-import io.netty.channel.ServerChannel;
+import io.netty.channel.*;
 import io.netty.channel.epoll.*;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
@@ -19,6 +16,8 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
 
 public class EndpointServer extends AbstractServer {
@@ -44,8 +43,8 @@ public class EndpointServer extends AbstractServer {
         ThreadFactory bossFactory = new LocalThreadFactory("EndpointServerBoss");
         ThreadFactory workerFactory = new LocalThreadFactory("EndpointServerWorker");
         Class<? extends ServerChannel> channelClass;
-        if(Epoll.isAvailable()) {
-            if(endpointBuilder.isUsingUDS()) {
+        if (Epoll.isAvailable()) {
+            if (endpointBuilder.isUsingUDS()) {
                 channelClass = EpollServerDomainSocketChannel.class;
             } else {
                 channelClass = EpollServerSocketChannel.class;
@@ -100,8 +99,8 @@ public class EndpointServer extends AbstractServer {
 
         try {
             SocketAddress address = endpointBuilder.isUsingUDS() && Epoll.isAvailable() ?
-                new DomainSocketAddress(endpointBuilder.getUDSFile()) :
-                new InetSocketAddress(getPort());
+                    new DomainSocketAddress(endpointBuilder.getUDSFile()) :
+                    new InetSocketAddress(getPort());
 
             // Start the server and wait for socket to be bind to the given port
             channel = serverBootstrap.bind(address).sync().channel();
@@ -147,57 +146,49 @@ public class EndpointServer extends AbstractServer {
         return false;
     }
 
+
     /**
      * Write the given object to the channel.
      *
      * @param object
-     * @param sync
      */
     @Override
-    public void send(Channel channel, Object object, boolean sync) {
-        if (sync)
-            try {
-                channel.writeAndFlush(object).sync();
-            } catch (InterruptedException e) {
-                onException(getClass(), e);
-            }
-        else
-            channel.writeAndFlush(object);
+    public ChannelFuture send(Channel channel, Object object) {
+        return channel.writeAndFlush(object);
     }
 
     /**
-     * Write the given object to the channel. This will be processed async
+     * Write the given object to the channel.
      *
      * @param object
      */
-    public void send(Channel channel, Object object) {
-        // use send-method, default-behaviour: async
-        send(channel, object, false);
+    public void sendAndForget(Channel channel, Object object) {
+        send(channel, object);
     }
-
 
     /**
      * Write the given object to all channels.
      *
      * @param object
-     * @param sync
      */
     @Override
-    public void sendAll(Object object, boolean sync) {
+    public Map<Channel, ChannelFuture> broadcast(Object object) {
+        Map<Channel, ChannelFuture> channelFutureMap = new ConcurrentHashMap<>();
         for (Channel channel : channelGroup) {
-            send(channel, object, sync);
+            ChannelFuture future = send(channel, object);
+            channelFutureMap.put(channel, future);
         }
+        return channelFutureMap;
     }
 
     /**
-     * Write the given object to all channels. This will be processed async
+     * Write the given object to all channels.
      *
      * @param object
      */
-    public void sendAll(Object object) {
-        for (Channel channel : channelGroup) {
-            send(channel, object);
-        }
+    @Override
+    public void broadcastAndForget(Object object) {
+        broadcast(object).clear();
     }
 
     /**

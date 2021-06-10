@@ -17,7 +17,7 @@ public abstract class AbstractEndpoint implements Endpoint {
     public AbstractEndpoint(EndpointBuilder endpointBuilder) {
         this.endpointBuilder = endpointBuilder;
         this.eventBus = new EventHandler();
-        this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
     }
 
     @Override
@@ -46,12 +46,7 @@ public abstract class AbstractEndpoint implements Endpoint {
 
     @Override
     public EventHandler eventHandler() {
-        return this.eventBus;
-    }
-
-    @Override
-    public ExecutorService executor() {
-        return this.executor;
+        return eventBus;
     }
 
     @Override

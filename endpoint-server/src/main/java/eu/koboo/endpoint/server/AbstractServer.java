@@ -3,7 +3,10 @@ package eu.koboo.endpoint.server;
 import eu.koboo.endpoint.core.AbstractEndpoint;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 import io.netty.channel.group.ChannelGroup;
+
+import java.util.Map;
 
 public abstract class AbstractServer extends AbstractEndpoint {
 
@@ -22,15 +25,25 @@ public abstract class AbstractServer extends AbstractEndpoint {
     /**
      * @param object Send object to client
      */
-    public abstract void send(Channel channel, Object object, boolean sync);
+    public abstract ChannelFuture send(Channel channel, Object object);
 
     /**
-     * @param object Send object to all clients
+     * @param object Send object to client
      */
-    public abstract void sendAll(Object object, boolean sync);
+    public abstract void sendAndForget(Channel channel, Object object);
 
     /**
-     * @return returns false, because server
+     * @param object Broadcast object
+     */
+    public abstract Map<Channel, ChannelFuture> broadcast(Object object);
+
+    /**
+     * @param object Broadcast object
+     */
+    public abstract void broadcastAndForget(Object object);
+
+    /**
+     * @return false, because we are the server
      */
     @Override
     public boolean isClient() {
