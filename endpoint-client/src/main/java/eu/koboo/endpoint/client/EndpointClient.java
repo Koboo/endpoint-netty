@@ -64,27 +64,6 @@ public class EndpointClient extends AbstractClient {
     }
 
     /**
-     * Write the given object to the channel.
-     *
-     * @param object
-     * @param sync
-     */
-    @Override
-    public void send(Object object, boolean sync) {
-        try {
-            if (isConnected()) {
-                if (sync) {
-                    channel.writeAndFlush(object).sync();
-                } else {
-                    executor().execute(() -> channel.writeAndFlush(object));
-                }
-            }
-        } catch (Exception e) {
-            onException(getClass(), e);
-        }
-    }
-
-    /**
      * Return if the client is connected or not
      */
     @Override
@@ -153,7 +132,8 @@ public class EndpointClient extends AbstractClient {
 
         ChannelFutureListener connectListener = future -> {
             if (!future.isSuccess()) {
-                future.channel().close();
+                if (future.channel() != null && future.channel().isActive())
+                    future.channel().close();
                 start();
             } else {
                 ChannelFutureListener closeListener = reconnectFuture -> scheduleReconnect();
@@ -174,12 +154,42 @@ public class EndpointClient extends AbstractClient {
         return super.start();
     }
 
+
+    /**
+     * Write the given object to the server
+     * and do something with the returned ChannelFuture.
+     *
+     * @param object
+     */
+    @Override
+    public ChannelFuture send(Object object) {
+        try {
+            if (isConnected()) {
+                return channel.writeAndFlush(object);
+            }
+        } catch (Exception e) {
+            onException(getClass(), e);
+        }
+        return null;
+    }
+
+    /**
+     * Write the given object to the server
+     * and forget the send-future
+     *
+     * @param object
+     */
+    @Override
+    public void sendAndForget(Object object) {
+        send(object);
+    }
+
     private void scheduleReconnect() {
         if (builder().getAutoReconnect() != -1) {
             long delay = TimeUnit.SECONDS.toMillis(builder().getAutoReconnect());
             group.schedule(() -> {
                 if (!isConnected()) {
-                    eventHandler().handleEvent(new EndpointEvent(this, EndpointEvent.Action.RECONNECT));
+                    eventHandler().fireEvent(new EndpointEvent(this, EndpointEvent.Action.RECONNECT));
                     start();
                 }
             }, delay, TimeUnit.MILLISECONDS);
