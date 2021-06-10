@@ -9,7 +9,15 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class EndpointBuilder {
 
+    /**
+     * Method is deprecated. Use #builder() instead!
+     */
+    @Deprecated
     public static EndpointBuilder newBuilder() {
+        return builder();
+    }
+
+    public static EndpointBuilder builder() {
         return new EndpointBuilder();
     }
 
@@ -26,7 +34,7 @@ public class EndpointBuilder {
 
     private boolean logging = false;
 
-    private int autoReconnect = 3;
+    private int autoReconnect = -1;
 
     private final Map<Integer, Class<?>> packetRegistry = new ConcurrentHashMap<>();
 
