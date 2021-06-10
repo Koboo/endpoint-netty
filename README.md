@@ -10,13 +10,11 @@ Simply explained: Send (almost) every object back and forth between client or se
 
 The [original project](https://github.com/EsotericSoftware/kryonetty) was
 developed by [EsotericSoftware](https://github.com/EsotericSoftware).
-Since some changes on the official repository were
-not accepted and [Koboo](https://github.com/Koboo) had explicit changes take place,
-he had created a [fork](https://github.com/BinfluxDev/binflux-netty) to make his customization.
+Since I made some explicit changes, I created a [fork](https://github.com/BinfluxDev/binflux-netty) to make my own customizations.
 After some time and through more special projects,
-Koboo had decided to release a private customized version and continue working on it.
+I've decided to release a private customized version and continue working on it.
 
-Now the project is called EndpointNetty and is at the current state at version 2.0
+Now the project is called EndpointNetty.
 
 ## Overview
 
@@ -48,9 +46,9 @@ EndpointBuilder builder = EndpointBuilder.newBuilder();
 * `logging(boolean value)` 
     * enables/disables netty-built-in `LoggingHandler.class` (helpful for debugging)
     * default: disabled
-* `protocol(Protocol protocol)` 
-    * Choose between `SERIALIZABLE`, `NATIVE`
-    * default: Protocol.SERIALIZABLE
+* `codec(Class<? extends AbstractEndpointCodec> clazz)` 
+    * Choose between `NativeCodec.class`, `SerializableCodec.class` and 'JsonCodec.class'
+    * default: `NativeCodec.class`
 * `compression(Compression compression)`
     * Choose between compressions `GZIP`, `ZLIB`, `SNAPPY`
     * default: `Compression.GZIP`
@@ -60,6 +58,10 @@ EndpointBuilder builder = EndpointBuilder.newBuilder();
 * `eventMode(EventMode eventMode)`
     * Choose between modes `SYNC`, `SERVICE`, `EVENT_LOOP`
     * default: `ErrorMode.SERVICE`
+* `autoReconnect(int seconds)`
+    * Force the client to reconnect after given seconds
+    * default: '3 seconds'
+    * `-1` to disbale auto-reconnect
 
 #### Timeout options:
 * `idleState(int readTimeout, int writeTimeout)`
@@ -82,19 +84,6 @@ from the server to the client, a ReadTimeout is thrown.
     * default-action: no action
 
 (Note: only the client throws this events.)
-
-#### Serializer options:
-* `serializer(SerializerPool pool)` 
-    * sets the specific `SerializerPool` with a `Serialization`-class
-    * default: `JavaSerialization`
-
-Example usage:
-```java
-endpointBuilder.serializer(new SerializerPool(KryoSerialization.class));
-```
-
-All serialization is based on [Serialization](https://github.com/Koboo/serilization). 
-More documentation in the project there
 
 ## How to build the Endpoints:
 
@@ -142,16 +131,17 @@ client.start();
 
 ## Default Events
 
-The event system is completely `Consumer<T>` based. There are some default events:
+The event system is completely `Consumer`-based. These are the default events:
 
 * `ChannelActionEvent`
-    * server/client: channel connects/disconnects
+    * server/client: channel change connection state
+    * action: connect, disconnect
     
-* `NativeReceiveEvent`/`SerializableEvent`
+* `ReceiveEvent`
     * server/client: receives object from client/server by the specific protocol
     
 * `ErrorEvent`
-    * server/client: exception occured
+    * server/client: exception occured (only is thrown by `ErrorMode.EVENT`)
     
 * `TimeoutEvent` 
     * client: read-/write-timeout
@@ -159,10 +149,7 @@ The event system is completely `Consumer<T>` based. There are some default event
     
 * `EndpointEvent`
     * endpoint: the endpoint
-    * action: start, stop, close, initialize
-
-The entire event system is based on the [EventBus](https://github.com/Koboo/event-bus).
-For further documentation see the project there.
+    * action: start, stop, close
 
 ## Add as dependency
 
@@ -174,23 +161,25 @@ repositories {
 }
 ```
 
-And add it as dependency. (e.g. `2.0` is the release-version)
+And add it as dependency. (e.g. `2.3` is the release-version)
 ```java
 dependencies {
     // !Always needed! 
-    compile 'eu.koboo:netty-core:2.0'
+    compile 'eu.koboo:endpoint-core:2.3'
+    
+    // dependency to use codec-native (!Add dependency by client and server!)
+    compile 'eu.koboo:endpoint-codec-native:2.3'
     
     // client-related     
-    compile 'eu.koboo:netty-client:2.0'
+    compile 'eu.koboo:endpoint-client:2.3'
         
     // server-related     
-    compile 'eu.koboo:netty-server:2.0'
+    compile 'eu.koboo:endpoint-server:2.3'
 }
 ```
 
 ## Build from source
 
 * Clone repository
-* Run `./gradlew buildApp`
-* Output `/build/libs/endpoint-netty-{version}-all.jar`
-* Build task [build.gradle](https://github.com/Koboo/endpoint-netty/blob/master/build.gradle)
+* Run `./gradlew build`
+* Output `/build/libs/endpoint-netty-{version}.jar`
