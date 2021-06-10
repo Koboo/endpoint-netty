@@ -1,7 +1,6 @@
 import eu.koboo.endpoint.client.EndpointClient;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
-import eu.koboo.endpoint.core.builder.param.EventMode;
 import eu.koboo.endpoint.core.codec.serial.SerializableCodec;
 import eu.koboo.endpoint.core.codec.serial.SerializablePacket;
 import eu.koboo.endpoint.core.events.ReceiveEvent;
@@ -16,7 +15,6 @@ public class UDSTest {
         EndpointBuilder builder = EndpointBuilder.newBuilder()
                 .codec(SerializableCodec.class)
                 .errorMode(ErrorMode.STACK_TRACE)
-                .eventMode(EventMode.SYNC)
                 .logging(true);
         System.out.println("Setting up builder..");
 
@@ -57,7 +55,7 @@ public class UDSTest {
         Thread.sleep(2500);
 
         System.out.println("Sending...");
-        client.send(new UDSPacket("Striiiiing", -5000, 123456789), true);
+        client.send(new UDSPacket("Striiiiing", -5000, 123456789)).sync();
         System.out.println("Sent!");
     }
 

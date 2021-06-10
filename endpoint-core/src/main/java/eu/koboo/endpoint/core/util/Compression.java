@@ -9,6 +9,7 @@ import io.netty.handler.codec.compression.ZlibCodecFactory;
 import io.netty.handler.codec.compression.ZlibWrapper;
 
 public enum Compression {
+
     NONE {
         public MessageToByteEncoder<ByteBuf> getEncoder() {
             return null;
@@ -46,7 +47,7 @@ public enum Compression {
         }
     };
 
-    private Compression() {
+    Compression() {
     }
 
     public abstract MessageToByteEncoder<ByteBuf> getEncoder();

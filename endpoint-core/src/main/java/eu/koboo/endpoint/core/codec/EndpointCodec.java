@@ -8,5 +8,4 @@ public interface EndpointCodec<T> {
     byte[] encodePacket(Channel channel, T packet) throws Exception;
 
     T decodePacket(Channel channel, ByteBuf in) throws Exception;
-
 }

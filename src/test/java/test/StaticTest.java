@@ -2,7 +2,6 @@ package test;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
-import eu.koboo.endpoint.core.builder.param.EventMode;
 import test.benchmark.DataRequestTest;
 import test.benchmark.NativeRequestTest;
 import test.benchmark.RandomRequestTest;
@@ -26,8 +25,7 @@ public class StaticTest {
     static {
         BUILDER = EndpointBuilder.newBuilder()
                 .logging(false)
-                .errorMode(ErrorMode.STACK_TRACE)
-                .eventMode(EventMode.SERVICE);
+                .errorMode(ErrorMode.STACK_TRACE);
 
         Random random = new Random();
         testBytes = new byte[1000];
