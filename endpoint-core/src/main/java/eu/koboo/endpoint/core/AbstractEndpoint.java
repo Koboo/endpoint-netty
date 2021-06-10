@@ -22,20 +22,20 @@ public abstract class AbstractEndpoint implements Endpoint {
 
     @Override
     public boolean start() {
-        eventBus.handleEvent(new EndpointEvent(this, EndpointEvent.Action.START));
+        eventBus.fireEvent(new EndpointEvent(this, EndpointEvent.Action.START));
         return true;
     }
 
     @Override
     public boolean stop() {
         executor.shutdownNow();
-        eventBus.handleEvent(new EndpointEvent(this, EndpointEvent.Action.STOP));
+        eventBus.fireEvent(new EndpointEvent(this, EndpointEvent.Action.STOP));
         return true;
     }
 
     @Override
     public boolean close() {
-        eventBus.handleEvent(new EndpointEvent(this, EndpointEvent.Action.CLOSE));
+        eventBus.fireEvent(new EndpointEvent(this, EndpointEvent.Action.CLOSE));
         return true;
     }
 
@@ -53,7 +53,7 @@ public abstract class AbstractEndpoint implements Endpoint {
     public void onException(Class clazz, Throwable error) {
         switch (endpointBuilder.getErrorMode()) {
             case EVENT:
-                eventBus.handleEvent(new ErrorEvent(clazz, error));
+                eventBus.fireEvent(new ErrorEvent(clazz, error));
                 break;
             case STACK_TRACE:
                 error.printStackTrace();

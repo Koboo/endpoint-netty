@@ -1,7 +1,6 @@
 package eu.koboo.endpoint.core.builder;
 
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
-import eu.koboo.endpoint.core.builder.param.EventMode;
 import eu.koboo.endpoint.core.codec.AbstractEndpointCodec;
 import eu.koboo.endpoint.core.util.Compression;
 
@@ -18,7 +17,6 @@ public class EndpointBuilder {
 
     private Compression compression = Compression.NONE;
     private ErrorMode errorMode = ErrorMode.STACK_TRACE;
-    private EventMode eventMode = EventMode.EVENT_LOOP;
 
     private String udsFile = "/tmp/endpoint-netty/uds.sock";
 
@@ -50,11 +48,6 @@ public class EndpointBuilder {
         return this;
     }
 
-    public EndpointBuilder eventMode(EventMode eventMode) {
-        this.eventMode = eventMode;
-        return this;
-    }
-
     public EndpointBuilder useUDS(String socketFile) {
         this.udsFile = socketFile;
         return this;
@@ -82,23 +75,22 @@ public class EndpointBuilder {
         return this;
     }
 
-    public EndpointBuilder registerPacket(int oid, Class<?> clazz) {
-        if(packetRegistry.containsKey(oid))
+    public EndpointBuilder registerPacket(int id, Class<?> clazz) {
+        if (packetRegistry.containsKey(id))
             throw new IllegalArgumentException("Id already used, please choose another.");
-        packetRegistry.put(oid, clazz);
+        packetRegistry.put(id, clazz);
         return this;
     }
 
-    public Class<?> getClassById(int oid) {
-        return packetRegistry.getOrDefault(oid, null);
+    public Class<?> getClassById(int id) {
+        return packetRegistry.getOrDefault(id, null);
     }
 
     public int getIdByClass(Class<?> clazz) {
-        for(Map.Entry<Integer, Class<?>> entry : packetRegistry.entrySet()) {
-            if(entry.getValue().getSimpleName().equalsIgnoreCase(clazz.getSimpleName())) {
+        for (Map.Entry<Integer, Class<?>> entry : packetRegistry.entrySet())
+            if (entry.getValue().getSimpleName().equalsIgnoreCase(clazz.getSimpleName()))
                 return entry.getKey();
-            }
-        }
+
         return -1;
     }
 
@@ -112,10 +104,6 @@ public class EndpointBuilder {
 
     public ErrorMode getErrorMode() {
         return errorMode;
-    }
-
-    public EventMode getEventMode() {
-        return eventMode;
     }
 
     public boolean isUsingUDS() {

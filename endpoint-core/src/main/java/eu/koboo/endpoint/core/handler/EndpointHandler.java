@@ -24,7 +24,7 @@ public class EndpointHandler extends ChannelInboundHandlerAdapter {
             super.channelActive(ctx);
             if (!endpoint.isClient() && channels != null)
                 channels.add(ctx.channel());
-            endpoint.eventHandler().handleEvent(new ChannelActionEvent(ctx.channel(), ChannelActionEvent.Action.CONNECT));
+            endpoint.eventHandler().fireEvent(new ChannelActionEvent(ctx.channel(), ChannelActionEvent.Action.CONNECT));
         } catch (Exception e) {
             endpoint.onException(EndpointHandler.class, e);
         }
@@ -36,7 +36,7 @@ public class EndpointHandler extends ChannelInboundHandlerAdapter {
             super.channelInactive(ctx);
             if (!endpoint.isClient() && channels != null)
                 channels.remove(ctx.channel());
-            endpoint.eventHandler().handleEvent(new ChannelActionEvent(ctx.channel(), ChannelActionEvent.Action.DISCONNECT));
+            endpoint.eventHandler().fireEvent(new ChannelActionEvent(ctx.channel(), ChannelActionEvent.Action.DISCONNECT));
         } catch (Exception e) {
             endpoint.onException(EndpointHandler.class, e);
         }
@@ -49,17 +49,7 @@ public class EndpointHandler extends ChannelInboundHandlerAdapter {
             super.channelRead(ctx, msg);
 
             ReceiveEvent event = new ReceiveEvent(ctx.channel(), msg);
-            switch (endpoint.builder().getEventMode()) {
-                case SYNC:
-                    endpoint.eventHandler().handleEvent(event);
-                    break;
-                case SERVICE:
-                    endpoint.executor().execute(() -> endpoint.eventHandler().handleEvent(event));
-                    break;
-                case EVENT_LOOP:
-                    ctx.executor().execute(() -> endpoint.eventHandler().handleEvent(event));
-                    break;
-            }
+            endpoint.eventHandler().fireEvent(event);
         } catch (Exception e) {
             ReferenceCountUtil.release(msg);
             endpoint.onException(EndpointHandler.class, e);
@@ -69,8 +59,8 @@ public class EndpointHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
         try {
-            super.channelReadComplete(ctx);
             ctx.flush();
+            super.channelReadComplete(ctx);
         } catch (Exception e) {
             endpoint.onException(EndpointHandler.class, e);
         }

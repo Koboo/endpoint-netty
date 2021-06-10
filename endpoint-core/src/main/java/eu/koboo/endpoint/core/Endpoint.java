@@ -18,11 +18,6 @@ public interface Endpoint {
     EventHandler eventHandler();
 
     /**
-     * @return Returns the Endpoint-ExecutorService instance
-     */
-    ExecutorService executor();
-
-    /**
      * @return Starts the Endpoint-connection and returns true if was successful
      */
     boolean start();
