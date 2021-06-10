@@ -10,6 +10,11 @@ import eu.koboo.endpoint.server.EndpointServer;
 import java.util.function.Consumer;
 
 public class UDSTest {
+    /*
+
+    This class was not written as unit-test, because it is compiled and executed directly on a Linux machine.
+
+     */
 
     public static void main(String[] args) throws InterruptedException {
         EndpointBuilder builder = EndpointBuilder.newBuilder()
