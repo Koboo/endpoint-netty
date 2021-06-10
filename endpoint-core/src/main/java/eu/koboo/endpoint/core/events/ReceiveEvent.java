@@ -16,7 +16,6 @@ public class ReceiveEvent implements EventHandler.ConsumerEvent {
         return ctx;
     }
 
-
     public Object getObject() {
         return object;
     }

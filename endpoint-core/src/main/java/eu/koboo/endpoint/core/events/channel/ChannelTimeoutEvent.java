@@ -21,7 +21,8 @@ public class ChannelTimeoutEvent implements EventHandler.ConsumerEvent {
         return type;
     }
 
-    public static enum Type {
-        READ, WRITE;
+    public enum Type {
+
+        READ, WRITE
     }
 }

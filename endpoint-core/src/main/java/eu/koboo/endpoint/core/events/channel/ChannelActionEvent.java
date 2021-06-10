@@ -21,10 +21,8 @@ public class ChannelActionEvent implements EventHandler.ConsumerEvent {
         return action;
     }
 
-    public static enum Action {
+    public enum Action {
 
-        CONNECT,
-        DISCONNECT;
-
+        CONNECT, DISCONNECT
     }
 }

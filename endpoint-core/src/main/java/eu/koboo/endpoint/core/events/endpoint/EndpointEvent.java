@@ -21,13 +21,9 @@ public class EndpointEvent implements EventHandler.ConsumerEvent {
         return action;
     }
 
-    public static enum Action {
+    public enum Action {
 
-        START,
-        RECONNECT,
-        STOP,
-        CLOSE;
-
+        START, RECONNECT, STOP, CLOSE
     }
 
 }
