@@ -17,10 +17,6 @@ public abstract class AbstractEndpointCodec<T> extends ByteToMessageCodec<T> imp
         this.endpoint = endpoint;
     }
 
-    public abstract byte[] encodePacket(Channel channel, T packet) throws Exception;
-
-    public abstract T decodePacket(Channel channel, ByteBuf in) throws Exception;
-
     @Override
     protected void encode(ChannelHandlerContext ctx, T nativePacket, ByteBuf out) {
         try {
