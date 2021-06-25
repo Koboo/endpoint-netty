@@ -1,7 +1,7 @@
 import eu.koboo.endpoint.client.EndpointClient;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
-import eu.koboo.endpoint.core.codec.NativePacket;
+import eu.koboo.endpoint.core.codec.EndpointPacket;
 import eu.koboo.endpoint.core.events.ReceiveEvent;
 import eu.koboo.endpoint.core.events.channel.ChannelAction;
 import eu.koboo.endpoint.core.events.channel.ChannelActionEvent;
@@ -65,7 +65,7 @@ public class UDSTest {
         System.out.println("Sent!");
     }
 
-    public static class UDSPacket implements NativePacket {
+    public static class UDSPacket implements EndpointPacket {
 
         String testString;
         long testLong;

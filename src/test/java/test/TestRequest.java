@@ -1,10 +1,10 @@
 package test;
 
-import eu.koboo.endpoint.core.codec.NativePacket;
+import eu.koboo.endpoint.core.codec.EndpointPacket;
 import eu.koboo.endpoint.core.util.BufUtils;
 import io.netty.buffer.ByteBuf;
 
-public class TestRequest implements NativePacket {
+public class TestRequest implements EndpointPacket {
 
     String testString;
     long testLong;

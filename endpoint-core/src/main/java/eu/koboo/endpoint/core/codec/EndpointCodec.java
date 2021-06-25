@@ -11,7 +11,7 @@ import io.netty.handler.codec.ByteToMessageCodec;
 import javax.crypto.SecretKey;
 import java.util.List;
 
-public class EndpointCodec extends ByteToMessageCodec<NativePacket> {
+public class EndpointCodec extends ByteToMessageCodec<EndpointPacket> {
 
     protected final Endpoint endpoint;
     private final SecretKey secretKey;
@@ -25,9 +25,9 @@ public class EndpointCodec extends ByteToMessageCodec<NativePacket> {
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, NativePacket nativePacket, ByteBuf out) {
+    protected void encode(ChannelHandlerContext ctx, EndpointPacket endpointPacket, ByteBuf out) {
         try {
-            byte[] encoded = encodePacket(ctx.channel(), nativePacket);
+            byte[] encoded = encodePacket(ctx.channel(), endpointPacket);
 
             if (encoded.length > 1) {
 
@@ -63,7 +63,7 @@ public class EndpointCodec extends ByteToMessageCodec<NativePacket> {
             ByteBuf inBuffer = ctx.alloc().buffer(contentLength);
             in.readBytes(inBuffer);
 
-            NativePacket packet = decodePacket(ctx.channel(), inBuffer);
+            EndpointPacket packet = decodePacket(ctx.channel(), inBuffer);
 
             if (packet != null) {
                 out.add(packet);
@@ -76,7 +76,7 @@ public class EndpointCodec extends ByteToMessageCodec<NativePacket> {
         }
     }
 
-    public byte[] encodePacket(Channel channel, NativePacket packet) throws Exception {
+    public byte[] encodePacket(Channel channel, EndpointPacket packet) throws Exception {
 
         ByteBuf payload = channel.alloc().buffer();
 
@@ -99,7 +99,7 @@ public class EndpointCodec extends ByteToMessageCodec<NativePacket> {
         return null;
     }
 
-    public NativePacket decodePacket(Channel channel, ByteBuf in) throws Exception {
+    public EndpointPacket decodePacket(Channel channel, ByteBuf in) throws Exception {
 
         if(secretKey != null) {
             byte[] encrypted = new byte[in.readableBytes()];
@@ -114,12 +114,12 @@ public class EndpointCodec extends ByteToMessageCodec<NativePacket> {
 
         Class<?> clazz = endpoint.builder().getClassById(oid);
         if (clazz != null) {
-            NativePacket nativePacket = (NativePacket) clazz.newInstance();
-            nativePacket.read(in);
+            EndpointPacket endpointPacket = (EndpointPacket) clazz.newInstance();
+            endpointPacket.read(in);
 
             in.release();
 
-            return nativePacket;
+            return endpointPacket;
         }
         return null;
     }

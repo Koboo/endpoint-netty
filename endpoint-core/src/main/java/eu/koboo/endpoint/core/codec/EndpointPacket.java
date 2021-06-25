@@ -2,7 +2,7 @@ package eu.koboo.endpoint.core.codec;
 
 import io.netty.buffer.ByteBuf;
 
-public interface NativePacket {
+public interface EndpointPacket {
 
     void read(ByteBuf byteBuf);
 
