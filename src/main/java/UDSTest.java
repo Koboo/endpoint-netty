@@ -1,11 +1,13 @@
 import eu.koboo.endpoint.client.EndpointClient;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
-import eu.koboo.endpoint.core.codec.serial.SerializableCodec;
-import eu.koboo.endpoint.core.codec.serial.SerializablePacket;
+import eu.koboo.endpoint.core.codec.NativePacket;
 import eu.koboo.endpoint.core.events.ReceiveEvent;
+import eu.koboo.endpoint.core.events.channel.ChannelAction;
 import eu.koboo.endpoint.core.events.channel.ChannelActionEvent;
+import eu.koboo.endpoint.core.util.BufUtils;
 import eu.koboo.endpoint.server.EndpointServer;
+import io.netty.buffer.ByteBuf;
 
 import java.util.function.Consumer;
 
@@ -17,8 +19,7 @@ public class UDSTest {
      */
 
     public static void main(String[] args) throws InterruptedException {
-        EndpointBuilder builder = EndpointBuilder.newBuilder()
-                .codec(SerializableCodec.class)
+        EndpointBuilder builder = EndpointBuilder.builder()
                 .errorMode(ErrorMode.STACK_TRACE)
                 .logging(true);
         System.out.println("Setting up builder..");
@@ -26,12 +27,12 @@ public class UDSTest {
         System.out.println("Creating universal EventListener..");
 
         Consumer<ChannelActionEvent> eventConsumer = channelActionEvent -> {
-            ChannelActionEvent.Action action = channelActionEvent.getAction();
-            if(action == null) {
+            ChannelAction channelAction = channelActionEvent.getAction();
+            if(channelAction == null) {
                 System.out.println("action is null.");
                 return;
             }
-            System.out.println("Action: " + action.name());
+            System.out.println("Action: " + channelAction.name());
         };
 
         System.out.println("Initialize server..");
@@ -64,7 +65,7 @@ public class UDSTest {
         System.out.println("Sent!");
     }
 
-    public static class UDSPacket implements SerializablePacket {
+    public static class UDSPacket implements NativePacket {
 
         String testString;
         long testLong;
@@ -86,6 +87,20 @@ public class UDSTest {
 
         public int getTestInt() {
             return testInt;
+        }
+
+        @Override
+        public void read(ByteBuf byteBuf) {
+            this.testString = BufUtils.readString(byteBuf);
+            this.testLong = BufUtils.readVarLong(byteBuf);
+            this.testInt = BufUtils.readVarInt(byteBuf);
+        }
+
+        @Override
+        public void write(ByteBuf byteBuf) {
+            BufUtils.writeString(testString, byteBuf);
+            BufUtils.writeVarLong(testLong, byteBuf);
+            BufUtils.writeVarInt(testInt, byteBuf);
         }
     }
 
