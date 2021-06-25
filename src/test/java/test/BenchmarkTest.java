@@ -1,24 +1,18 @@
 
-package test.benchmark;
+package test;
 
-import com.carrotsearch.junitbenchmarks.AbstractBenchmark;
-import eu.binflux.serial.core.SerializerPool;
-import eu.binflux.serial.fst.FSTSerialization;
 import eu.koboo.endpoint.client.EndpointClient;
-import eu.koboo.endpoint.core.codec.serial.SerializableCodec;
-import eu.koboo.endpoint.core.codec.serial.SerializablePacket;
 import eu.koboo.endpoint.core.events.ReceiveEvent;
 import eu.koboo.endpoint.server.EndpointServer;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import test.StaticTest;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.*;
 
-public class RandomRequestTest extends AbstractBenchmark {
+public class BenchmarkTest {
 
     public static EndpointServer server;
     public static EndpointClient client;
@@ -26,25 +20,24 @@ public class RandomRequestTest extends AbstractBenchmark {
     public static AtomicInteger counter;
     public static AtomicInteger average;
 
+    private static final int amount = 5_000;
+
     @BeforeClass
     public static void setupClass() {
         System.out.println("== Test RandomRequest/Sec Behaviour == ");
 
-        StaticTest.BUILDER
-                .codec(SerializableCodec.class);
-
-        server = new EndpointServer(StaticTest.BUILDER, 54321);
+        server = new EndpointServer(TestConstants.BUILDER, 54321);
         server.eventHandler().register(ReceiveEvent.class, event -> {
-            if (event.getTypeObject() instanceof RandomRequest) {
-                RandomRequest request = (RandomRequest) event.getTypeObject();
-                assertEquals(request.getTestString(), StaticTest.testString);
-                assertEquals(request.getTestLong(), StaticTest.testLong);
-                assertArrayEquals(request.getTestBytes(), StaticTest.testBytes);
+            if (event.getTypeObject() instanceof TestRequest) {
+                TestRequest request = event.getTypeObject();
+                assertEquals(request.getTestString(), TestConstants.testString);
+                assertEquals(request.getTestLong(), TestConstants.testLong);
+                assertArrayEquals(request.getTestBytes(), TestConstants.testBytes);
                 counter.getAndIncrement();
             }
         });
 
-        client = new EndpointClient(StaticTest.BUILDER, "localhost", 54321);
+        client = new EndpointClient(TestConstants.BUILDER, "localhost", 54321);
 
         average = new AtomicInteger();
         counter = new AtomicInteger();
@@ -66,14 +59,13 @@ public class RandomRequestTest extends AbstractBenchmark {
     public void testStringPerSec() throws Exception {
         Thread.sleep(250);
         final long start = System.nanoTime();
-        int amount = 5_000;
         for (int i = 0; i < amount; i++) {
-            client.send(StaticTest.RANDOM_REQUEST);
+            client.send(TestConstants.TEST_REQUEST);
         }
         final long end = System.nanoTime();
         final long time = (end - start);
-        int packetsPerSec = StaticTest.getPacketsPerSec(amount, time);
-        StaticTest.adjustAverage(average, packetsPerSec);
+        int packetsPerSec = TestConstants.getPacketsPerSec(amount, time);
+        TestConstants.adjustAverage(average, packetsPerSec);
         while (amount > counter.get()) {
             Thread.sleep(200);
             System.out.println("Sleeping.. (" + counter.get() + "/" + amount + ")");
@@ -81,35 +73,6 @@ public class RandomRequestTest extends AbstractBenchmark {
         System.out.println(amount + "/" + counter.get() + " successful in " + (time * (1 / 1000000000f)) + " seconds");
         System.out.println(packetsPerSec + " packets/sec");
         counter.set(0);
-    }
-
-    public static class RandomRequest implements SerializablePacket {
-
-        String testString;
-        long testLong;
-        byte[] testBytes;
-
-        public RandomRequest() {
-        }
-
-        public RandomRequest(String testString, long testLong, byte[] testBytes) {
-            this.testString = testString;
-            this.testLong = testLong;
-            this.testBytes = testBytes;
-        }
-
-        public String getTestString() {
-            return testString;
-        }
-
-        public long getTestLong() {
-            return testLong;
-        }
-
-        public byte[] getTestBytes() {
-            return testBytes;
-        }
-
     }
 
 }

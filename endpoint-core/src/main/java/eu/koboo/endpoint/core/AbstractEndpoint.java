@@ -2,7 +2,8 @@ package eu.koboo.endpoint.core;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.events.EventHandler;
-import eu.koboo.endpoint.core.events.endpoint.EndpointEvent;
+import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
+import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
 import eu.koboo.endpoint.core.events.message.ErrorEvent;
 
 import java.util.concurrent.ExecutorService;
@@ -22,20 +23,20 @@ public abstract class AbstractEndpoint implements Endpoint {
 
     @Override
     public boolean start() {
-        eventBus.fireEvent(new EndpointEvent(this, EndpointEvent.Action.START));
+        eventBus.fireEvent(new EndpointActionEvent(this, EndpointAction.START));
         return true;
     }
 
     @Override
     public boolean stop() {
         executor.shutdownNow();
-        eventBus.fireEvent(new EndpointEvent(this, EndpointEvent.Action.STOP));
+        eventBus.fireEvent(new EndpointActionEvent(this, EndpointAction.STOP));
         return true;
     }
 
     @Override
     public boolean close() {
-        eventBus.fireEvent(new EndpointEvent(this, EndpointEvent.Action.CLOSE));
+        eventBus.fireEvent(new EndpointActionEvent(this, EndpointAction.CLOSE));
         return true;
     }
 
