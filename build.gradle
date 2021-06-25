@@ -5,7 +5,7 @@ plugins {
 allprojects {
 
     group 'eu.koboo'
-    version '2.3'
+    version '2.4'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -25,19 +25,14 @@ allprojects {
 
 dependencies {
     testCompile group: 'junit', name: 'junit', version: '4.13.1'
-    testCompile group: 'com.carrotsearch', name: 'junit-benchmarks', version: '0.7.2'
 
     compile project('endpoint-client')
     compile project('endpoint-core')
     compile project('endpoint-server')
-
-    compile project('endpoint-codec-json')
-    compile project('endpoint-codec-native')
-    compile project('endpoint-codec-serial')
 }
 
 test {
-    exclude '*'
+    //exclude '*'
 }
 
 jar {
