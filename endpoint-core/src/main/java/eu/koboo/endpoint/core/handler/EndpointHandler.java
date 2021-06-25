@@ -2,6 +2,7 @@ package eu.koboo.endpoint.core.handler;
 
 import eu.koboo.endpoint.core.Endpoint;
 import eu.koboo.endpoint.core.events.ReceiveEvent;
+import eu.koboo.endpoint.core.events.channel.ChannelAction;
 import eu.koboo.endpoint.core.events.channel.ChannelActionEvent;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -24,7 +25,7 @@ public class EndpointHandler extends ChannelInboundHandlerAdapter {
             super.channelActive(ctx);
             if (!endpoint.isClient() && channels != null)
                 channels.add(ctx.channel());
-            endpoint.eventHandler().fireEvent(new ChannelActionEvent(ctx.channel(), ChannelActionEvent.Action.CONNECT));
+            endpoint.eventHandler().fireEvent(new ChannelActionEvent(ctx.channel(), ChannelAction.CONNECT));
         } catch (Exception e) {
             endpoint.onException(EndpointHandler.class, e);
         }
@@ -36,7 +37,7 @@ public class EndpointHandler extends ChannelInboundHandlerAdapter {
             super.channelInactive(ctx);
             if (!endpoint.isClient() && channels != null)
                 channels.remove(ctx.channel());
-            endpoint.eventHandler().fireEvent(new ChannelActionEvent(ctx.channel(), ChannelActionEvent.Action.DISCONNECT));
+            endpoint.eventHandler().fireEvent(new ChannelActionEvent(ctx.channel(), ChannelAction.DISCONNECT));
         } catch (Exception e) {
             endpoint.onException(EndpointHandler.class, e);
         }

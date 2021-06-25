@@ -2,7 +2,8 @@
 package eu.koboo.endpoint.client;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
-import eu.koboo.endpoint.core.events.endpoint.EndpointEvent;
+import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
+import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
 import eu.koboo.endpoint.core.util.LocalThreadFactory;
 import io.netty.bootstrap.Bootstrap;
@@ -189,7 +190,7 @@ public class EndpointClient extends AbstractClient {
             long delay = TimeUnit.SECONDS.toMillis(builder().getAutoReconnect());
             group.schedule(() -> {
                 if (!isConnected()) {
-                    eventHandler().fireEvent(new EndpointEvent(this, EndpointEvent.Action.RECONNECT));
+                    eventHandler().fireEvent(new EndpointActionEvent(this, EndpointAction.RECONNECT));
                     start();
                 }
             }, delay, TimeUnit.MILLISECONDS);

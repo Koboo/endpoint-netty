@@ -1,8 +1,9 @@
 package eu.koboo.endpoint.core.events.message;
 
+import eu.koboo.endpoint.core.events.ConsumerEvent;
 import eu.koboo.endpoint.core.events.EventHandler;
 
-public class ErrorEvent implements EventHandler.ConsumerEvent {
+public class ErrorEvent implements ConsumerEvent {
 
     private final Class clazz;
     private final Throwable throwable;

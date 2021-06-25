@@ -2,7 +2,7 @@ package eu.koboo.endpoint.core.events;
 
 import io.netty.channel.Channel;
 
-public class ReceiveEvent implements EventHandler.ConsumerEvent {
+public class ReceiveEvent implements ConsumerEvent {
 
     private final Channel ctx;
     private final Object object;

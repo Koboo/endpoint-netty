@@ -1,9 +1,8 @@
 package eu.koboo.endpoint.core.events.message;
 
+import eu.koboo.endpoint.core.events.ConsumerEvent;
 
-import eu.koboo.endpoint.core.events.EventHandler;
-
-public class LogEvent implements EventHandler.ConsumerEvent {
+public class LogEvent implements ConsumerEvent {
 
     private final String message;
 

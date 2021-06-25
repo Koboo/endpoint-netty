@@ -1,11 +1,8 @@
 package eu.koboo.endpoint.core.events;
 
-import io.netty.util.concurrent.FastThreadLocalThread;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class EventHandler {
@@ -65,24 +62,5 @@ public class EventHandler {
         List<Consumer<? extends ConsumerEvent>> unknownConsumerList = consumerMap.getOrDefault(eventClass, null);
         if (unknownConsumerList != null && !unknownConsumerList.isEmpty())
             unknownConsumerList.remove(consumer);
-    }
-
-    public interface ConsumerEvent {
-
-    }
-
-    private static class EventThreadFactory implements ThreadFactory {
-
-        private static final String THREAD_PREFIX = "EventExecutor";
-
-        final AtomicInteger threadNumber = new AtomicInteger();
-
-        public EventThreadFactory() {
-        }
-
-        public Thread newThread(Runnable runnable) {
-            return new FastThreadLocalThread(runnable, THREAD_PREFIX + "-" + threadNumber.getAndIncrement());
-        }
-
     }
 }

@@ -2,6 +2,7 @@ package eu.koboo.endpoint.core.handler;
 
 import eu.koboo.endpoint.core.Endpoint;
 import eu.koboo.endpoint.core.events.channel.ChannelTimeoutEvent;
+import eu.koboo.endpoint.core.events.channel.Timeout;
 import io.netty.channel.ChannelDuplexHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.timeout.IdleState;
@@ -21,14 +22,14 @@ public class EndpointIdleHandler extends ChannelDuplexHandler {
             IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
             if (idleStateEvent.state() == IdleState.WRITER_IDLE) {
 
-                if (endpoint.builder().isFireIdleStates())
-                    endpoint.eventHandler().fireEvent(new ChannelTimeoutEvent(ctx.channel(), ChannelTimeoutEvent.Type.WRITE));
+                if (endpoint.builder().isUsingTimeouts())
+                    endpoint.eventHandler().fireEvent(new ChannelTimeoutEvent(ctx.channel(), Timeout.WRITE));
 
                 ctx.writeAndFlush(1);
             } else if (idleStateEvent.state() == IdleState.READER_IDLE) {
 
-                if (endpoint.builder().isFireIdleStates())
-                    endpoint.eventHandler().fireEvent(new ChannelTimeoutEvent(ctx.channel(), ChannelTimeoutEvent.Type.READ));
+                if (endpoint.builder().isUsingTimeouts())
+                    endpoint.eventHandler().fireEvent(new ChannelTimeoutEvent(ctx.channel(), Timeout.READ));
             }
         }
         super.userEventTriggered(ctx, evt);

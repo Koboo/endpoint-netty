@@ -1,28 +1,24 @@
 package eu.koboo.endpoint.core.events.channel;
 
-import eu.koboo.endpoint.core.events.EventHandler;
+import eu.koboo.endpoint.core.events.ConsumerEvent;
 import io.netty.channel.Channel;
 
-public class ChannelActionEvent implements EventHandler.ConsumerEvent {
+public class ChannelActionEvent implements ConsumerEvent {
 
     private final Channel ctx;
-    private final Action action;
+    private final ChannelAction channelAction;
 
-    public ChannelActionEvent(Channel ctx, Action action) {
+    public ChannelActionEvent(Channel ctx, ChannelAction channelAction) {
         this.ctx = ctx;
-        this.action = action;
+        this.channelAction = channelAction;
     }
 
     public Channel getChannel() {
         return ctx;
     }
 
-    public Action getAction() {
-        return action;
+    public ChannelAction getAction() {
+        return channelAction;
     }
 
-    public enum Action {
-
-        CONNECT, DISCONNECT
-    }
 }

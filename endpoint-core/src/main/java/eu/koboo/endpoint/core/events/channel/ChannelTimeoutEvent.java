@@ -1,28 +1,23 @@
 package eu.koboo.endpoint.core.events.channel;
 
-import eu.koboo.endpoint.core.events.EventHandler;
+import eu.koboo.endpoint.core.events.ConsumerEvent;
 import io.netty.channel.Channel;
 
-public class ChannelTimeoutEvent implements EventHandler.ConsumerEvent {
+public class ChannelTimeoutEvent implements ConsumerEvent {
 
     private final Channel channel;
-    private final Type type;
+    private final Timeout timeout;
 
-    public ChannelTimeoutEvent(Channel channel, Type type) {
+    public ChannelTimeoutEvent(Channel channel, Timeout timeout) {
         this.channel = channel;
-        this.type = type;
+        this.timeout = timeout;
     }
 
     public Channel getChannel() {
         return channel;
     }
 
-    public Type getType() {
-        return type;
-    }
-
-    public enum Type {
-
-        READ, WRITE
+    public Timeout getType() {
+        return timeout;
     }
 }
