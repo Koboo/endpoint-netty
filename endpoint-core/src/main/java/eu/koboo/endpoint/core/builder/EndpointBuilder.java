@@ -1,7 +1,6 @@
 package eu.koboo.endpoint.core.builder;
 
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
-import eu.koboo.endpoint.core.codec.AbstractEndpointCodec;
 import eu.koboo.endpoint.core.util.Compression;
 
 import java.util.Map;
@@ -21,14 +20,12 @@ public class EndpointBuilder {
         return new EndpointBuilder();
     }
 
-    private Class<? extends AbstractEndpointCodec<?>> endpointCodecClass;
-
     private Compression compression = Compression.NONE;
     private ErrorMode errorMode = ErrorMode.STACK_TRACE;
 
     private String udsFile = "/tmp/endpoint-netty/uds.sock";
 
-    private boolean fireIdleStates = false;
+    private boolean useTimeouts = false;
     private int writeTimeout = 15;
     private int readTimeout = 0;
 
@@ -36,14 +33,11 @@ public class EndpointBuilder {
 
     private int autoReconnect = -1;
 
+    private String encryption;
+
     private final Map<Integer, Class<?>> packetRegistry = new ConcurrentHashMap<>();
 
     private EndpointBuilder() {
-    }
-
-    public EndpointBuilder codec(Class<? extends AbstractEndpointCodec<?>> endpointCodecClass) {
-        this.endpointCodecClass = endpointCodecClass;
-        return this;
     }
 
     public EndpointBuilder compression(Compression compression) {
@@ -61,8 +55,13 @@ public class EndpointBuilder {
         return this;
     }
 
-    public EndpointBuilder idleState(int writeTimeout, int readTimeout) {
-        this.fireIdleStates = true;
+    public EndpointBuilder password(String password) {
+        this.encryption = password;
+        return this;
+    }
+
+    public EndpointBuilder timeout(int writeTimeout, int readTimeout) {
+        this.useTimeouts = true;
         this.writeTimeout = writeTimeout;
         this.readTimeout = readTimeout;
         return this;
@@ -102,16 +101,16 @@ public class EndpointBuilder {
         return -1;
     }
 
-    public Class<? extends AbstractEndpointCodec<?>> getEndpointCodecClass() {
-        return endpointCodecClass;
-    }
-
     public Compression getCompression() {
         return compression;
     }
 
     public ErrorMode getErrorMode() {
         return errorMode;
+    }
+
+    public String getEncryption() {
+        return encryption;
     }
 
     public boolean isUsingUDS() {
@@ -122,8 +121,8 @@ public class EndpointBuilder {
         return udsFile;
     }
 
-    public boolean isFireIdleStates() {
-        return fireIdleStates;
+    public boolean isUsingTimeouts() {
+        return useTimeouts;
     }
 
     public int getWriteTimeout() {

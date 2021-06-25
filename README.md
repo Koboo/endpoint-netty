@@ -1,8 +1,7 @@
 ![Binflux-Netty](binflux-netty.png)
 
-Endpoint-Netty facilitates the integration of various serialization libraries into 
-an environment supported by Netty and also offers the possibility to implement own codecs. 
-By default, ``ByteBuf``, ``Serializable`` and ``JSONObject`` are supported by the respective codecs.
+Endpoint-Netty facilitates the integration of a lightweight and easy to use packet-protocol into 
+an environment supported by Netty.
 
 Simply explained: Send (almost) every object back and forth between client or server.
 
@@ -18,8 +17,6 @@ Now the project is called EndpointNetty.
 
 ## Overview
 
-This overview offers a simple step by step guide to get started with binflux-netty.
-
 #### Endpoints
   * [EndpointBuilder](#what-is-the-endpointbuilder)
   * [Basic](#basic-options)
@@ -27,8 +24,10 @@ This overview offers a simple step by step guide to get started with binflux-net
 #### Usage
   * [Build Endpoints](#how-to-build-the-endpoints)
   * [Start Endpoints](#how-to-start-the-endpoints)
-  * [Reconnect](#reconnecting-with-endpointclient)
+  * [Create Packets](#how-to-create-packets)
   * [Default Events](#default-events)
+  * [Register Events](#register-events)
+  * [Reconnect](#reconnecting-with-endpointclient)
 #### Build and Download
   * [Download](#add-as-dependency)  
   * [Build From Source](#build-from-source)
@@ -38,36 +37,37 @@ This overview offers a simple step by step guide to get started with binflux-net
 `EndpointBuilder` passes options to endpoints. Create new Builder-instance:
 
 ```java
-EndpointBuilder builder = EndpointBuilder.newBuilder();
+EndpointBuilder builder = EndpointBuilder.builder()
+        // Add more options by fluent calls
+        .logging(false)
+        .timeout(15, 0);
 ```
 
 #### Basic options:
 * `logging(boolean value)` 
-    * enables/disables netty-built-in `LoggingHandler.class` (helpful for debugging)
-    * default: disabled
-* `codec(Class<? extends AbstractEndpointCodec> clazz)` 
-    * Choose between `NativeCodec.class`, `SerializableCodec.class` and 'JsonCodec.class'
-    * default: `NativeCodec.class`
+    * enables/disables built-in `LoggingHandler.class` of netty (helpful for debugging)
+    * default: `false` (disabled)
 * `compression(Compression compression)`
-    * Choose between compressions `GZIP`, `ZLIB`, `SNAPPY`
-    * default: `Compression.GZIP`
+    * Compressions: `GZIP`, `ZLIB`, `SNAPPY` and `NONE`
+    * default: `Compression.NONE`
 * `errorMode(ErrorMode errorMode)`
-    * Choose between modes `SILENT`, `STACK_TRACE`, `EVENT`
+    * ErrorModes: `SILENT`, `STACK_TRACE`, `EVENT`
     * default: `ErrorMode.STACK_TRACE`
-* `eventMode(EventMode eventMode)`
-    * Choose between modes `SYNC`, `SERVICE`, `EVENT_LOOP`
-    * default: `ErrorMode.SERVICE`
 * `autoReconnect(int seconds)`
-    * Force the client to reconnect after given seconds
-    * default: '-1 seconds' (disabled)
-    * `-1` to disbale auto-reconnect
+    * automatic reconnect after `int seconds`
+    * default: '-1' (disabled)
+    * `-1` to disable reconnect (or use `builder.disableReconnect()`)
+* `useUDS(String udsFile)`
+    * Try to use Unix-Domain-Sockets (short: `UDS`)
+    * default: `null` (disabled)
+* `password(String password)`
+    * Algorithms: `AES-128` and `SHA-256`
+    * default: `null` (disabled)
 
 #### Timeout options:
-* `idleState(int readTimeout, int writeTimeout)`
-    * enables initialization of `NettyIdleHandler.class`
-    * default: disabled 
-    * default-write-time: 15
-    * default-read-time: 0 (= disabled)
+* `timeout(int writeTimeout, int readTimeout)`
+    * default: disabled (write-timeout: `15`, read-timeout: `0`) 
+    * `0` = disabled
 
 What does mean `ReadTimeout` and `WriteTimeout`?
 
@@ -78,19 +78,22 @@ If after the time (`readTimeout` in seconds) no object has been transferred
 from the server to the client, a ReadTimeout is thrown.
 
 * `WriteTimeout`
-    * default-action: `int 1` is sent after timeout.
+    * default: `int 1` is sent after timeout to keep alive the channel.
 * `ReadTimeout`
-    * default-action: no action
-
-(Note: only the client throws this events.)
+    * default: no action
 
 ## How to build the Endpoints:
 
 To build the `EndpointServer` or `EndpointClient`:
 ```java
-EndpointClient client = new EndpointClient(endpointBuilder, String host, int port);
+EndpointBuilder builder = EndpointBuilder.builder()
+        // Add more options by fluent calls
+        .logging(false)
+        .timeout(15, 0);
 
-EndpointServer server = new EndpointServer(endpointBuilder, int port);
+EndpointClient client = new EndpointClient(builder, String host, int port);
+
+EndpointServer server = new EndpointServer(builder, int port);
 ```
     
 ## How to start the Endpoints
@@ -98,12 +101,156 @@ EndpointServer server = new EndpointServer(endpointBuilder, int port);
 To start the `EndpointServer` or `EndpointClient` call `start()`. 
 
 ```java
+EndpointBuilder builder = EndpointBuilder.builder()
+        // Add more options by fluent calls
+        .logging(false)
+        .timeout(15, 0);
+
 EndpointServer server = new EndpointServer(endpointBuilder, 54321);
 server.start();
 
 EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
 client.start();
 ```
+
+## How to create Packets
+
+````java
+public class TestRequest implements NativePacket {
+
+    String testString;
+    long testLong;
+    byte[] testBytes;
+
+    public String getTestString() {
+        return testString;
+    }
+
+    public TestRequest setTestString(String testString) {
+        this.testString = testString;
+        return this;
+    }
+
+    public long getTestLong() {
+        return testLong;
+    }
+
+    public TestRequest setTestLong(long testLong) {
+        this.testLong = testLong;
+        return this;
+    }
+
+    public byte[] getTestBytes() {
+        return testBytes;
+    }
+
+    public TestRequest setTestBytes(byte[] testBytes) {
+        this.testBytes = testBytes;
+        return this;
+    }
+
+    @Override
+    public void read(ByteBuf byteBuf) {
+        this.testString = BufUtils.readString(byteBuf);
+        this.testLong = BufUtils.readVarLong(byteBuf);
+        this.testBytes = BufUtils.readArray(byteBuf);
+    }
+
+    @Override
+    public void write(ByteBuf byteBuf) {
+        BufUtils.writeString(testString, byteBuf);
+        BufUtils.writeVarLong(testLong, byteBuf);
+        BufUtils.writeArray(testBytes, byteBuf);
+    }
+}
+````
+
+````java
+```java
+EndpointBuilder builder = EndpointBuilder.builder()
+    // Add more options by fluent calls
+    .logging(false)
+    .timeout(15, 0)
+    // Register as much packets as you want.
+    // But packetIds can only be registered once!    
+    .registerPacket(1, TestRequest.class);
+
+EndpointServer server = new EndpointServer(endpointBuilder, 54321);
+server.start();
+
+EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
+client.start();
+````
+
+## Default Events
+
+The event system is completely `Consumer`-based. These are the default events:
+
+* `ChannelActionEvent`
+  * server/client: channel change connection state
+  * ChannelAction: `CONNECT`, `DISCONNECT`
+  
+* `ChannelTimeoutEvent`
+  * server/client: read-/write-timeout
+  * Timeout: `READ` or `WRITE`
+  
+* `EndpointActionEvent`
+  * server/client: Thrown if some action happens on the endpoint
+  * EndpointAction: `START`, `STOP`, `CLOSE` (`RECONNECT` only thrown by client)
+  
+* `ReceiveEvent`
+  * server/client: receives packet from client/server
+    
+* `ErrorEvent`
+  * server/client: exception occured (only is thrown by `ErrorMode.EVENT`)
+
+* `LogEvent` / `DebugEvent`
+  * server/client: something got logged
+  
+## Register Events
+
+````java
+EndpointBuilder builder = EndpointBuilder.builder()
+        // Add more options by fluent calls
+        .logging(false)
+        .timeout(15, 0)
+        // Register as much packets as you want.
+        // But packetIds can only be registered once!    
+        .registerPacket(1, TestRequest.class);
+
+EndpointServer server = new EndpointServer(endpointBuilder, 54321);
+server.start();
+
+EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
+client.start();
+
+client.eventHandler().register(ReceiveEvent.class, event -> {
+    if(event.getTypeObject() instanceof TestRequest) {
+        TestRequest request = event.getTypeObject();
+    }
+});
+
+new ReceiveListener(server);
+````
+
+
+````java
+public class ReceiveListener implements Consumer<ReceiveEvent> {
+    
+    public ReceiveListener(Endpoint endpoint) {
+        endpoint.eventHandler().register(ReceiveEvent.class, this);
+    }
+    
+    @Override
+    public void accept(ReceiveEvent event) {
+        if(event.getTypeObject() instanceof TestRequest) {
+            TestRequest request = event.getTypeObject();
+        }
+    }
+    
+}
+````
+
 
 ## Reconnecting with EndpointClient
 
@@ -128,27 +275,7 @@ client.setAddress("localhost", 12345);
 client.start();
 ```
 
-## Default Events
-
-The event system is completely `Consumer`-based. These are the default events:
-
-* `ChannelActionEvent`
-    * server/client: channel change connection state
-    * action: connect, disconnect
-    
-* `ReceiveEvent`
-    * server/client: receives object from client/server by the specific protocol
-    
-* `ErrorEvent`
-    * server/client: exception occured (only is thrown by `ErrorMode.EVENT`)
-    
-* `TimeoutEvent` 
-    * client: read-/write-timeout
-    * type: read or write
-    
-* `EndpointEvent`
-    * endpoint: the endpoint
-    * action: start, stop, close
+If you call `client.stop()`, all events get unregistered.
 
 ## Add as dependency
 
@@ -165,10 +292,7 @@ And add it as dependency. (e.g. `2.3` is the release-version)
 dependencies {
     // !Always needed! 
     compile 'eu.koboo:endpoint-core:2.3'
-    
-    // dependency to use codec-native (!Add dependency by client and server!)
-    compile 'eu.koboo:endpoint-codec-native:2.3'
-    
+        
     // client-related     
     compile 'eu.koboo:endpoint-client:2.3'
         
