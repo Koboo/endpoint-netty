@@ -3,8 +3,6 @@ package eu.koboo.endpoint.core;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.events.EventHandler;
 
-import java.util.concurrent.ExecutorService;
-
 public interface Endpoint {
 
     /**

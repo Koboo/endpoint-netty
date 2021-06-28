@@ -19,7 +19,7 @@ public class SingleTest {
         System.out.println("== Test SingleRequest/Sec Behaviour == ");
 
         TestConstants.BUILDER
-                .logging(true);
+                .logging(false);
 
         server = new EndpointServer(TestConstants.BUILDER, 54321);
         server.eventHandler().register(ReceiveEvent.class, event -> {

@@ -1,7 +1,6 @@
 package eu.koboo.endpoint.core.events.message;
 
 import eu.koboo.endpoint.core.events.ConsumerEvent;
-import eu.koboo.endpoint.core.events.EventHandler;
 
 public class ErrorEvent implements ConsumerEvent {
 

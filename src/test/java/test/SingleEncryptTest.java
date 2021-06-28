@@ -19,7 +19,7 @@ public class SingleEncryptTest {
         System.out.println("== Test SingleRequest/Sec Behaviour == ");
 
         TestConstants.BUILDER
-                .logging(true)
+                .logging(false)
                 .password("ThisisMyStrongPassword");
 
         server = new EndpointServer(TestConstants.BUILDER, 54321);

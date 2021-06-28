@@ -20,7 +20,7 @@ public class SingleEncryptCompressTest {
         System.out.println("== Test SingleRequest/Sec Behaviour == ");
 
         TestConstants.BUILDER
-                .logging(true)
+                .logging(false)
                 .password("ThisIsMyStrongPassword")
                 .compression(Compression.SNAPPY);
 
