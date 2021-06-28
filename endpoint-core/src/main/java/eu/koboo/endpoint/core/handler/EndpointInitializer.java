@@ -47,8 +47,10 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
                 pipeline.addLast(endpoint.builder().getCompression().getDecoder());
             }
 
-            pipeline.addLast("idle-state", new IdleStateHandler(endpoint.builder().getReadTimeout(), endpoint.builder().getWriteTimeout(), 0));
-            pipeline.addLast("idle-handler", new EndpointIdleHandler(endpoint));
+            if(endpoint.builder().isUsingTimeouts()) {
+                pipeline.addLast("idle-state", new IdleStateHandler(endpoint.builder().getReadTimeout(), endpoint.builder().getWriteTimeout(), 0));
+                pipeline.addLast("idle-handler", new EndpointIdleHandler(endpoint));
+            }
 
             pipeline.addLast("endpoint-codec", new EndpointCodec(endpoint));
 

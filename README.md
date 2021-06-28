@@ -76,6 +76,8 @@ EndpointBuilder builder = EndpointBuilder.builder()
 * `timeout(int writeTimeout, int readTimeout)`
     * default: disabled (write-timeout: `15`, read-timeout: `0`) 
     * `0` = disabled
+* `disableTimeouts()`
+    * disable usage of `IdleStateHandler` and timeout-events 
 
 What does mean `ReadTimeout` and `WriteTimeout`?
 
@@ -85,8 +87,9 @@ from the client to the server, a WriteTimeout is thrown.
 If after the time (`readTimeout` in seconds) no object has been transferred 
 from the server to the client, a ReadTimeout is thrown.
 
+Default behaviour:
 * `WriteTimeout`
-    * default: `int 1` is sent after timeout to keep alive the channel.
+    * default: `int 1` is sent after timeout to keep alive the channel if no further listener is registered.
 * `ReadTimeout`
     * default: no action
 

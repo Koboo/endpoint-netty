@@ -28,7 +28,6 @@ public class EndpointBuilder {
 
     private String udsFile = null;
 
-    private boolean useTimeouts = false;
     private int writeTimeout = 15;
     private int readTimeout = 0;
 
@@ -73,9 +72,14 @@ public class EndpointBuilder {
     }
 
     public EndpointBuilder timeout(int writeTimeout, int readTimeout) {
-        this.useTimeouts = true;
         this.writeTimeout = writeTimeout;
         this.readTimeout = readTimeout;
+        return this;
+    }
+
+    public EndpointBuilder disableTimeouts() {
+        this.writeTimeout = -1;
+        this.readTimeout = -1;
         return this;
     }
 
@@ -157,7 +161,7 @@ public class EndpointBuilder {
     }
 
     public boolean isUsingTimeouts() {
-        return useTimeouts;
+        return writeTimeout > 0 || readTimeout > 0;
     }
 
     public int getWriteTimeout() {

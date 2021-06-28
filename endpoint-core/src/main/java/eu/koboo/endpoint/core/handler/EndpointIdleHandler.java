@@ -21,15 +21,15 @@ public class EndpointIdleHandler extends ChannelDuplexHandler {
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent idleStateEvent = (IdleStateEvent) evt;
             if (idleStateEvent.state() == IdleState.WRITER_IDLE) {
-
-                if (endpoint.builder().isUsingTimeouts())
+                if(endpoint.eventHandler().hasConsumer(ChannelTimeoutEvent.class)) {
                     endpoint.eventHandler().fireEvent(new ChannelTimeoutEvent(ctx.channel(), Timeout.WRITE));
-
-                ctx.writeAndFlush(1);
+                } else {
+                    ctx.writeAndFlush(1);
+                }
             } else if (idleStateEvent.state() == IdleState.READER_IDLE) {
-
-                if (endpoint.builder().isUsingTimeouts())
+                if(endpoint.eventHandler().hasConsumer(ChannelTimeoutEvent.class)) {
                     endpoint.eventHandler().fireEvent(new ChannelTimeoutEvent(ctx.channel(), Timeout.READ));
+                }
             }
         }
         super.userEventTriggered(ctx, evt);
