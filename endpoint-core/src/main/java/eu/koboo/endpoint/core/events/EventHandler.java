@@ -1,5 +1,7 @@
 package eu.koboo.endpoint.core.events;
 
+import eu.koboo.endpoint.core.util.LocalThreadFactory;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -11,7 +13,7 @@ import java.util.function.Consumer;
 public class EventHandler {
 
     private final ConcurrentHashMap<Class<?>, List<Consumer<? extends ConsumerEvent>>> consumerMap = new ConcurrentHashMap<>();
-    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2, new EventThreadFactory());
+    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2, new LocalThreadFactory("EventExec"));
 
     public EventHandler() {
         Thread shutdownThread = new Thread(executor::shutdown);
