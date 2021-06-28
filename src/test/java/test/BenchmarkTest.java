@@ -1,9 +1,11 @@
 
 package test;
 
+import eu.koboo.endpoint.client.ClientBuilder;
 import eu.koboo.endpoint.client.EndpointClient;
 import eu.koboo.endpoint.core.events.ReceiveEvent;
 import eu.koboo.endpoint.server.EndpointServer;
+import eu.koboo.endpoint.server.ServerBuilder;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -26,8 +28,8 @@ public class BenchmarkTest {
     public static void setupClass() {
         System.out.println("== Test RandomRequest/Sec Behaviour == ");
 
-        server = new EndpointServer(TestConstants.BUILDER, 54321);
-        server.eventHandler().register(ReceiveEvent.class, event -> {
+        server = ServerBuilder.of(TestConstants.BUILDER, 54321);
+        server.registerEvent(ReceiveEvent.class, event -> {
             if (event.getTypeObject() instanceof TestRequest) {
                 TestRequest request = event.getTypeObject();
                 assertEquals(request.getTestString(), TestConstants.testString);
@@ -37,7 +39,7 @@ public class BenchmarkTest {
             }
         });
 
-        client = new EndpointClient(TestConstants.BUILDER, "localhost", 54321);
+        client = ClientBuilder.of(TestConstants.BUILDER, "localhost", 54321);
 
         average = new AtomicInteger();
         counter = new AtomicInteger();

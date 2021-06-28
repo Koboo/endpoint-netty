@@ -19,31 +19,37 @@ Now the project is called EndpointNetty.
 
 #### Endpoints
   * [EndpointBuilder](#what-is-the-endpointbuilder)
-  * [Basic](#basic-options)
+  * [Options](#options)
   * [Timeouts](#timeout-options)
-#### Usage
-  * [Build Endpoints](#how-to-build-the-endpoints)
-  * [Start Endpoints](#how-to-start-the-endpoints)
-  * [Create Packets](#how-to-create-packets)
+  * [Building Endpoints](#how-to-build-the-endpoints)
+  * [Starting Endpoints](#how-to-start-the-endpoints)
+  * [Reconnecting with Client](#reconnecting-with-endpointclient)
+#### Packets
+  * [Creating Packets](#how-to-create-packets)
+  * [Sending Packets](#how-to-send-packets)
+#### Events
   * [Default Events](#default-events)
-  * [Register Events](#register-events)
-  * [Reconnect](#reconnecting-with-endpointclient)
+  * [Registering Events](#register-events)
+  * [Unregistering Events](#unregister-events)
+  * [Creating new Events](#create-new-events)  
 #### Build and Download
   * [Download](#add-as-dependency)  
   * [Build From Source](#build-from-source)
 
 
 ## What is the EndpointBuilder
-`EndpointBuilder` passes options to endpoints. Create new Builder-instance:
+`EndpointBuilder` passes options to endpoints. To create a new instance:
 
 ```java
 EndpointBuilder builder = EndpointBuilder.builder()
         // Add more options by fluent calls
         .logging(false)
+        .framing(true)
+        .processing(true)
         .timeout(15, 0);
 ```
 
-#### Basic options:
+#### Options:
 * `logging(boolean value)` 
     * enables/disables built-in `LoggingHandler.class` of netty (helpful for debugging)
     * default: `false` (disabled)
@@ -100,11 +106,13 @@ To build the `EndpointServer` or `EndpointClient`:
 EndpointBuilder builder = EndpointBuilder.builder()
         // Add more options by fluent calls
         .logging(false)
+        .framing(true)
+        .processing(true)
         .timeout(15, 0);
 
-EndpointClient client = new EndpointClient(builder, String host, int port);
+EndpointClient client = ClientBuilder.of(builder, String host, int port);
 
-EndpointServer server = new EndpointServer(builder, int port);
+EndpointServer server = ServerBuilder.of(builder, int port);
 ```
     
 ## How to start the Endpoints
@@ -115,19 +123,22 @@ To start the `EndpointServer` or `EndpointClient` call `start()`.
 EndpointBuilder builder = EndpointBuilder.builder()
         // Add more options by fluent calls
         .logging(false)
+        .framing(true)
+        .processing(true)
         .timeout(15, 0);
 
-EndpointServer server = new EndpointServer(endpointBuilder, 54321);
+EndpointServer server = ServerBuilder.of(endpointBuilder, 54321);
 server.start();
 
-EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
+EndpointClient client = ClientBuilder.of(endpointBuilder, "localhost", 54321);
 client.start();
 ```
 
 ## How to create Packets
-
+This is a sample ``EndpointPacket`` with a ``String``, a ```long`, and a ``byte[]`` as attributes.
+Each attribute of a ``EndpointPacket`` must be written/read independently to/from the ``ByteBuf``.
 ````java
-public class TestRequest implements NativePacket {
+public class TestRequest implements EndpointPacket {
 
     String testString;
     long testLong;
@@ -176,21 +187,48 @@ public class TestRequest implements NativePacket {
 }
 ````
 
+# How to send Packets
+
 ````java
-```java
 EndpointBuilder builder = EndpointBuilder.builder()
     // Add more options by fluent calls
     .logging(false)
+    .framing(true)
+    .processing(true)
     .timeout(15, 0)
     // Register as much packets as you want.
     // But packetIds can only be registered once!    
     .registerPacket(1, TestRequest.class);
 
-EndpointServer server = new EndpointServer(endpointBuilder, 54321);
+EndpointServer server = ServerBuilder.of(endpointBuilder, 54321);
 server.start();
 
-EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
+EndpointClient client = ClientBuilder.of(endpointBuilder, "localhost", 54321);
 client.start();
+
+TestRequest request = new TestRequest()
+        .setTestString(/* Any string here */)
+        .setTestLong(/* Any long here */)
+        .setTestBytes(/* Any byte[] here */);
+
+// Send the packet and do something with the ChannelFuture
+ChannelFuture future = client.send(request);
+
+// Send the packet and ignore result.
+client.sendAndForget(request);
+
+// Send the packet and do something with the ChannelFuture
+ChannelFuture future = server.send(channel, request);
+
+// Send the packet and ignore result.
+server.sendAndForget(channel, request);
+
+// Send the packet and do something with the ChannelFuture
+Map<String, ChannelFuture> futureMap = server.broadcast(request);
+
+
+// Send the packet to each connected client and ignore result.
+server.broadcastAndForget(request);
 ````
 
 ## Default Events
@@ -219,37 +257,40 @@ The event system is completely `Consumer`-based. These are the default events:
   * server/client: something got logged
   
 ## Register Events
-
+To register events, use the following instructions:
 ````java
 EndpointBuilder builder = EndpointBuilder.builder()
         // Add more options by fluent calls
         .logging(false)
+        .framing(true)
+        .processing(true)
         .timeout(15, 0)
         // Register as much packets as you want.
         // But packetIds can only be registered once!    
         .registerPacket(1, TestRequest.class);
 
-EndpointServer server = new EndpointServer(endpointBuilder, 54321);
+EndpointServer server = ServerBuilder.of(endpointBuilder, 54321);
 server.start();
 
-EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
+EndpointClient client = ClientBuilder.of(endpointBuilder, "localhost", 54321);
 client.start();
 
-client.eventHandler().register(ReceiveEvent.class, event -> {
+client.registerEvent(ReceiveEvent.class, event -> {
     if(event.getTypeObject() instanceof TestRequest) {
         TestRequest request = event.getTypeObject();
     }
 });
 
-new ReceiveListener(server);
+ReceiveListener listener = new ReceiveListener(server);
+
+server.unregisterEvent(ReceiveEvent.class, listener);
 ````
-
-
+Or create a separate class as event-listener:
 ````java
 public class ReceiveListener implements Consumer<ReceiveEvent> {
     
     public ReceiveListener(Endpoint endpoint) {
-        endpoint.eventHandler().register(ReceiveEvent.class, this);
+        endpoint.registerEvent(ReceiveEvent.class, this);
     }
     
     @Override
@@ -262,6 +303,60 @@ public class ReceiveListener implements Consumer<ReceiveEvent> {
 }
 ````
 
+## Unregister Events
+
+Events can also be unregistered, but for this you need the instance of the listener:
+````java
+
+ReceiveListener listener = new ReceiveListener(server);
+
+server.unregisterEvent(ReceiveEvent.class, listener);
+````
+
+## Create new Events
+
+Create a new class and define the required fields as follows:
+
+````java
+public class TestEvent implements ConsumerEvent {
+
+    private final String someString;
+    private final int someInt;
+  
+    public TestEvent(String someString, int someInt) {
+      this.someString = someString;
+      this.someInt = someInt;
+    }
+  
+    public String getSomeString() {
+      return someString;
+    }
+  
+    public int getSomeInt() {
+      return someInt;
+    }
+}  
+````
+
+To fire an event, use the following method:
+
+````java
+TestEvent event = new TestEvent("abc", 123);
+
+CompletableFuture<TestEvent> future = server.fireEvent(event);
+````
+
+You can also use the CompletableFuture as a callback:
+
+````java
+TestEvent event = new TestEvent("abc", 123);
+
+CompletableFuture<TestEvent> future = server.fireEvent(event);
+
+future.whenComplete((event, error) -> {
+    // Do something, after event got processed.
+});
+````
 
 ## Reconnecting with EndpointClient
 
