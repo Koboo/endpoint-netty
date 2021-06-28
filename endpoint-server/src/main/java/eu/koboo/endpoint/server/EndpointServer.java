@@ -33,9 +33,8 @@ public class EndpointServer extends AbstractServer {
         super(endpointBuilder, port);
 
         // Get cores to calculate the event-loop-group sizes
-        int cores = Runtime.getRuntime().availableProcessors();
-        int bossSize = 2 * cores;
-        int workerSize = 4 * cores;
+        int bossSize = 2 * EndpointBuilder.CORES;
+        int workerSize = 4 * EndpointBuilder.CORES;
 
         ThreadFactory bossFactory = new LocalThreadFactory("EndpointServerBoss");
         ThreadFactory workerFactory = new LocalThreadFactory("EndpointServerWorker");

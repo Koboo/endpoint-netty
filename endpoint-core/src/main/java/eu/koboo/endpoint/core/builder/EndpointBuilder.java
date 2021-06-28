@@ -11,6 +11,8 @@ import java.util.function.Supplier;
 
 public class EndpointBuilder {
 
+    public static final int CORES = Runtime.getRuntime().availableProcessors();
+
     /**
      * Method is deprecated. Use #builder() instead!
      */

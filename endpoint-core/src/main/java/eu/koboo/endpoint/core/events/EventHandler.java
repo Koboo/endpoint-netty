@@ -1,24 +1,21 @@
 package eu.koboo.endpoint.core.events;
 
-import eu.koboo.endpoint.core.util.LocalThreadFactory;
+import eu.koboo.endpoint.core.Endpoint;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.function.Consumer;
 
 public class EventHandler {
 
     private final ConcurrentHashMap<Class<?>, List<Consumer<? extends ConsumerEvent>>> consumerMap = new ConcurrentHashMap<>();
-    private final ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2, new LocalThreadFactory("EventExec"));
 
-    public EventHandler() {
-        Thread shutdownThread = new Thread(executor::shutdown);
-        shutdownThread.setName("EventExecutorShutdown");
-        Runtime.getRuntime().addShutdownHook(shutdownThread);
+    private final Endpoint endpoint;
+
+    public EventHandler(Endpoint endpoint) {
+        this.endpoint = endpoint;
     }
 
     @SuppressWarnings("unchecked")
@@ -42,7 +39,7 @@ public class EventHandler {
         if (event == null || !hasConsumer(event.getClass())) {
             return CompletableFuture.completedFuture(event);
         }
-        return CompletableFuture.supplyAsync(() -> handleEvent(event), executor);
+        return CompletableFuture.supplyAsync(() -> handleEvent(event), endpoint.executor());
     }
 
     private <T extends ConsumerEvent> T handleEvent(T event) {

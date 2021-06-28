@@ -32,8 +32,7 @@ public class EndpointClient extends AbstractClient {
         super(endpointBuilder, host, port);
 
         // Get cores to calculate the event-loop-group sizes
-        int cores = Runtime.getRuntime().availableProcessors();
-        int workerSize = 4 * cores;
+        int workerSize = 4 * EndpointBuilder.CORES;
 
         // Check and initialize the event-loop-groups
         ThreadFactory localFactory = new LocalThreadFactory("EndpointClient");

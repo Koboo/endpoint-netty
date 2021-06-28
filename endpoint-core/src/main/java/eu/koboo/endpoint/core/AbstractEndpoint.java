@@ -27,11 +27,10 @@ public abstract class AbstractEndpoint implements Endpoint {
 
     public AbstractEndpoint(EndpointBuilder endpointBuilder) {
         this.endpointBuilder = endpointBuilder;
-        this.eventBus = new EventHandler();
-        int cores = Runtime.getRuntime().availableProcessors();
-        this.executor = Executors.newFixedThreadPool(cores * 2);
+        this.eventBus = new EventHandler(this);
+        this.executor = Executors.newFixedThreadPool(EndpointBuilder.CORES * 2);
         if (builder().isProcessing()) {
-            this.executorGroup = new DefaultEventExecutorGroup(cores * 2);
+            this.executorGroup = new DefaultEventExecutorGroup(EndpointBuilder.CORES * 2);
         } else {
             this.executorGroup = null;
         }
@@ -48,12 +47,16 @@ public abstract class AbstractEndpoint implements Endpoint {
     public boolean stop() {
         try {
             boolean close = this.close();
-            executor.shutdownNow();
+
+            executor.shutdown();
+
             for (EventLoopGroup eventLoopGroup : eventLoopGroupList) {
                 eventLoopGroup.shutdownGracefully();
             }
+
             if (executorGroup != null)
                 executorGroup.shutdownGracefully();
+
             eventBus.fireEvent(new EndpointActionEvent(this, EndpointAction.STOP));
             return close;
         } catch (Exception e) {
@@ -85,10 +88,14 @@ public abstract class AbstractEndpoint implements Endpoint {
         return eventBus;
     }
 
-
     @Override
     public boolean isConnected() {
         return channel != null && channel.isOpen() && channel.isActive();
+    }
+
+    @Override
+    public ExecutorService executor() {
+        return executor;
     }
 
     @Override
