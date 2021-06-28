@@ -1,7 +1,8 @@
-package test;
+package eu.koboo.endpoint.test.networkable;
 
 import eu.koboo.endpoint.networkable.NetworkUtil;
 import eu.koboo.endpoint.networkable.Networkable;
+import eu.koboo.endpoint.test.TestRequest;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

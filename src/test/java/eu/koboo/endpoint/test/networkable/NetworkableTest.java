@@ -1,8 +1,10 @@
-package test;
+package eu.koboo.endpoint.test.networkable;
 
 import eu.koboo.endpoint.networkable.NetworkableEncoder;
 
+import eu.koboo.endpoint.test.TestConstants;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -43,14 +45,14 @@ public class NetworkableTest {
         NetworkTestObject testObject = encoder.decode(bytes);
         System.out.println("Decoded NetworkTestObject");
 
-        assertEquals(testObject.getTestString(), TestConstants.testString);
-        assertEquals(testObject.getTestLong(), TestConstants.testLong);
-        assertArrayEquals(testObject.getTestBytes(), TestConstants.testBytes);
+        Assert.assertEquals(testObject.getTestString(), TestConstants.testString);
+        Assert.assertEquals(testObject.getTestLong(), TestConstants.testLong);
+        Assert.assertArrayEquals(testObject.getTestBytes(), TestConstants.testBytes);
         System.out.println("Asserted against TestConstants");
 
-        assertEquals(testObject.getTestString(), networkTestObject.getTestString());
-        assertEquals(testObject.getTestLong(), networkTestObject.getTestLong());
-        assertArrayEquals(testObject.getTestBytes(), networkTestObject.getTestBytes());
+        Assert.assertEquals(testObject.getTestString(), networkTestObject.getTestString());
+        Assert.assertEquals(testObject.getTestLong(), networkTestObject.getTestLong());
+        Assert.assertArrayEquals(testObject.getTestBytes(), networkTestObject.getTestBytes());
         System.out.println("Asserted against NetworkTestObject");
 
         byte[] testBytes = encoder.encode(testObject);

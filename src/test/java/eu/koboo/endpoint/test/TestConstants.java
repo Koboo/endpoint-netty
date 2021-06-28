@@ -1,4 +1,4 @@
-package test;
+package eu.koboo.endpoint.test;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.builder.param.ErrorMode;

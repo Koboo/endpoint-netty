@@ -1,11 +1,13 @@
 
-package test;
+package eu.koboo.endpoint.test.benchmark;
 
 import eu.koboo.endpoint.client.ClientBuilder;
 import eu.koboo.endpoint.client.EndpointClient;
 import eu.koboo.endpoint.core.events.ReceiveEvent;
 import eu.koboo.endpoint.server.EndpointServer;
 import eu.koboo.endpoint.server.ServerBuilder;
+import eu.koboo.endpoint.test.TestConstants;
+import eu.koboo.endpoint.test.TestRequest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
