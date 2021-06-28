@@ -13,6 +13,7 @@ import io.netty.channel.epoll.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.channel.unix.DomainSocketAddress;
+import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -21,40 +22,36 @@ import java.util.concurrent.TimeUnit;
 
 public class EndpointClient extends AbstractClient {
 
-    private final EventLoopGroup group;
     private final Bootstrap bootstrap;
-    private Channel channel;
 
-    public EndpointClient(EndpointBuilder endpointBuilder) {
-        this(endpointBuilder, null, -1);
-    }
-
-    public EndpointClient(EndpointBuilder endpointBuilder, String host, int port) {
+    protected EndpointClient(EndpointBuilder endpointBuilder, String host, int port) {
         super(endpointBuilder, host, port);
 
         // Get cores to calculate the event-loop-group sizes
-        int cores = Runtime.getRuntime().availableProcessors();
-        int workerSize = 4 * cores;
+        int workerSize = 4 * EndpointBuilder.CORES;
 
         // Check and initialize the event-loop-groups
         ThreadFactory localFactory = new LocalThreadFactory("EndpointClient");
-        Class<? extends Channel> channelClass;
+        ChannelFactory<? extends Channel> channelFactory;
+        EventLoopGroup group;
         if (Epoll.isAvailable()) {
             if (endpointBuilder.isUsingUDS()) {
-                channelClass = EpollDomainSocketChannel.class;
+                channelFactory = EpollDomainSocketChannel::new;
             } else {
-                channelClass = EpollSocketChannel.class;
+                channelFactory = EpollSocketChannel::new;
             }
             group = new EpollEventLoopGroup(workerSize, localFactory);
         } else {
-            channelClass = NioSocketChannel.class;
+            channelFactory = NioSocketChannel::new;
             group = new NioEventLoopGroup(workerSize, localFactory);
         }
+
+        executorList.add(group);
 
         // Create Bootstrap
         bootstrap = new Bootstrap()
                 .group(group)
-                .channel(channelClass)
+                .channelFactory(channelFactory)
                 .handler(new EndpointInitializer(this, null))
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 
@@ -62,44 +59,6 @@ public class EndpointClient extends AbstractClient {
         if (Epoll.isAvailable()) {
             bootstrap.option(EpollChannelOption.EPOLL_MODE, EpollMode.LEVEL_TRIGGERED);
         }
-    }
-
-    /**
-     * Return if the client is connected or not
-     */
-    @Override
-    public boolean isConnected() {
-        return channel != null && channel.isOpen() && channel.isActive();
-    }
-
-    /**
-     * Close only the channel
-     */
-    @Override
-    public boolean close() {
-        try {
-            if (channel != null && channel.isActive())
-                channel.close().sync();
-            return super.close();
-        } catch (InterruptedException e) {
-            onException(getClass(), e);
-        }
-        return false;
-    }
-
-    /**
-     * Close the endpoint
-     */
-    @Override
-    public boolean stop() {
-        try {
-            group.shutdownGracefully();
-
-            return close();
-        } catch (Exception e) {
-            onException(getClass(), e);
-        }
-        return false;
     }
 
     /**
@@ -188,9 +147,9 @@ public class EndpointClient extends AbstractClient {
     private void scheduleReconnect() {
         if (builder().getAutoReconnect() != -1) {
             long delay = TimeUnit.SECONDS.toMillis(builder().getAutoReconnect());
-            group.schedule(() -> {
+            GlobalEventExecutor.INSTANCE.schedule(() -> {
                 if (!isConnected()) {
-                    eventHandler().fireEvent(new EndpointActionEvent(this, EndpointAction.RECONNECT));
+                    fireEvent(new EndpointActionEvent(this, EndpointAction.RECONNECT));
                     start();
                 }
             }, delay, TimeUnit.MILLISECONDS);

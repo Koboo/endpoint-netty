@@ -1,5 +1,6 @@
 package eu.koboo.endpoint.core.handler;
 
+import eu.koboo.endpoint.core.AbstractEndpoint;
 import eu.koboo.endpoint.core.Endpoint;
 import eu.koboo.endpoint.core.codec.EndpointCodec;
 import eu.koboo.endpoint.core.util.Compression;
@@ -12,20 +13,16 @@ import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
-import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 
 public class EndpointInitializer extends ChannelInitializer<Channel> {
 
-    private final Endpoint endpoint;
+    private final AbstractEndpoint endpoint;
     private final ChannelGroup channels;
-    private final EventExecutorGroup executorGroup;
 
-    public EndpointInitializer(Endpoint endpoint, ChannelGroup channels) {
+    public EndpointInitializer(AbstractEndpoint endpoint, ChannelGroup channels) {
         this.endpoint = endpoint;
         this.channels = channels;
-        int cores = Runtime.getRuntime().availableProcessors();
-        this.executorGroup = new DefaultEventExecutorGroup(cores * 4);
     }
 
     @Override
@@ -34,8 +31,10 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
             // Get pipeline-instance
             ChannelPipeline pipeline = ch.pipeline();
 
-            pipeline.addLast("length-decoder", new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 8, 0, 8));
-            pipeline.addLast("length-encoder", new LengthFieldPrepender(8));
+            if (endpoint.builder().isFraming()) {
+                pipeline.addLast("length-decoder", new LengthFieldBasedFrameDecoder(2048, 0, 4, 0, 4));
+                pipeline.addLast("length-encoder", new LengthFieldPrepender(4));
+            }
 
             //Add logging-handler if enabled
             if (endpoint.builder().isLogging())
@@ -46,12 +45,18 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
                 pipeline.addLast(endpoint.builder().getCompression().getDecoder());
             }
 
-            pipeline.addLast("idle-state", new IdleStateHandler(endpoint.builder().getReadTimeout(), endpoint.builder().getWriteTimeout(), 0));
-            pipeline.addLast("idle-handler", new EndpointIdleHandler(endpoint));
+            if(endpoint.builder().isUsingTimeouts()) {
+                pipeline.addLast("idle-state", new IdleStateHandler(endpoint.builder().getReadTimeout(), endpoint.builder().getWriteTimeout(), 0));
+                pipeline.addLast("idle-handler", new EndpointIdleHandler(endpoint));
+            }
 
-            pipeline.addLast("native-codec", new EndpointCodec(endpoint));
+            pipeline.addLast("endpoint-codec", new EndpointCodec(endpoint));
 
-            pipeline.addLast(executorGroup, "netty-handler", new EndpointHandler(endpoint, channels));
+            if (endpoint.builder().isProcessing() && endpoint.executorGroup() != null) {
+                pipeline.addLast(endpoint.executorGroup(), "endpoint-handler", new EndpointHandler(endpoint, channels));
+            } else {
+                pipeline.addLast("endpoint-handler", new EndpointHandler(endpoint, channels));
+            }
         } catch (Exception e) {
             endpoint.onException(getClass(), e);
         }

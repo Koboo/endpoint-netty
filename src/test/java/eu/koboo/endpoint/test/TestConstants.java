@@ -1,4 +1,4 @@
-package test;
+package eu.koboo.endpoint.test;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
@@ -18,12 +18,13 @@ public class TestConstants {
 
     static {
         BUILDER = EndpointBuilder.builder()
+                .framing(false)
                 .logging(false)
                 .errorMode(ErrorMode.STACK_TRACE)
-                .registerPacket(1, TestRequest.class);
+                .registerPacket(1, TestRequest::new);
 
         Random random = new Random();
-        testBytes = new byte[1000];
+        testBytes = new byte[8192];
         random.nextBytes(testBytes);
 
         testString = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat";

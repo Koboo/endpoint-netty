@@ -1,12 +1,17 @@
 package eu.koboo.endpoint.core.builder;
 
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
+import eu.koboo.endpoint.core.codec.EndpointPacket;
 import eu.koboo.endpoint.core.util.Compression;
 
+import java.io.File;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 public class EndpointBuilder {
+
+    public static final int CORES = Runtime.getRuntime().availableProcessors();
 
     /**
      * Method is deprecated. Use #builder() instead!
@@ -23,19 +28,20 @@ public class EndpointBuilder {
     private Compression compression = Compression.NONE;
     private ErrorMode errorMode = ErrorMode.STACK_TRACE;
 
-    private String udsFile = "/tmp/endpoint-netty/uds.sock";
+    private String udsFile = null;
 
-    private boolean useTimeouts = false;
     private int writeTimeout = 15;
     private int readTimeout = 0;
 
     private boolean logging = false;
+    private boolean framing = true;
+    private boolean processing = true;
 
     private int autoReconnect = -1;
 
     private String encryption;
 
-    private final Map<Integer, Class<?>> packetRegistry = new ConcurrentHashMap<>();
+    private final Map<Integer, Supplier<? extends EndpointPacket>> supplierMap = new ConcurrentHashMap<>();
 
     private EndpointBuilder() {
     }
@@ -50,6 +56,13 @@ public class EndpointBuilder {
         return this;
     }
 
+    public EndpointBuilder useUDS() {
+        File dir = new File("tmp/endpoint-netty/");
+        if (!dir.exists())
+            dir.mkdirs();
+        return useUDS("/tmp/endpoint-netty/uds.sock");
+    }
+
     public EndpointBuilder useUDS(String socketFile) {
         this.udsFile = socketFile;
         return this;
@@ -61,14 +74,29 @@ public class EndpointBuilder {
     }
 
     public EndpointBuilder timeout(int writeTimeout, int readTimeout) {
-        this.useTimeouts = true;
         this.writeTimeout = writeTimeout;
         this.readTimeout = readTimeout;
         return this;
     }
 
+    public EndpointBuilder disableTimeouts() {
+        this.writeTimeout = -1;
+        this.readTimeout = -1;
+        return this;
+    }
+
     public EndpointBuilder logging(boolean logging) {
         this.logging = logging;
+        return this;
+    }
+
+    public EndpointBuilder framing(boolean framing) {
+        this.framing = framing;
+        return this;
+    }
+
+    public EndpointBuilder asyncProcessing(boolean processing) {
+        this.processing = processing;
         return this;
     }
 
@@ -82,23 +110,36 @@ public class EndpointBuilder {
         return this;
     }
 
-    public EndpointBuilder registerPacket(int id, Class<?> clazz) {
-        if (packetRegistry.containsKey(id))
-            throw new IllegalArgumentException("Id already used, please choose another.");
-        packetRegistry.put(id, clazz);
+    public EndpointBuilder registerPacket(int id, Class<? extends EndpointPacket> clazz) {
+        return registerPacket(id, () -> {
+            try {
+                return clazz.newInstance();
+            } catch (InstantiationException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            return null;
+        });
+    }
+
+    public EndpointBuilder registerPacket(int id, Supplier<? extends EndpointPacket> supplier) {
+        if (supplierMap.containsKey(id)) {
+            throw new IllegalArgumentException("Id '" + id + "' is already used.");
+        }
+        supplierMap.put(id, supplier);
         return this;
     }
 
-    public Class<?> getClassById(int id) {
-        return packetRegistry.getOrDefault(id, null);
+    public <Type extends EndpointPacket> int getId(Type object) {
+        for (Map.Entry<Integer, Supplier<? extends EndpointPacket>> entry : supplierMap.entrySet()) {
+            if (entry.getValue().get().getClass().getName().equalsIgnoreCase(object.getClass().getName())) {
+                return entry.getKey();
+            }
+        }
+        return Integer.MIN_VALUE;
     }
 
-    public int getIdByClass(Class<?> clazz) {
-        for (Map.Entry<Integer, Class<?>> entry : packetRegistry.entrySet())
-            if (entry.getValue().getSimpleName().equalsIgnoreCase(clazz.getSimpleName()))
-                return entry.getKey();
-
-        return -1;
+    public <Type extends EndpointPacket> Supplier<Type> getSupplier(int id) {
+        return (Supplier<Type>) supplierMap.get(id);
     }
 
     public Compression getCompression() {
@@ -122,7 +163,7 @@ public class EndpointBuilder {
     }
 
     public boolean isUsingTimeouts() {
-        return useTimeouts;
+        return writeTimeout > 0 || readTimeout > 0;
     }
 
     public int getWriteTimeout() {
@@ -135,6 +176,14 @@ public class EndpointBuilder {
 
     public boolean isLogging() {
         return logging;
+    }
+
+    public boolean isFraming() {
+        return framing;
+    }
+
+    public boolean isProcessing() {
+        return processing;
     }
 
     public int getAutoReconnect() {

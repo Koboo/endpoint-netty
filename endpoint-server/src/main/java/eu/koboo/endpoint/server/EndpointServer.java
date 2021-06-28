@@ -23,46 +23,43 @@ import java.util.concurrent.ThreadFactory;
 public class EndpointServer extends AbstractServer {
 
     private final ServerBootstrap serverBootstrap;
-    private final EventLoopGroup bossGroup;
-    private final EventLoopGroup workerGroup;
     private final ChannelGroup channelGroup;
-    private Channel channel;
 
-    public EndpointServer(EndpointBuilder endpointBuilder) {
-        this(endpointBuilder, -1);
-    }
-
-    public EndpointServer(EndpointBuilder endpointBuilder, int port) {
+    protected EndpointServer(EndpointBuilder endpointBuilder, int port) {
         super(endpointBuilder, port);
 
         // Get cores to calculate the event-loop-group sizes
-        int cores = Runtime.getRuntime().availableProcessors();
-        int bossSize = 2 * cores;
-        int workerSize = 4 * cores;
+        int bossSize = 2 * EndpointBuilder.CORES;
+        int workerSize = 4 * EndpointBuilder.CORES;
 
         ThreadFactory bossFactory = new LocalThreadFactory("EndpointServerBoss");
         ThreadFactory workerFactory = new LocalThreadFactory("EndpointServerWorker");
-        Class<? extends ServerChannel> channelClass;
+        ChannelFactory<? extends ServerChannel> channelFactory;
+        EventLoopGroup bossGroup;
+        EventLoopGroup workerGroup;
         if (Epoll.isAvailable()) {
             if (endpointBuilder.isUsingUDS()) {
-                channelClass = EpollServerDomainSocketChannel.class;
+                channelFactory = EpollServerDomainSocketChannel::new;
             } else {
-                channelClass = EpollServerSocketChannel.class;
+                channelFactory = EpollServerSocketChannel::new;
             }
             bossGroup = new EpollEventLoopGroup(bossSize, bossFactory);
             workerGroup = new EpollEventLoopGroup(workerSize, workerFactory);
         } else {
-            channelClass = NioServerSocketChannel.class;
+            channelFactory = NioServerSocketChannel::new;
             bossGroup = new NioEventLoopGroup(bossSize, bossFactory);
             workerGroup = new NioEventLoopGroup(workerSize, workerFactory);
         }
 
-        channelGroup = new DefaultChannelGroup("EndpointServerConnected", GlobalEventExecutor.INSTANCE);
+        executorList.add(bossGroup);
+        executorList.add(workerGroup);
+
+        channelGroup = new DefaultChannelGroup("EndpointServerChannelGroup", GlobalEventExecutor.INSTANCE);
 
         // Create ServerBootstrap
         serverBootstrap = new ServerBootstrap()
                 .group(bossGroup, workerGroup)
-                .channel(channelClass)
+                .channelFactory(channelFactory)
                 .childHandler(new EndpointInitializer(this, channelGroup))
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
@@ -85,7 +82,6 @@ public class EndpointServer extends AbstractServer {
      */
     @Override
     public boolean start() {
-
 
         if (endpointBuilder.isUsingUDS() && !Epoll.isAvailable() && getPort() == -1) {
             onException(getClass(), new RuntimeException("Platform error! UnixDomainSocket is set, but no native transport available.."));
@@ -110,42 +106,6 @@ public class EndpointServer extends AbstractServer {
         }
         return false;
     }
-
-    /**
-     * Stops the server socket.
-     */
-    @Override
-    public boolean stop() {
-        try {
-
-            // shutdown eventloop-groups
-            bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
-
-            // close server-channel
-            channel.close().sync();
-            return super.stop();
-        } catch (Exception e) {
-            onException(getClass(), e);
-        }
-        return false;
-    }
-
-    /**
-     * Closes the server socket.
-     */
-    @Override
-    public boolean close() {
-        if (channel != null && channel.isOpen())
-            try {
-                channel.close().sync();
-                return super.close();
-            } catch (InterruptedException e) {
-                onException(getClass(), e);
-            }
-        return false;
-    }
-
 
     /**
      * Write the given object to the channel.
@@ -196,7 +156,7 @@ public class EndpointServer extends AbstractServer {
      */
     @Override
     public ChannelGroup getChannelGroup() {
-        return this.channelGroup;
+        return channelGroup;
     }
 
 }

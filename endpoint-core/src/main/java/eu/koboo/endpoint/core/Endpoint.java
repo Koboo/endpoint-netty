@@ -1,44 +1,56 @@
 package eu.koboo.endpoint.core;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
+import eu.koboo.endpoint.core.events.ConsumerEvent;
 import eu.koboo.endpoint.core.events.EventHandler;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 
 public interface Endpoint {
 
     /**
-     * @return Returns the Endpoint-Options instance
+     * @return Returns the Endpoint-Builder instance
      */
     EndpointBuilder builder();
 
-    /**
-     * @return Returns the Endpoint-NetworkEventManager instance
-     */
-    EventHandler eventHandler();
+    <T extends ConsumerEvent> Endpoint registerEvent(Class<T> eventClass, Consumer<? super T> consumer);
+
+    <T extends ConsumerEvent> Endpoint unregisterEvent(Class<T> eventClass, Consumer<T> consumer);
+
+    <T extends ConsumerEvent> CompletableFuture<T> fireEvent(T event);
+
+    <T extends ConsumerEvent> boolean hasListener(Class<T> eventClass);
 
     /**
-     * @return Starts the Endpoint-connection and returns true if was successful
+     * @return Starts the connection and returns true if was successful
      */
     boolean start();
 
     /**
-     * @return Stops the Endpoint-connection and returns true if was successful
+     * @return Stops the connection and returns true if was successful
      */
     boolean stop();
 
     /**
-     * @return closes the Endpoint-connection and returns true if was successful
+     * @return closes the connection and returns true if was successful
      */
     boolean close();
 
     /**
-     * @return true if Endpoint is client
+     * @return Check if client is connected to server/if server is bound to port
+     */
+    boolean isConnected();
+
+    /**
+     * @return true if Endpoint is client or server
      */
     boolean isClient();
 
     /**
-     * @return called on Exception
+     * Always called if an Exception is thrown
      */
-    void onException(Class clazz, Throwable error);
+    @SuppressWarnings("all")
+    Endpoint onException(Class clazz, Throwable error);
 }

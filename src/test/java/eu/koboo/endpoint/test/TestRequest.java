@@ -1,4 +1,4 @@
-package test;
+package eu.koboo.endpoint.test;
 
 import eu.koboo.endpoint.core.codec.EndpointPacket;
 import eu.koboo.endpoint.core.util.BufUtils;

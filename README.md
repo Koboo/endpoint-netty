@@ -1,52 +1,68 @@
 ![Binflux-Netty](binflux-netty.png)
 
-Endpoint-Netty facilitates the integration of a lightweight and easy to use packet-protocol into 
-an environment supported by Netty.
+Endpoint-Netty offers a fast, simple and secure way to define 
+your own protocol and process it accordingly. 
+The main functions are the definition of the protocol, 
+the encoding of the packets and the provision of a consumer-based event bus.
 
-Simply explained: Send (almost) every object back and forth between client or server.
+Further information can be found in the following documentation.
 
 ## History 
 
-The [original project](https://github.com/EsotericSoftware/kryonetty) was
+The [initial project](https://github.com/EsotericSoftware/kryonetty) was
 developed by [EsotericSoftware](https://github.com/EsotericSoftware).
-Since I made some explicit changes, I created a [fork](https://github.com/BinfluxDev/binflux-netty) to make my own customizations.
-After some time and through more special projects,
-I've decided to release a private customized version and continue working on it.
+Since [KryoNetty](https://github.com/EsotericSoftware/kryonetty) did not work with [Netty 4](https://netty.io), 
+I ported to it and created a [fork](https://github.com/BinfluxDev/binflux-netty) to make my own customizations.
+During the porting I already made some changes to achieve my set requirements. Since I put a big 
+focus on performance in the later development, the serialization by [Kryo](https://github.com/EsotericSoftware/kryo) was removed.
 
-Now the project is called EndpointNetty.
+I've decided to release a "customized version" and now this project is
+called **EndpointNetty**. The biggest difference between **EndpointNetty** and **BinfluxNetty** is: [Manual Packet-Encoding](#how-to-create-packets) instead of [Automatic serialization by Kryo](https://github.com/EsotericSoftware/kryo).
 
 ## Overview
 
 #### Endpoints
   * [EndpointBuilder](#what-is-the-endpointbuilder)
-  * [Basic](#basic-options)
+  * [Options](#options)
   * [Timeouts](#timeout-options)
-#### Usage
-  * [Build Endpoints](#how-to-build-the-endpoints)
-  * [Start Endpoints](#how-to-start-the-endpoints)
-  * [Create Packets](#how-to-create-packets)
+  * [Building Endpoints](#how-to-build-the-endpoints)
+  * [Starting Endpoints](#how-to-start-the-endpoints)
+  * [Reconnecting with Client](#reconnecting-with-endpointclient)
+#### Packets
+  * [Creating Packets](#how-to-create-packets)
+  * [Sending Packets](#how-to-send-packets)
+#### Events
   * [Default Events](#default-events)
-  * [Register Events](#register-events)
-  * [Reconnect](#reconnecting-with-endpointclient)
+  * [Registering Events](#register-events)
+  * [Unregistering Events](#unregister-events)
+  * [Creating new Events](#create-new-events)  
 #### Build and Download
   * [Download](#add-as-dependency)  
   * [Build From Source](#build-from-source)
 
 
 ## What is the EndpointBuilder
-`EndpointBuilder` passes options to endpoints. Create new Builder-instance:
+`EndpointBuilder` passes options to endpoints. To create a new instance:
 
 ```java
 EndpointBuilder builder = EndpointBuilder.builder()
         // Add more options by fluent calls
         .logging(false)
+        .framing(true)
+        .processing(true)
         .timeout(15, 0);
 ```
 
-#### Basic options:
+#### Options:
 * `logging(boolean value)` 
     * enables/disables built-in `LoggingHandler.class` of netty (helpful for debugging)
     * default: `false` (disabled)
+* `framing(boolean value)`
+    * enables/disables built-in packet-framing codec of netty 
+    * default: `true` (enabled)
+* `processing(boolean value)`
+    * enables/disables asynchronous packet-processing by usage of `EventExecutorGroup`
+    * default: `true` (enabled)
 * `compression(Compression compression)`
     * Compressions: `GZIP`, `ZLIB`, `SNAPPY` and `NONE`
     * default: `Compression.NONE`
@@ -55,12 +71,14 @@ EndpointBuilder builder = EndpointBuilder.builder()
     * default: `ErrorMode.STACK_TRACE`
 * `autoReconnect(int seconds)`
     * automatic reconnect after `int seconds`
-    * default: '-1' (disabled)
+    * default: `-1` (disabled)
     * `-1` to disable reconnect (or use `builder.disableReconnect()`)
 * `useUDS(String udsFile)`
     * Try to use Unix-Domain-Sockets (short: `UDS`)
     * default: `null` (disabled)
+    * default-path: `tmp/endpoint-netty/uds.sock`
 * `password(String password)`
+    * Automatic encryption
     * Algorithms: `AES-128` and `SHA-256`
     * default: `null` (disabled)
 
@@ -68,6 +86,8 @@ EndpointBuilder builder = EndpointBuilder.builder()
 * `timeout(int writeTimeout, int readTimeout)`
     * default: disabled (write-timeout: `15`, read-timeout: `0`) 
     * `0` = disabled
+* `disableTimeouts()`
+    * disable usage of `IdleStateHandler` and timeout-events 
 
 What does mean `ReadTimeout` and `WriteTimeout`?
 
@@ -77,8 +97,9 @@ from the client to the server, a WriteTimeout is thrown.
 If after the time (`readTimeout` in seconds) no object has been transferred 
 from the server to the client, a ReadTimeout is thrown.
 
+Default behaviour:
 * `WriteTimeout`
-    * default: `int 1` is sent after timeout to keep alive the channel.
+    * default: `int 1` is sent after timeout to keep alive the channel if no further listener is registered.
 * `ReadTimeout`
     * default: no action
 
@@ -89,11 +110,13 @@ To build the `EndpointServer` or `EndpointClient`:
 EndpointBuilder builder = EndpointBuilder.builder()
         // Add more options by fluent calls
         .logging(false)
+        .framing(true)
+        .processing(true)
         .timeout(15, 0);
 
-EndpointClient client = new EndpointClient(builder, String host, int port);
+EndpointClient client = ClientBuilder.of(builder, String host, int port);
 
-EndpointServer server = new EndpointServer(builder, int port);
+EndpointServer server = ServerBuilder.of(builder, int port);
 ```
     
 ## How to start the Endpoints
@@ -104,19 +127,22 @@ To start the `EndpointServer` or `EndpointClient` call `start()`.
 EndpointBuilder builder = EndpointBuilder.builder()
         // Add more options by fluent calls
         .logging(false)
+        .framing(true)
+        .processing(true)
         .timeout(15, 0);
 
-EndpointServer server = new EndpointServer(endpointBuilder, 54321);
+EndpointServer server = ServerBuilder.of(endpointBuilder, 54321);
 server.start();
 
-EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
+EndpointClient client = ClientBuilder.of(endpointBuilder, "localhost", 54321);
 client.start();
 ```
 
 ## How to create Packets
-
+This is a sample ``EndpointPacket`` with a ``String``, a ```long`, and a ``byte[]`` as attributes.
+Each attribute of a ``EndpointPacket`` must be written/read independently to/from the ``ByteBuf``.
 ````java
-public class TestRequest implements NativePacket {
+public class TestRequest implements EndpointPacket {
 
     String testString;
     long testLong;
@@ -165,21 +191,59 @@ public class TestRequest implements NativePacket {
 }
 ````
 
+# How to send Packets
+To register a ``EndpointPacket``, you need a ``Supplier<? extends EndpointPacket>`` of the specific ``EndpointPacket`` so
+that EndpointNetty can initialize new instances.
 ````java
-```java
 EndpointBuilder builder = EndpointBuilder.builder()
     // Add more options by fluent calls
     .logging(false)
+    .framing(true)
+    .processing(true)
     .timeout(15, 0)
     // Register as much packets as you want.
     // But packetIds can only be registered once!    
-    .registerPacket(1, TestRequest.class);
+    .registerPacket(1, TestRequest::new) 
+    .registerPacket(2, new Supplier<TestRequest>() {
+            @Override
+            public TestRequest get() {
+                return new TestRequest();
+            }
+    })
+    .registerPacket(3, TestRequest.class); // REQUIRES EMPTY CONSTRUCTOR
 
-EndpointServer server = new EndpointServer(endpointBuilder, 54321);
+EndpointServer server = ServerBuilder.of(endpointBuilder, 54321);
 server.start();
 
-EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
+EndpointClient client = ClientBuilder.of(endpointBuilder, "localhost", 54321);
 client.start();
+
+// Create a new instance of the packet and set the attributes
+TestRequest request = new TestRequest()
+        .setTestString(/* Any string here */)
+        .setTestLong(/* Any long here */)
+        .setTestBytes(/* Any byte[] here */);
+
+// Packet sending by client
+// Send the packet and do something with the ChannelFuture
+ChannelFuture future = client.send(request);
+
+// Send the packet and ignore result.
+client.sendAndForget(request);
+
+
+// Packet sending by server
+// Send the packet and do something with the ChannelFuture
+ChannelFuture future = server.send(channel, request);
+
+// Send the packet and ignore result.
+server.sendAndForget(channel, request);
+
+// Send the packet and do something with the ChannelFuture
+Map<String, ChannelFuture> futureMap = server.broadcast(request);
+
+// Send the packet to each connected client and ignore result.
+server.broadcastAndForget(request);
 ````
 
 ## Default Events
@@ -208,37 +272,41 @@ The event system is completely `Consumer`-based. These are the default events:
   * server/client: something got logged
   
 ## Register Events
-
+To register events, use the following instructions:
 ````java
 EndpointBuilder builder = EndpointBuilder.builder()
         // Add more options by fluent calls
         .logging(false)
+        .framing(true)
+        .processing(true)
         .timeout(15, 0)
         // Register as much packets as you want.
         // But packetIds can only be registered once!    
         .registerPacket(1, TestRequest.class);
 
-EndpointServer server = new EndpointServer(endpointBuilder, 54321);
+EndpointServer server = ServerBuilder.of(endpointBuilder, 54321);
 server.start();
 
-EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
+EndpointClient client = ClientBuilder.of(endpointBuilder, "localhost", 54321);
 client.start();
 
-client.eventHandler().register(ReceiveEvent.class, event -> {
+client.registerEvent(ReceiveEvent.class, event -> {
     if(event.getTypeObject() instanceof TestRequest) {
         TestRequest request = event.getTypeObject();
     }
 });
 
-new ReceiveListener(server);
+// See example below
+ReceiveListener listener = new ReceiveListener(server);
+
+server.unregisterEvent(ReceiveEvent.class, listener);
 ````
-
-
+Or create a separate class as event-listener:
 ````java
 public class ReceiveListener implements Consumer<ReceiveEvent> {
     
     public ReceiveListener(Endpoint endpoint) {
-        endpoint.eventHandler().register(ReceiveEvent.class, this);
+        endpoint.registerEvent(ReceiveEvent.class, this);
     }
     
     @Override
@@ -251,6 +319,57 @@ public class ReceiveListener implements Consumer<ReceiveEvent> {
 }
 ````
 
+## Unregister Events
+
+Events can also be unregistered, but for this you need the instance of the listener:
+````java
+
+ReceiveListener listener = new ReceiveListener(server);
+
+server.unregisterEvent(ReceiveEvent.class, listener);
+````
+
+## Create new Events
+
+Create a new class and define the required fields as follows:
+````java
+public class TestEvent implements ConsumerEvent {
+
+    private final String someString;
+    private final int someInt;
+  
+    public TestEvent(String someString, int someInt) {
+      this.someString = someString;
+      this.someInt = someInt;
+    }
+  
+    public String getSomeString() {
+      return someString;
+    }
+  
+    public int getSomeInt() {
+      return someInt;
+    }
+}  
+````
+
+To fire an event, use the following method:
+````java
+TestEvent event = new TestEvent("abc", 123);
+
+CompletableFuture<TestEvent> future = server.fireEvent(event);
+````
+
+You can also use the ``CompletableFuture<? extends ConsumerEvent>`` as a callback:
+````java
+TestEvent event = new TestEvent("abc", 123);
+
+CompletableFuture<TestEvent> future = server.fireEvent(event);
+
+future.whenComplete((event, error) -> {
+    // Do something, after event got processed.
+});
+````
 
 ## Reconnecting with EndpointClient
 

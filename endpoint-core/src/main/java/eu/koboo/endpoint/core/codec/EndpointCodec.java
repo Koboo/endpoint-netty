@@ -10,6 +10,7 @@ import io.netty.handler.codec.ByteToMessageCodec;
 
 import javax.crypto.SecretKey;
 import java.util.List;
+import java.util.function.Supplier;
 
 public class EndpointCodec extends ByteToMessageCodec<EndpointPacket> {
 
@@ -80,7 +81,7 @@ public class EndpointCodec extends ByteToMessageCodec<EndpointPacket> {
 
         ByteBuf payload = channel.alloc().buffer();
 
-        int oid = endpoint.builder().getIdByClass(packet.getClass());
+        int oid = endpoint.builder().getId(packet);
 
         if (oid != -1) {
 
@@ -112,16 +113,17 @@ public class EndpointCodec extends ByteToMessageCodec<EndpointPacket> {
 
         int oid = BufUtils.readVarInt(in);
 
-        Class<?> clazz = endpoint.builder().getClassById(oid);
-        if (clazz != null) {
-            EndpointPacket endpointPacket = (EndpointPacket) clazz.newInstance();
+        Supplier<? extends EndpointPacket> supplier = endpoint.builder().getSupplier(oid);
+        if (supplier != null) {
+            EndpointPacket endpointPacket = supplier.get();
             endpointPacket.read(in);
 
             in.release();
 
             return endpointPacket;
+        } else {
+            throw new NullPointerException("No supplier found of id '" + oid + "'");
         }
-        return null;
     }
 
 }

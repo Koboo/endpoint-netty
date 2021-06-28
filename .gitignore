@@ -1,11 +1,5 @@
-/build/
-/.gradle/
-/gradle/
-/.idea/
-/out/
-/endpoint-client/build
-/endpoint-codec-json/build
-/endpoint-codec-native/build
-/endpoint-codec-serial/build
-/endpoint-core/build
-/endpoint-server/build
+.gradle
+gradle
+.idea
+out
+build

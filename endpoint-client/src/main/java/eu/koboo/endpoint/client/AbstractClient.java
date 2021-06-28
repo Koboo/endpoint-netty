@@ -19,11 +19,6 @@ public abstract class AbstractClient extends AbstractEndpoint {
     }
 
     /**
-     * @return Check if client is connected to server
-     */
-    public abstract boolean isConnected();
-
-    /**
      * @return true, because we are the client
      */
     @Override
