@@ -21,12 +21,7 @@ public class NetworkableTest {
     public static void setupClass() {
         encoder = new NetworkableEncoder();
         encoder.register(1, NetworkTestObject::new);
-        System.out.println("== Test NetworkableEncoder Behaviour == ");
-    }
-
-    @AfterClass
-    public static void afterClass() {
-        System.out.println("== Finished NetworkableEncoder Behaviour == ");
+        System.out.println("== Test NetworkableTest Behaviour == ");
     }
 
     @Test
@@ -60,5 +55,10 @@ public class NetworkableTest {
 
         assertArrayEquals(bytes, testBytes);
         System.out.println("Assert against encoded bytes");
+    }
+
+    @AfterClass
+    public static void afterClass() {
+        System.out.println("== Finished NetworkableTest Behaviour == ");
     }
 }
