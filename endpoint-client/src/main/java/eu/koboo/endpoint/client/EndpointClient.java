@@ -24,11 +24,7 @@ public class EndpointClient extends AbstractClient {
 
     private final Bootstrap bootstrap;
 
-    public EndpointClient(EndpointBuilder endpointBuilder) {
-        this(endpointBuilder, null, -1);
-    }
-
-    public EndpointClient(EndpointBuilder endpointBuilder, String host, int port) {
+    protected EndpointClient(EndpointBuilder endpointBuilder, String host, int port) {
         super(endpointBuilder, host, port);
 
         // Get cores to calculate the event-loop-group sizes
@@ -50,7 +46,7 @@ public class EndpointClient extends AbstractClient {
             group = new NioEventLoopGroup(workerSize, localFactory);
         }
 
-        eventLoopGroupList.add(group);
+        executorList.add(group);
 
         // Create Bootstrap
         bootstrap = new Bootstrap()
@@ -153,7 +149,7 @@ public class EndpointClient extends AbstractClient {
             long delay = TimeUnit.SECONDS.toMillis(builder().getAutoReconnect());
             GlobalEventExecutor.INSTANCE.schedule(() -> {
                 if (!isConnected()) {
-                    eventHandler().fireEvent(new EndpointActionEvent(this, EndpointAction.RECONNECT));
+                    fireEvent(new EndpointActionEvent(this, EndpointAction.RECONNECT));
                     start();
                 }
             }, delay, TimeUnit.MILLISECONDS);

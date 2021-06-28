@@ -25,11 +25,7 @@ public class EndpointServer extends AbstractServer {
     private final ServerBootstrap serverBootstrap;
     private final ChannelGroup channelGroup;
 
-    public EndpointServer(EndpointBuilder endpointBuilder) {
-        this(endpointBuilder, -1);
-    }
-
-    public EndpointServer(EndpointBuilder endpointBuilder, int port) {
+    protected EndpointServer(EndpointBuilder endpointBuilder, int port) {
         super(endpointBuilder, port);
 
         // Get cores to calculate the event-loop-group sizes
@@ -55,8 +51,8 @@ public class EndpointServer extends AbstractServer {
             workerGroup = new NioEventLoopGroup(workerSize, workerFactory);
         }
 
-        eventLoopGroupList.add(bossGroup);
-        eventLoopGroupList.add(workerGroup);
+        executorList.add(bossGroup);
+        executorList.add(workerGroup);
 
         channelGroup = new DefaultChannelGroup("EndpointServerChannelGroup", GlobalEventExecutor.INSTANCE);
 
@@ -160,7 +156,7 @@ public class EndpointServer extends AbstractServer {
      */
     @Override
     public ChannelGroup getChannelGroup() {
-        return this.channelGroup;
+        return channelGroup;
     }
 
 }

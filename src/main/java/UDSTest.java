@@ -1,3 +1,4 @@
+import eu.koboo.endpoint.client.ClientBuilder;
 import eu.koboo.endpoint.client.EndpointClient;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
@@ -7,6 +8,7 @@ import eu.koboo.endpoint.core.events.channel.ChannelAction;
 import eu.koboo.endpoint.core.events.channel.ChannelActionEvent;
 import eu.koboo.endpoint.core.util.BufUtils;
 import eu.koboo.endpoint.server.EndpointServer;
+import eu.koboo.endpoint.server.ServerBuilder;
 import io.netty.buffer.ByteBuf;
 
 import java.util.function.Consumer;
@@ -36,10 +38,10 @@ public class UDSTest {
         };
 
         System.out.println("Initialize server..");
-        EndpointServer server = new EndpointServer(builder, 666);
+        EndpointServer server = ServerBuilder.of(builder, 666);
         System.out.println("Registering listener (server)..");
-        server.eventHandler().register(ChannelActionEvent.class, eventConsumer);
-        server.eventHandler().register(ReceiveEvent.class, event -> {
+        server.registerEvent(ChannelActionEvent.class, eventConsumer);
+        server.registerEvent(ReceiveEvent.class, event -> {
             if(event.getObject() instanceof UDSPacket) {
                 UDSPacket udsPacket = (UDSPacket) event.getTypeObject();
                 System.out.println("String: " + udsPacket.getTestString());
@@ -51,9 +53,9 @@ public class UDSTest {
         server.start();
 
         System.out.println("Initialize client..");
-        EndpointClient client = new EndpointClient(builder, "localhost", 666);
+        EndpointClient client = ClientBuilder.of(builder, "localhost", 666);
         System.out.println("Registering listener (client)..");
-        client.eventHandler().register(ChannelActionEvent.class, eventConsumer);
+        client.registerEvent(ChannelActionEvent.class, eventConsumer);
         System.out.println("Starting client..");
         client.start();
 
