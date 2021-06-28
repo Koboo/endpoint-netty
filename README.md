@@ -1,19 +1,23 @@
 ![Binflux-Netty](binflux-netty.png)
 
-Endpoint-Netty facilitates the integration of a lightweight and easy to use packet-protocol into 
-an environment supported by Netty.
+Endpoint-Netty offers a fast, simple and secure way to define 
+your own protocol and process it accordingly. 
+The main functions are the definition of the protocol, 
+the encoding of the packets and the provision of a consumer-based event bus.
 
-Simply explained: Send (almost) every object back and forth between client or server.
+Further information can be found in the following documentation.
 
 ## History 
 
-The [original project](https://github.com/EsotericSoftware/kryonetty) was
+The [initial project](https://github.com/EsotericSoftware/kryonetty) was
 developed by [EsotericSoftware](https://github.com/EsotericSoftware).
-Since I made some explicit changes, I created a [fork](https://github.com/BinfluxDev/binflux-netty) to make my own customizations.
-After some time and through more special projects,
-I've decided to release a private customized version and continue working on it.
+Since [KryoNetty](https://github.com/EsotericSoftware/kryonetty) did not work with [Netty 4](https://netty.io), 
+I ported to it and created a [fork](https://github.com/BinfluxDev/binflux-netty) to make my own customizations.
+During the porting I already made some changes to achieve my set requirements. Since I put a big 
+focus on performance in the later development, the serialization by [Kryo](https://github.com/EsotericSoftware/kryo) was removed.
 
-Now the project is called EndpointNetty.
+I've decided to release a "customized version" and now this project is
+called **EndpointNetty**. The biggest difference between **EndpointNetty** and **BinfluxNetty** is: [Manual Packet-Encoding](#how-to-create-packets) instead of [Automatic serialization by Kryo](https://github.com/EsotericSoftware/kryo).
 
 ## Overview
 
@@ -188,7 +192,8 @@ public class TestRequest implements EndpointPacket {
 ````
 
 # How to send Packets
-
+To register a ``EndpointPacket``, you need a ``Supplier<? extends EndpointPacket>`` of the specific ``EndpointPacket`` so
+that EndpointNetty can initialize new instances.
 ````java
 EndpointBuilder builder = EndpointBuilder.builder()
     // Add more options by fluent calls
@@ -198,7 +203,14 @@ EndpointBuilder builder = EndpointBuilder.builder()
     .timeout(15, 0)
     // Register as much packets as you want.
     // But packetIds can only be registered once!    
-    .registerPacket(1, TestRequest.class);
+    .registerPacket(1, TestRequest::new) 
+    .registerPacket(2, new Supplier<TestRequest>() {
+            @Override
+            public TestRequest get() {
+                return new TestRequest();
+            }
+    })
+    .registerPacket(3, TestRequest.class); // REQUIRES EMPTY CONSTRUCTOR
 
 EndpointServer server = ServerBuilder.of(endpointBuilder, 54321);
 server.start();
@@ -206,17 +218,21 @@ server.start();
 EndpointClient client = ClientBuilder.of(endpointBuilder, "localhost", 54321);
 client.start();
 
+// Create a new instance of the packet and set the attributes
 TestRequest request = new TestRequest()
         .setTestString(/* Any string here */)
         .setTestLong(/* Any long here */)
         .setTestBytes(/* Any byte[] here */);
 
+// Packet sending by client
 // Send the packet and do something with the ChannelFuture
 ChannelFuture future = client.send(request);
 
 // Send the packet and ignore result.
 client.sendAndForget(request);
 
+
+// Packet sending by server
 // Send the packet and do something with the ChannelFuture
 ChannelFuture future = server.send(channel, request);
 
@@ -225,7 +241,6 @@ server.sendAndForget(channel, request);
 
 // Send the packet and do something with the ChannelFuture
 Map<String, ChannelFuture> futureMap = server.broadcast(request);
-
 
 // Send the packet to each connected client and ignore result.
 server.broadcastAndForget(request);
@@ -281,6 +296,7 @@ client.registerEvent(ReceiveEvent.class, event -> {
     }
 });
 
+// See example below
 ReceiveListener listener = new ReceiveListener(server);
 
 server.unregisterEvent(ReceiveEvent.class, listener);
@@ -316,7 +332,6 @@ server.unregisterEvent(ReceiveEvent.class, listener);
 ## Create new Events
 
 Create a new class and define the required fields as follows:
-
 ````java
 public class TestEvent implements ConsumerEvent {
 
@@ -339,15 +354,13 @@ public class TestEvent implements ConsumerEvent {
 ````
 
 To fire an event, use the following method:
-
 ````java
 TestEvent event = new TestEvent("abc", 123);
 
 CompletableFuture<TestEvent> future = server.fireEvent(event);
 ````
 
-You can also use the CompletableFuture as a callback:
-
+You can also use the ``CompletableFuture<? extends ConsumerEvent>`` as a callback:
 ````java
 TestEvent event = new TestEvent("abc", 123);
 
