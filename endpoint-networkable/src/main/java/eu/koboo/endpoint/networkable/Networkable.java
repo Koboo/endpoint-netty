@@ -5,7 +5,7 @@ import java.io.DataOutputStream;
 
 public interface Networkable {
 
-    void readStream(DataInputStream output) throws Exception;
+    void readStream(DataInputStream input) throws Exception;
 
-    void writeStream(DataOutputStream input) throws Exception;
+    void writeStream(DataOutputStream output) throws Exception;
 }
