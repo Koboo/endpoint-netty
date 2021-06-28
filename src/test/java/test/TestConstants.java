@@ -20,7 +20,7 @@ public class TestConstants {
         BUILDER = EndpointBuilder.builder()
                 .logging(false)
                 .errorMode(ErrorMode.STACK_TRACE)
-                .registerPacket(1, TestRequest.class);
+                .registerPacket(1, TestRequest::new);
 
         Random random = new Random();
         testBytes = new byte[1000];

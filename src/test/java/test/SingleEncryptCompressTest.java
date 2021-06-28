@@ -21,7 +21,7 @@ public class SingleEncryptCompressTest {
 
         TestConstants.BUILDER
                 .logging(true)
-                .password("ThisisMyStrongPassword")
+                .password("ThisIsMyStrongPassword")
                 .compression(Compression.SNAPPY);
 
         server = new EndpointServer(TestConstants.BUILDER, 54321);
