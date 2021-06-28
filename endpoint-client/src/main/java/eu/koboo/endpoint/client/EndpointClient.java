@@ -13,8 +13,6 @@ import io.netty.channel.epoll.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.channel.unix.DomainSocketAddress;
-import io.netty.util.concurrent.DefaultEventExecutorGroup;
-import io.netty.util.concurrent.EventExecutorGroup;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -39,23 +37,23 @@ public class EndpointClient extends AbstractClient {
 
         // Check and initialize the event-loop-groups
         ThreadFactory localFactory = new LocalThreadFactory("EndpointClient");
-        Class<? extends Channel> channelClass;
+        ChannelFactory<? extends Channel> channelFactory;
         if (Epoll.isAvailable()) {
             if (endpointBuilder.isUsingUDS()) {
-                channelClass = EpollDomainSocketChannel.class;
+                channelFactory = EpollDomainSocketChannel::new;
             } else {
-                channelClass = EpollSocketChannel.class;
+                channelFactory = EpollSocketChannel::new;
             }
             group = new EpollEventLoopGroup(workerSize, localFactory);
         } else {
-            channelClass = NioSocketChannel.class;
+            channelFactory = NioSocketChannel::new;
             group = new NioEventLoopGroup(workerSize, localFactory);
         }
 
         // Create Bootstrap
         bootstrap = new Bootstrap()
                 .group(group)
-                .channel(channelClass)
+                .channelFactory(channelFactory)
                 .handler(new EndpointInitializer(this, null, executorGroup))
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 

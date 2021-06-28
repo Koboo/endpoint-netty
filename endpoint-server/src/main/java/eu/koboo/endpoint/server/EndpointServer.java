@@ -12,7 +12,6 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.unix.DomainSocketAddress;
-import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.net.InetSocketAddress;
@@ -42,17 +41,17 @@ public class EndpointServer extends AbstractServer {
 
         ThreadFactory bossFactory = new LocalThreadFactory("EndpointServerBoss");
         ThreadFactory workerFactory = new LocalThreadFactory("EndpointServerWorker");
-        Class<? extends ServerChannel> channelClass;
+        ChannelFactory<? extends ServerChannel> channelFactory;
         if (Epoll.isAvailable()) {
             if (endpointBuilder.isUsingUDS()) {
-                channelClass = EpollServerDomainSocketChannel.class;
+                channelFactory = EpollServerDomainSocketChannel::new;
             } else {
-                channelClass = EpollServerSocketChannel.class;
+                channelFactory = EpollServerSocketChannel::new;
             }
             bossGroup = new EpollEventLoopGroup(bossSize, bossFactory);
             workerGroup = new EpollEventLoopGroup(workerSize, workerFactory);
         } else {
-            channelClass = NioServerSocketChannel.class;
+            channelFactory = NioServerSocketChannel::new;
             bossGroup = new NioEventLoopGroup(bossSize, bossFactory);
             workerGroup = new NioEventLoopGroup(workerSize, workerFactory);
         }
@@ -62,7 +61,7 @@ public class EndpointServer extends AbstractServer {
         // Create ServerBootstrap
         serverBootstrap = new ServerBootstrap()
                 .group(bossGroup, workerGroup)
-                .channel(channelClass)
+                .channelFactory(channelFactory)
                 .childHandler(new EndpointInitializer(this, channelGroup, executorGroup))
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
