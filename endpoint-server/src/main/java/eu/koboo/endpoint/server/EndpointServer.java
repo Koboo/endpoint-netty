@@ -12,6 +12,7 @@ import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.unix.DomainSocketAddress;
+import io.netty.util.concurrent.EventExecutorGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.net.InetSocketAddress;
@@ -26,7 +27,6 @@ public class EndpointServer extends AbstractServer {
     private final EventLoopGroup bossGroup;
     private final EventLoopGroup workerGroup;
     private final ChannelGroup channelGroup;
-    private Channel channel;
 
     public EndpointServer(EndpointBuilder endpointBuilder) {
         this(endpointBuilder, -1);
@@ -57,13 +57,13 @@ public class EndpointServer extends AbstractServer {
             workerGroup = new NioEventLoopGroup(workerSize, workerFactory);
         }
 
-        channelGroup = new DefaultChannelGroup("EndpointServerConnected", GlobalEventExecutor.INSTANCE);
+        channelGroup = new DefaultChannelGroup("EndpointServerChannelGroup", GlobalEventExecutor.INSTANCE);
 
         // Create ServerBootstrap
         serverBootstrap = new ServerBootstrap()
                 .group(bossGroup, workerGroup)
                 .channel(channelClass)
-                .childHandler(new EndpointInitializer(this, channelGroup))
+                .childHandler(new EndpointInitializer(this, channelGroup, executorGroup))
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 

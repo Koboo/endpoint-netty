@@ -21,15 +21,10 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
     private final ChannelGroup channels;
     private final EventExecutorGroup executorGroup;
 
-    public EndpointInitializer(Endpoint endpoint, ChannelGroup channels) {
+    public EndpointInitializer(Endpoint endpoint, ChannelGroup channels, EventExecutorGroup executorGroup) {
         this.endpoint = endpoint;
         this.channels = channels;
-        int cores = Runtime.getRuntime().availableProcessors();
-        if (endpoint.builder().isProcessing()) {
-            this.executorGroup = new DefaultEventExecutorGroup(cores * 4);
-        } else {
-            this.executorGroup = null;
-        }
+        this.executorGroup = executorGroup;
     }
 
     @Override

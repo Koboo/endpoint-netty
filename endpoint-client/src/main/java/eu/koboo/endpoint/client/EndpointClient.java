@@ -13,6 +13,8 @@ import io.netty.channel.epoll.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.channel.unix.DomainSocketAddress;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -23,7 +25,6 @@ public class EndpointClient extends AbstractClient {
 
     private final EventLoopGroup group;
     private final Bootstrap bootstrap;
-    private Channel channel;
 
     public EndpointClient(EndpointBuilder endpointBuilder) {
         this(endpointBuilder, null, -1);
@@ -55,7 +56,7 @@ public class EndpointClient extends AbstractClient {
         bootstrap = new Bootstrap()
                 .group(group)
                 .channel(channelClass)
-                .handler(new EndpointInitializer(this, null))
+                .handler(new EndpointInitializer(this, null, executorGroup))
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 
         // Check for extra epoll-options
@@ -94,7 +95,9 @@ public class EndpointClient extends AbstractClient {
     public boolean stop() {
         try {
             group.shutdownGracefully();
-
+            if(executorGroup != null) {
+                executorGroup.shutdownGracefully();
+            }
             return close();
         } catch (Exception e) {
             onException(getClass(), e);

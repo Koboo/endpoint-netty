@@ -5,6 +5,9 @@ import eu.koboo.endpoint.core.events.EventHandler;
 import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
 import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
 import eu.koboo.endpoint.core.events.message.ErrorEvent;
+import io.netty.channel.Channel;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,11 +17,19 @@ public abstract class AbstractEndpoint implements Endpoint {
     protected final EndpointBuilder endpointBuilder;
     private final EventHandler eventBus;
     private final ExecutorService executor;
+    protected final EventExecutorGroup executorGroup;
+    protected Channel channel;
 
     public AbstractEndpoint(EndpointBuilder endpointBuilder) {
         this.endpointBuilder = endpointBuilder;
         this.eventBus = new EventHandler();
-        this.executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() * 2);
+        int cores = Runtime.getRuntime().availableProcessors();
+        this.executor = Executors.newFixedThreadPool(cores * 2);
+        if (builder().isProcessing()) {
+            this.executorGroup = new DefaultEventExecutorGroup(cores * 2);
+        } else {
+            this.executorGroup = null;
+        }
     }
 
     @Override
@@ -30,6 +41,8 @@ public abstract class AbstractEndpoint implements Endpoint {
     @Override
     public boolean stop() {
         executor.shutdownNow();
+        if(executorGroup != null)
+            executorGroup.shutdownGracefully();
         eventBus.fireEvent(new EndpointActionEvent(this, EndpointAction.STOP));
         return true;
     }
