@@ -19,12 +19,10 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
 
     private final AbstractEndpoint endpoint;
     private final ChannelGroup channels;
-    private final EventExecutorGroup executorGroup;
 
-    public EndpointInitializer(AbstractEndpoint endpoint, ChannelGroup channels, EventExecutorGroup executorGroup) {
+    public EndpointInitializer(AbstractEndpoint endpoint, ChannelGroup channels) {
         this.endpoint = endpoint;
         this.channels = channels;
-        this.executorGroup = executorGroup;
     }
 
     @Override
@@ -54,8 +52,8 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
 
             pipeline.addLast("endpoint-codec", new EndpointCodec(endpoint));
 
-            if (endpoint.builder().isProcessing() && executorGroup != null) {
-                pipeline.addLast(executorGroup, "endpoint-handler", new EndpointHandler(endpoint, channels));
+            if (endpoint.builder().isProcessing() && endpoint.executorGroup() != null) {
+                pipeline.addLast(endpoint.executorGroup(), "endpoint-handler", new EndpointHandler(endpoint, channels));
             } else {
                 pipeline.addLast("endpoint-handler", new EndpointHandler(endpoint, channels));
             }

@@ -60,7 +60,7 @@ public class EndpointServer extends AbstractServer {
         serverBootstrap = new ServerBootstrap()
                 .group(bossGroup, workerGroup)
                 .channelFactory(channelFactory)
-                .childHandler(new EndpointInitializer(this, channelGroup, executorGroup))
+                .childHandler(new EndpointInitializer(this, channelGroup))
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 

@@ -52,7 +52,7 @@ public class EndpointClient extends AbstractClient {
         bootstrap = new Bootstrap()
                 .group(group)
                 .channelFactory(channelFactory)
-                .handler(new EndpointInitializer(this, null, executorGroup))
+                .handler(new EndpointInitializer(this, null))
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
 
         // Check for extra epoll-options
