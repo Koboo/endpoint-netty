@@ -23,8 +23,6 @@ import java.util.concurrent.ThreadFactory;
 public class EndpointServer extends AbstractServer {
 
     private final ServerBootstrap serverBootstrap;
-    private final EventLoopGroup bossGroup;
-    private final EventLoopGroup workerGroup;
     private final ChannelGroup channelGroup;
 
     public EndpointServer(EndpointBuilder endpointBuilder) {
@@ -42,6 +40,8 @@ public class EndpointServer extends AbstractServer {
         ThreadFactory bossFactory = new LocalThreadFactory("EndpointServerBoss");
         ThreadFactory workerFactory = new LocalThreadFactory("EndpointServerWorker");
         ChannelFactory<? extends ServerChannel> channelFactory;
+        EventLoopGroup bossGroup;
+        EventLoopGroup workerGroup;
         if (Epoll.isAvailable()) {
             if (endpointBuilder.isUsingUDS()) {
                 channelFactory = EpollServerDomainSocketChannel::new;
@@ -55,6 +55,9 @@ public class EndpointServer extends AbstractServer {
             bossGroup = new NioEventLoopGroup(bossSize, bossFactory);
             workerGroup = new NioEventLoopGroup(workerSize, workerFactory);
         }
+
+        eventLoopGroupList.add(bossGroup);
+        eventLoopGroupList.add(workerGroup);
 
         channelGroup = new DefaultChannelGroup("EndpointServerChannelGroup", GlobalEventExecutor.INSTANCE);
 
@@ -85,7 +88,6 @@ public class EndpointServer extends AbstractServer {
     @Override
     public boolean start() {
 
-
         if (endpointBuilder.isUsingUDS() && !Epoll.isAvailable() && getPort() == -1) {
             onException(getClass(), new RuntimeException("Platform error! UnixDomainSocket is set, but no native transport available.."));
             return false;
@@ -109,42 +111,6 @@ public class EndpointServer extends AbstractServer {
         }
         return false;
     }
-
-    /**
-     * Stops the server socket.
-     */
-    @Override
-    public boolean stop() {
-        try {
-
-            // shutdown eventloop-groups
-            bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
-
-            // close server-channel
-            channel.close().sync();
-            return super.stop();
-        } catch (Exception e) {
-            onException(getClass(), e);
-        }
-        return false;
-    }
-
-    /**
-     * Closes the server socket.
-     */
-    @Override
-    public boolean close() {
-        if (channel != null && channel.isOpen())
-            try {
-                channel.close().sync();
-                return super.close();
-            } catch (InterruptedException e) {
-                onException(getClass(), e);
-            }
-        return false;
-    }
-
 
     /**
      * Write the given object to the channel.

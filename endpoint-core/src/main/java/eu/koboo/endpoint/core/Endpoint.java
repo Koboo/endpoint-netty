@@ -31,6 +31,11 @@ public interface Endpoint {
     boolean close();
 
     /**
+     * @return Check if client is connected to server
+     */
+    boolean isConnected();
+
+    /**
      * @return true if Endpoint is client
      */
     boolean isClient();

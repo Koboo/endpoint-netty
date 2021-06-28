@@ -6,9 +6,13 @@ import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
 import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
 import eu.koboo.endpoint.core.events.message.ErrorEvent;
 import io.netty.channel.Channel;
+import io.netty.channel.EventLoop;
+import io.netty.channel.EventLoopGroup;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -18,6 +22,7 @@ public abstract class AbstractEndpoint implements Endpoint {
     private final EventHandler eventBus;
     private final ExecutorService executor;
     protected final EventExecutorGroup executorGroup;
+    protected final List<EventLoopGroup> eventLoopGroupList;
     protected Channel channel;
 
     public AbstractEndpoint(EndpointBuilder endpointBuilder) {
@@ -30,6 +35,7 @@ public abstract class AbstractEndpoint implements Endpoint {
         } else {
             this.executorGroup = null;
         }
+        this.eventLoopGroupList = new ArrayList<>();
     }
 
     @Override
@@ -40,17 +46,33 @@ public abstract class AbstractEndpoint implements Endpoint {
 
     @Override
     public boolean stop() {
-        executor.shutdownNow();
-        if(executorGroup != null)
-            executorGroup.shutdownGracefully();
-        eventBus.fireEvent(new EndpointActionEvent(this, EndpointAction.STOP));
-        return true;
+        try {
+            boolean close = this.close();
+            executor.shutdownNow();
+            for (EventLoopGroup eventLoopGroup : eventLoopGroupList) {
+                eventLoopGroup.shutdownGracefully();
+            }
+            if (executorGroup != null)
+                executorGroup.shutdownGracefully();
+            eventBus.fireEvent(new EndpointActionEvent(this, EndpointAction.STOP));
+            return close;
+        } catch (Exception e) {
+            onException(getClass(), e);
+        }
+        return false;
     }
 
     @Override
     public boolean close() {
-        eventBus.fireEvent(new EndpointActionEvent(this, EndpointAction.CLOSE));
-        return true;
+        try {
+            if (channel != null && channel.isOpen() && channel.isActive())
+                channel.close().sync();
+            eventBus.fireEvent(new EndpointActionEvent(this, EndpointAction.CLOSE));
+            return true;
+        } catch (InterruptedException e) {
+            onException(getClass(), e);
+        }
+        return false;
     }
 
     @Override
@@ -61,6 +83,12 @@ public abstract class AbstractEndpoint implements Endpoint {
     @Override
     public EventHandler eventHandler() {
         return eventBus;
+    }
+
+
+    @Override
+    public boolean isConnected() {
+        return channel != null && channel.isOpen() && channel.isActive();
     }
 
     @Override

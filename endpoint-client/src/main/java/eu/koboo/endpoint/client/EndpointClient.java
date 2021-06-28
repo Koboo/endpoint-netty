@@ -13,6 +13,7 @@ import io.netty.channel.epoll.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.channel.unix.DomainSocketAddress;
+import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -21,7 +22,6 @@ import java.util.concurrent.TimeUnit;
 
 public class EndpointClient extends AbstractClient {
 
-    private final EventLoopGroup group;
     private final Bootstrap bootstrap;
 
     public EndpointClient(EndpointBuilder endpointBuilder) {
@@ -38,6 +38,7 @@ public class EndpointClient extends AbstractClient {
         // Check and initialize the event-loop-groups
         ThreadFactory localFactory = new LocalThreadFactory("EndpointClient");
         ChannelFactory<? extends Channel> channelFactory;
+        EventLoopGroup group;
         if (Epoll.isAvailable()) {
             if (endpointBuilder.isUsingUDS()) {
                 channelFactory = EpollDomainSocketChannel::new;
@@ -50,6 +51,8 @@ public class EndpointClient extends AbstractClient {
             group = new NioEventLoopGroup(workerSize, localFactory);
         }
 
+        eventLoopGroupList.add(group);
+
         // Create Bootstrap
         bootstrap = new Bootstrap()
                 .group(group)
@@ -61,46 +64,6 @@ public class EndpointClient extends AbstractClient {
         if (Epoll.isAvailable()) {
             bootstrap.option(EpollChannelOption.EPOLL_MODE, EpollMode.LEVEL_TRIGGERED);
         }
-    }
-
-    /**
-     * Return if the client is connected or not
-     */
-    @Override
-    public boolean isConnected() {
-        return channel != null && channel.isOpen() && channel.isActive();
-    }
-
-    /**
-     * Close only the channel
-     */
-    @Override
-    public boolean close() {
-        try {
-            if (channel != null && channel.isActive())
-                channel.close().sync();
-            return super.close();
-        } catch (InterruptedException e) {
-            onException(getClass(), e);
-        }
-        return false;
-    }
-
-    /**
-     * Close the endpoint
-     */
-    @Override
-    public boolean stop() {
-        try {
-            group.shutdownGracefully();
-            if(executorGroup != null) {
-                executorGroup.shutdownGracefully();
-            }
-            return close();
-        } catch (Exception e) {
-            onException(getClass(), e);
-        }
-        return false;
     }
 
     /**
@@ -189,7 +152,7 @@ public class EndpointClient extends AbstractClient {
     private void scheduleReconnect() {
         if (builder().getAutoReconnect() != -1) {
             long delay = TimeUnit.SECONDS.toMillis(builder().getAutoReconnect());
-            group.schedule(() -> {
+            GlobalEventExecutor.INSTANCE.schedule(() -> {
                 if (!isConnected()) {
                     eventHandler().fireEvent(new EndpointActionEvent(this, EndpointAction.RECONNECT));
                     start();
