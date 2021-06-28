@@ -48,7 +48,10 @@ EndpointBuilder builder = EndpointBuilder.builder()
     * enables/disables built-in `LoggingHandler.class` of netty (helpful for debugging)
     * default: `false` (disabled)
 * `framing(boolean value)`
-    * enables/disables built-in packet-framing mechanism of netty 
+    * enables/disables built-in packet-framing codec of netty 
+    * default: `true` (enabled)
+* `processing(boolean value)`
+    * enables/disables asynchronous packet-processing by usage of `EventExecutorGroup`
     * default: `true` (enabled)
 * `compression(Compression compression)`
     * Compressions: `GZIP`, `ZLIB`, `SNAPPY` and `NONE`

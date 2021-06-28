@@ -34,6 +34,7 @@ public class EndpointBuilder {
 
     private boolean logging = false;
     private boolean framing = true;
+    private boolean processing = true;
 
     private int autoReconnect = -1;
 
@@ -85,6 +86,11 @@ public class EndpointBuilder {
 
     public EndpointBuilder framing(boolean framing) {
         this.framing = framing;
+        return this;
+    }
+
+    public EndpointBuilder asyncProcessing(boolean processing) {
+        this.processing = processing;
         return this;
     }
 
@@ -168,6 +174,10 @@ public class EndpointBuilder {
 
     public boolean isFraming() {
         return framing;
+    }
+
+    public boolean isProcessing() {
+        return processing;
     }
 
     public int getAutoReconnect() {

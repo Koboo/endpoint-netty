@@ -25,7 +25,11 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
         this.endpoint = endpoint;
         this.channels = channels;
         int cores = Runtime.getRuntime().availableProcessors();
-        this.executorGroup = new DefaultEventExecutorGroup(cores * 4);
+        if (endpoint.builder().isProcessing()) {
+            this.executorGroup = new DefaultEventExecutorGroup(cores * 4);
+        } else {
+            this.executorGroup = null;
+        }
     }
 
     @Override
@@ -34,9 +38,9 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
             // Get pipeline-instance
             ChannelPipeline pipeline = ch.pipeline();
 
-            if(endpoint.builder().isFraming()) {
-                pipeline.addLast("length-decoder", new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 8, 0, 8));
-                pipeline.addLast("length-encoder", new LengthFieldPrepender(8));
+            if (endpoint.builder().isFraming()) {
+                pipeline.addLast("length-decoder", new LengthFieldBasedFrameDecoder(2048, 0, 4, 0, 4));
+                pipeline.addLast("length-encoder", new LengthFieldPrepender(4));
             }
 
             //Add logging-handler if enabled
@@ -51,9 +55,13 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
             pipeline.addLast("idle-state", new IdleStateHandler(endpoint.builder().getReadTimeout(), endpoint.builder().getWriteTimeout(), 0));
             pipeline.addLast("idle-handler", new EndpointIdleHandler(endpoint));
 
-            pipeline.addLast("native-codec", new EndpointCodec(endpoint));
+            pipeline.addLast("endpoint-codec", new EndpointCodec(endpoint));
 
-            pipeline.addLast(executorGroup, "netty-handler", new EndpointHandler(endpoint, channels));
+            if (endpoint.builder().isProcessing() && executorGroup != null) {
+                pipeline.addLast(executorGroup, "endpoint-handler", new EndpointHandler(endpoint, channels));
+            } else {
+                pipeline.addLast("endpoint-handler", new EndpointHandler(endpoint, channels));
+            }
         } catch (Exception e) {
             endpoint.onException(getClass(), e);
         }
