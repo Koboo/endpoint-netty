@@ -47,6 +47,9 @@ EndpointBuilder builder = EndpointBuilder.builder()
 * `logging(boolean value)` 
     * enables/disables built-in `LoggingHandler.class` of netty (helpful for debugging)
     * default: `false` (disabled)
+* `framing(boolean value)`
+    * enables/disables built-in packet-framing mechanism of netty 
+    * default: `true` (enabled)
 * `compression(Compression compression)`
     * Compressions: `GZIP`, `ZLIB`, `SNAPPY` and `NONE`
     * default: `Compression.NONE`
@@ -55,12 +58,14 @@ EndpointBuilder builder = EndpointBuilder.builder()
     * default: `ErrorMode.STACK_TRACE`
 * `autoReconnect(int seconds)`
     * automatic reconnect after `int seconds`
-    * default: '-1' (disabled)
+    * default: `-1` (disabled)
     * `-1` to disable reconnect (or use `builder.disableReconnect()`)
 * `useUDS(String udsFile)`
     * Try to use Unix-Domain-Sockets (short: `UDS`)
     * default: `null` (disabled)
+    * default-path: `tmp/endpoint-netty/uds.sock`
 * `password(String password)`
+    * Automatic encryption
     * Algorithms: `AES-128` and `SHA-256`
     * default: `null` (disabled)
 

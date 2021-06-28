@@ -34,8 +34,10 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
             // Get pipeline-instance
             ChannelPipeline pipeline = ch.pipeline();
 
-            pipeline.addLast("length-decoder", new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 8, 0, 8));
-            pipeline.addLast("length-encoder", new LengthFieldPrepender(8));
+            if(endpoint.builder().isFraming()) {
+                pipeline.addLast("length-decoder", new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 8, 0, 8));
+                pipeline.addLast("length-encoder", new LengthFieldPrepender(8));
+            }
 
             //Add logging-handler if enabled
             if (endpoint.builder().isLogging())
