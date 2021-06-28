@@ -1,9 +1,12 @@
 package eu.koboo.endpoint.core;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
+import eu.koboo.endpoint.core.events.ConsumerEvent;
 import eu.koboo.endpoint.core.events.EventHandler;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 
 public interface Endpoint {
 
@@ -12,15 +15,13 @@ public interface Endpoint {
      */
     EndpointBuilder builder();
 
-    /**
-     * @return Returns the Endpoint-EventHandler instance
-     */
-    EventHandler eventHandler();
+    <T extends ConsumerEvent> Endpoint registerEvent(Class<T> eventClass, Consumer<? super T> consumer);
 
-    /**
-     * @return Returns the Endpoint-ExecutorService instance
-     */
-    ExecutorService executor();
+    <T extends ConsumerEvent> Endpoint unregisterEvent(Class<T> eventClass, Consumer<T> consumer);
+
+    <T extends ConsumerEvent> CompletableFuture<T> fireEvent(T event);
+
+    <T extends ConsumerEvent> boolean hasListener(Class<T> eventClass);
 
     /**
      * @return Starts the connection and returns true if was successful
@@ -50,5 +51,6 @@ public interface Endpoint {
     /**
      * Always called if an Exception is thrown
      */
-    void onException(Class clazz, Throwable error);
+    @SuppressWarnings("all")
+    Endpoint onException(Class clazz, Throwable error);
 }

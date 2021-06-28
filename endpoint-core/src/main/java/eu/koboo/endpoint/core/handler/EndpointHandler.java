@@ -25,7 +25,7 @@ public class EndpointHandler extends ChannelInboundHandlerAdapter {
             super.channelActive(ctx);
             if (!endpoint.isClient() && channels != null)
                 channels.add(ctx.channel());
-            endpoint.eventHandler().fireEvent(new ChannelActionEvent(ctx.channel(), ChannelAction.CONNECT));
+            endpoint.fireEvent(new ChannelActionEvent(ctx.channel(), ChannelAction.CONNECT));
         } catch (Exception e) {
             endpoint.onException(EndpointHandler.class, e);
         }
@@ -37,7 +37,7 @@ public class EndpointHandler extends ChannelInboundHandlerAdapter {
             super.channelInactive(ctx);
             if (!endpoint.isClient() && channels != null)
                 channels.remove(ctx.channel());
-            endpoint.eventHandler().fireEvent(new ChannelActionEvent(ctx.channel(), ChannelAction.DISCONNECT));
+            endpoint.fireEvent(new ChannelActionEvent(ctx.channel(), ChannelAction.DISCONNECT));
         } catch (Exception e) {
             endpoint.onException(EndpointHandler.class, e);
         }
@@ -50,7 +50,7 @@ public class EndpointHandler extends ChannelInboundHandlerAdapter {
             super.channelRead(ctx, msg);
 
             ReceiveEvent event = new ReceiveEvent(ctx.channel(), msg);
-            endpoint.eventHandler().fireEvent(event);
+            endpoint.fireEvent(event);
         } catch (Exception e) {
             ReferenceCountUtil.release(msg);
             endpoint.onException(EndpointHandler.class, e);

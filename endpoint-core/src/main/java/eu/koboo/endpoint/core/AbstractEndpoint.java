@@ -1,40 +1,34 @@
 package eu.koboo.endpoint.core;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
+import eu.koboo.endpoint.core.events.ConsumerEvent;
 import eu.koboo.endpoint.core.events.EventHandler;
 import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
 import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
 import eu.koboo.endpoint.core.events.message.ErrorEvent;
 import io.netty.channel.Channel;
-import io.netty.channel.EventLoop;
-import io.netty.channel.EventLoopGroup;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 public abstract class AbstractEndpoint implements Endpoint {
 
     protected final EndpointBuilder endpointBuilder;
-    private final EventHandler eventBus;
-    private final ExecutorService executor;
+    protected final EventHandler eventBus;
     protected final EventExecutorGroup executorGroup;
-    protected final List<EventLoopGroup> eventLoopGroupList;
+    protected final List<EventExecutorGroup> executorList;
     protected Channel channel;
 
     public AbstractEndpoint(EndpointBuilder endpointBuilder) {
         this.endpointBuilder = endpointBuilder;
-        this.eventBus = new EventHandler(this);
-        this.executor = Executors.newFixedThreadPool(EndpointBuilder.CORES * 2);
-        if (builder().isProcessing()) {
-            this.executorGroup = new DefaultEventExecutorGroup(EndpointBuilder.CORES * 2);
-        } else {
-            this.executorGroup = null;
-        }
-        this.eventLoopGroupList = new ArrayList<>();
+        eventBus = new EventHandler(this);
+        executorGroup = new DefaultEventExecutorGroup(EndpointBuilder.CORES * 2);
+        executorList = new ArrayList<>();
+        executorList.add(executorGroup);
     }
 
     @Override
@@ -46,18 +40,14 @@ public abstract class AbstractEndpoint implements Endpoint {
     @Override
     public boolean stop() {
         try {
-            boolean close = this.close();
-
-            executor.shutdown();
-
-            for (EventLoopGroup eventLoopGroup : eventLoopGroupList) {
-                eventLoopGroup.shutdownGracefully();
-            }
-
-            if (executorGroup != null)
-                executorGroup.shutdownGracefully();
+            boolean close = close();
 
             eventBus.fireEvent(new EndpointActionEvent(this, EndpointAction.STOP));
+
+            for (EventExecutorGroup executorGroup : executorList) {
+                executorGroup.shutdownGracefully();
+            }
+
             return close;
         } catch (Exception e) {
             onException(getClass(), e);
@@ -68,9 +58,12 @@ public abstract class AbstractEndpoint implements Endpoint {
     @Override
     public boolean close() {
         try {
-            if (channel != null && channel.isOpen() && channel.isActive())
-                channel.close().sync();
             eventBus.fireEvent(new EndpointActionEvent(this, EndpointAction.CLOSE));
+
+            if (channel != null && channel.isOpen() && channel.isActive()) {
+                channel.close().sync();
+            }
+
             return true;
         } catch (InterruptedException e) {
             onException(getClass(), e);
@@ -84,22 +77,13 @@ public abstract class AbstractEndpoint implements Endpoint {
     }
 
     @Override
-    public EventHandler eventHandler() {
-        return eventBus;
-    }
-
-    @Override
     public boolean isConnected() {
         return channel != null && channel.isOpen() && channel.isActive();
     }
 
+    @SuppressWarnings("all")
     @Override
-    public ExecutorService executor() {
-        return executor;
-    }
-
-    @Override
-    public void onException(Class clazz, Throwable error) {
+    public Endpoint onException(Class clazz, Throwable error) {
         switch (endpointBuilder.getErrorMode()) {
             case EVENT:
                 eventBus.fireEvent(new ErrorEvent(clazz, error));
@@ -108,5 +92,32 @@ public abstract class AbstractEndpoint implements Endpoint {
                 error.printStackTrace();
                 break;
         }
+        return this;
+    }
+
+    @Override
+    public <T extends ConsumerEvent> Endpoint registerEvent(Class<T> eventClass, Consumer<? super T> consumer) {
+        eventBus.register(eventClass, consumer);
+        return this;
+    }
+
+    @Override
+    public <T extends ConsumerEvent> Endpoint unregisterEvent(Class<T> eventClass, Consumer<T> consumer) {
+        eventBus.unregister(eventClass, consumer);
+        return this;
+    }
+
+    @Override
+    public <T extends ConsumerEvent> CompletableFuture<T> fireEvent(T event) {
+        return eventBus.fireEvent(event);
+    }
+
+    @Override
+    public <T extends ConsumerEvent> boolean hasListener(Class<T> eventClass) {
+        return eventBus.hasListener(eventClass);
+    }
+
+    public EventExecutorGroup executorGroup() {
+        return executorGroup;
     }
 }

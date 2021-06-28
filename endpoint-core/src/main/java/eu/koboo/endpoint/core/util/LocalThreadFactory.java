@@ -12,7 +12,7 @@ public class LocalThreadFactory implements ThreadFactory {
 
     public LocalThreadFactory(String threadPrefix) {
         this.threadPrefix = threadPrefix;
-        this.threadNumber = new AtomicInteger();
+        threadNumber = new AtomicInteger();
     }
 
     public Thread newThread(Runnable runnable) {

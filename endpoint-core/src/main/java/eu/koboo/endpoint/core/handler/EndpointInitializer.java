@@ -1,5 +1,6 @@
 package eu.koboo.endpoint.core.handler;
 
+import eu.koboo.endpoint.core.AbstractEndpoint;
 import eu.koboo.endpoint.core.Endpoint;
 import eu.koboo.endpoint.core.codec.EndpointCodec;
 import eu.koboo.endpoint.core.util.Compression;
@@ -16,11 +17,11 @@ import io.netty.util.concurrent.EventExecutorGroup;
 
 public class EndpointInitializer extends ChannelInitializer<Channel> {
 
-    private final Endpoint endpoint;
+    private final AbstractEndpoint endpoint;
     private final ChannelGroup channels;
     private final EventExecutorGroup executorGroup;
 
-    public EndpointInitializer(Endpoint endpoint, ChannelGroup channels, EventExecutorGroup executorGroup) {
+    public EndpointInitializer(AbstractEndpoint endpoint, ChannelGroup channels, EventExecutorGroup executorGroup) {
         this.endpoint = endpoint;
         this.channels = channels;
         this.executorGroup = executorGroup;
