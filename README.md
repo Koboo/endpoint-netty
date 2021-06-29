@@ -27,7 +27,8 @@ called **EndpointNetty**. The biggest difference between **EndpointNetty** and *
   * [Timeouts](#timeout-options)
   * [Building Endpoints](#how-to-build-the-endpoints)
   * [Starting Endpoints](#how-to-start-the-endpoints)
-  * [Reconnecting with Client](#reconnecting-with-endpointclient)
+  * [Reconnecting with EndpointClient](#reconnecting-with-endpointclient)
+  * [Using the FluentEndpoints](#how-to-use-fluentendpoints)
 #### Packets
   * [Creating Packets](#how-to-create-packets)
   * [Sending Packets](#how-to-send-packets)
@@ -37,8 +38,8 @@ called **EndpointNetty**. The biggest difference between **EndpointNetty** and *
   * [Unregistering Events](#unregister-events)
   * [Creating new Events](#create-new-events)  
 #### Transferable
-  * [What is a Transferables](#what-is-a-transferable)
-  * [Creating Transferable](#how-to-create-Transferables)
+  * [What is a Transferable](#what-is-a-transferable)
+  * [Creating Transferable](#how-to-create-transferable)
   * [En-/Decoding Transferable](#how-to-encode-or-decode-transferable)
 #### Build and Download
   * [Download](#add-as-dependency)  
@@ -400,10 +401,40 @@ client.start();
 
 If you call `client.stop()`, all events get unregistered.
 
+## How to use FluentEndpoints
+
+To enable a quick and easy integration into existing source codes, 
+there are the so-called ``FluentEndpoints``. The following possibilities are available:
+````java
+
+EndpointBuilder builder = EndpointBuilder.builder();
+
+server = ServerBuilder.fluentOf(builder)
+        .changePort(54321)
+        .onConnect(channel -> System.out.println("Server connected! " + channel.toString()))
+        .onDisconnect(channel -> System.out.println("Server disconnected! " + channel.toString()))
+        .onStart(() -> System.out.println("Server started!"))
+        .onStop(() -> System.out.println("Server stopped!"))
+        .onPacket(TestRequest.class, (channel, packet) -> System.out.println("Server received! " + channel.toString() + "/" + packet.toString()))
+        .bind();
+
+client = ClientBuilder.fluentOf(builder)
+        .changeAddress("localhost", 54321)
+        .onConnect(() -> System.out.println("Client connected!"))
+        .onDisconnect(() -> System.out.println("Client disconnected!"))
+        .onStart(() -> System.out.println("Client started!"))
+        .onStop(() -> System.out.println("Client stopped!"))
+        .onError((clazz, throwable) -> System.out.println("Client error: " + clazz.getSimpleName() + "/" + throwable.getClass().getSimpleName()))
+        .onPacket(TestRequest.class, packet -> System.out.println("Client received! " + packet.toString()))
+        .connect();
+````
+The two ``FluentEndpoints`` are an extension of the regular ``EndpointClient`` and ``EndpointServer``.
+Therefore they inherit all methods and functions
+
 ## What is a Transferable
 
 The ``Transferable`` object specifies the ``readStream(DataInputStream input)`` and ``writeStream(DataOutputStream output)`` methods. 
-This allows the ``TransferCodec`` to read/write instances of the object to/from a ``DataOutputStream``/``DataInputStream``.
+This allows the ``TransferCodec`` to read/write instances of the object from/to a ``DataOutputStream``/``DataInputStream``.
 The interface is defined as follows:
 
 ````java
@@ -433,7 +464,7 @@ methods are declared as default in the ``Transferable`` interface, which saves s
 ## How to create Transferable
 
 To define a new ``Transferable`` object, the corresponding class must implement the ``Transferable`` interface. 
-Then the data to be processed must be written or read from/to the respective stream.
+Then the data to be processed must be written/read to/from the respective stream.
 ````java
 public class TransferObject extends TestRequest implements Transferable {
 
@@ -490,20 +521,20 @@ repositories {
 }
 ```
 
-And add it as dependency. (e.g. `2.6` is the release-version)
+And add it as dependency. (e.g. `2.7` is the release-version)
 ```groovy
 dependencies {
     // !Always needed! 
-    compile 'eu.koboo:endpoint-core:2.6'
+    compile 'eu.koboo:endpoint-core:2.7'
   
    // (optional) transferable-related
-   compile 'eu.koboo:endpoint-transferable:2.6'
+   compile 'eu.koboo:endpoint-transferable:2.7'
         
     // client-related     
-    compile 'eu.koboo:endpoint-client:2.6'
+    compile 'eu.koboo:endpoint-client:2.7'
         
     // server-related     
-    compile 'eu.koboo:endpoint-server:2.6'
+    compile 'eu.koboo:endpoint-server:2.7'
 }
 ```
 

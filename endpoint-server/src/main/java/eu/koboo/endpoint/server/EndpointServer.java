@@ -17,8 +17,6 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadFactory;
 
 public class EndpointServer extends AbstractServer {
