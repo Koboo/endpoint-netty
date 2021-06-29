@@ -2,11 +2,10 @@ package eu.koboo.endpoint.server;
 
 import eu.koboo.endpoint.core.AbstractEndpoint;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
+import eu.koboo.endpoint.core.codec.EndpointPacket;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.group.ChannelGroup;
-
-import java.util.Map;
 
 public abstract class AbstractServer extends AbstractEndpoint {
 
@@ -22,25 +21,11 @@ public abstract class AbstractServer extends AbstractEndpoint {
 
     public abstract ChannelGroup getChannelGroup();
 
-    /**
-     * @param object Send object to client
-     */
-    public abstract ChannelFuture send(Channel channel, Object object);
+    public abstract <P extends EndpointPacket> ChannelFuture send(Channel channel, P packet);
 
-    /**
-     * @param object Send object to client
-     */
-    public abstract void sendAndForget(Channel channel, Object object);
+    public abstract <P extends EndpointPacket> void sendAndForget(Channel channel, P packet);
 
-    /**
-     * @param object Broadcast object
-     */
-    public abstract Map<Channel, ChannelFuture> broadcast(Object object);
-
-    /**
-     * @param object Broadcast object
-     */
-    public abstract void broadcastAndForget(Object object);
+    public abstract <P extends EndpointPacket> void broadcast(P packet);
 
     /**
      * @return false, because we are the server

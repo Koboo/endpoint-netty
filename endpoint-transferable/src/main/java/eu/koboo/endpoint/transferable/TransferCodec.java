@@ -1,4 +1,4 @@
-package eu.koboo.endpoint.networkable;
+package eu.koboo.endpoint.transferable;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -8,31 +8,31 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-public class NetworkableEncoder {
+public class TransferCodec {
 
-    private final Map<Integer, Supplier<? extends Networkable>> supplierMap = new ConcurrentHashMap<>();
+    private final Map<Integer, Supplier<? extends Transferable>> supplierMap = new ConcurrentHashMap<>();
 
-    public NetworkableEncoder() {
+    public TransferCodec() {
     }
 
-    public <Obj extends Networkable> NetworkableEncoder register(int id, Supplier<Obj> supplier) {
+    public <Obj extends Transferable> TransferCodec register(int id, Supplier<Obj> supplier) {
         if(supplierMap.containsKey(id)) {
-            throw new IllegalArgumentException("Id '" + id + "' in NetworkSerializer is already used.");
+            throw new IllegalArgumentException("Id '" + id + "' in TransferCodec is already used.");
         }
         supplierMap.put(id, supplier);
         return this;
     }
 
-    public <Obj extends Networkable> byte[] encode(Obj networkable) {
+    public <Obj extends Transferable> byte[] encode(Obj transferable) {
         try {
             ByteArrayOutputStream buffer = new ByteArrayOutputStream();
             DataOutputStream outputStream = new DataOutputStream(buffer);
-            int id = getId(networkable);
+            int id = getId(transferable);
             if(id == Integer.MIN_VALUE) {
-                throw new NullPointerException("No supplier found of classPath '" + networkable.getClass().getName() + "'");
+                throw new NullPointerException("No supplier found of classPath '" + transferable.getClass().getName() + "'");
             }
             outputStream.writeInt(id);
-            networkable.writeStream(outputStream);
+            transferable.writeStream(outputStream);
             buffer.close();
             return buffer.toByteArray();
         } catch (Exception e) {
@@ -42,26 +42,26 @@ public class NetworkableEncoder {
     }
 
     @SuppressWarnings("all")
-    public <Obj extends Networkable> Obj decode(byte[] bytes) {
+    public <Obj extends Transferable> Obj decode(byte[] bytes) {
         try {
             ByteArrayInputStream buffer = new ByteArrayInputStream(bytes);
             DataInputStream inputStream = new DataInputStream(buffer);
             int id = inputStream.readInt();
-            Supplier<? extends Networkable> supplier = getSupplier(id);
+            Supplier<? extends Transferable> supplier = getSupplier(id);
             if(supplier == null) {
                 throw new NullPointerException("No supplier found of id '" + id + "'");
             }
-            Networkable networkable = supplier.get();
-            networkable.readStream(inputStream);
-            return (Obj) networkable;
+            Transferable transferable = supplier.get();
+            transferable.readStream(inputStream);
+            return (Obj) transferable;
         } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
     }
 
-    public <Obj extends Networkable> int getId(Obj object) {
-        for(Map.Entry<Integer, Supplier<? extends Networkable>> entry : supplierMap.entrySet()) {
+    public <Obj extends Transferable> int getId(Obj object) {
+        for(Map.Entry<Integer, Supplier<? extends Transferable>> entry : supplierMap.entrySet()) {
             if(entry.getValue().get().getClass().getName().equalsIgnoreCase(object.getClass().getName())) {
                 return entry.getKey();
             }
@@ -69,7 +69,7 @@ public class NetworkableEncoder {
         return Integer.MIN_VALUE;
     }
 
-    public <Obj extends Networkable> Supplier<Obj> getSupplier(int id) {
+    public <Obj extends Transferable> Supplier<Obj> getSupplier(int id) {
         return (Supplier<Obj>) supplierMap.get(id);
     }
 
