@@ -36,6 +36,10 @@ called **EndpointNetty**. The biggest difference between **EndpointNetty** and *
   * [Registering Events](#register-events)
   * [Unregistering Events](#unregister-events)
   * [Creating new Events](#create-new-events)  
+#### Networkable
+  * [What is a Networkables](#what-is-a-networkable)
+  * [Creating Networkable](#how-to-create-networkables)
+  * [En-/Decoding Networkable](#how-to-encode-or-decode-networkable)
 #### Build and Download
   * [Download](#add-as-dependency)  
   * [Build From Source](#build-from-source)
@@ -139,7 +143,7 @@ client.start();
 ```
 
 ## How to create Packets
-This is a sample ``EndpointPacket`` with a ``String``, a ```long`, and a ``byte[]`` as attributes.
+This is a sample ``EndpointPacket`` with a ``String``, a ``long``, and a ``byte[]`` as attributes.
 Each attribute of a ``EndpointPacket`` must be written/read independently to/from the ``ByteBuf``.
 ````java
 public class TestRequest implements EndpointPacket {
@@ -396,27 +400,110 @@ client.start();
 
 If you call `client.stop()`, all events get unregistered.
 
+## What is a Networkable
+
+The ``Networkable`` object specifies the ``readStream(DataInputStream input)`` and ``writeStream(DataOutputStream output)`` methods. 
+This allows the ``NetworkableEncoder`` to read/write instances of the object to/from a ``DataOutputStream``/``DataInputStream``.
+The interface is defined as follows:
+
+````java
+public interface Networkable {
+
+  void readStream(DataInputStream input) throws Exception;
+
+  void writeStream(DataOutputStream output) throws Exception;
+
+  default Primitive read(DataInputStream input, Class<Primitive> primitiveClass) { /*...*/ }
+
+  default void write(DataOutputStream output, Object primitive) { /*...*/ }
+  
+  default byte[] readArray(DataInputStream input) { /*...*/ }
+  
+  default void writeArray(DataOutputStream output, byte[] bytes) { /*...*/ }
+
+}
+````
+
+The ``read(DataInputStream input, Class<Primitive> primitiveClass)`` and ``write(DataOutputStream output, Object object)``
+methods are declared as default in the ``Networkable`` interface, which saves some code.
+
+
+**Attention, both methods can only work with java primitives!**
+
+## How to create Networkables
+
+To define a new ``Networkable`` object, the corresponding class must implement the ``Networkable`` interface. 
+Then the data to be processed must be written or read from/to the respective stream.
+````java
+public class NetworkTestObject extends TestRequest implements Networkable {
+
+    @Override
+    public void readStream(DataInputStream input) throws Exception {
+        setTestString(input.readUTF());
+        setTestLong(read(input, Long.class));
+        setTestBytes(readArray(input));
+    }
+
+    @Override
+    public void writeStream(DataOutputStream output) throws Exception {
+        output.writeUTF(getTestString());
+        write(output, getTestLong());
+        writeArray(output, getTestBytes());
+    }
+}
+````
+
+## How to encode or decode Networkable
+
+Here is the example how to define the ``NetworkableEncoder`` and how to encode/decode with it.
+````java
+public class NetworkableExample {
+    
+    public static void main(String[] args) {
+        NetworkableEncoder networkableEncoder = new NetworkableEncoder();
+        networkableEncoder
+              .register(1, new Supplier<Networkable>() {
+                  @Override 
+                  public Networkable get() {
+                    return new NetworkTestObject();
+                  }
+              })
+              .register(2, NetworkTestObject::new);
+        byte[] objectEncoded = networkableEncoder.encode(networkTestObject);
+        NetworkTestObject objectDecoded = networkableEncoder.decode(objectEncoded);
+    }
+
+}
+````
+
+**Attention: if no supplier is registered for the ``Networkable``, the ``NetworkableEncoder`` throws an ``NullPointerException``.**
+
 ## Add as dependency
 
 Add `repo.koboo.eu` as repository. 
 
 ```java
 repositories {
-    maven { url 'https://repo.koboo.eu/releases' }
+    maven { 
+        url 'https://repo.koboo.eu/releases' 
+    }
 }
 ```
 
 And add it as dependency. (e.g. `2.3` is the release-version)
-```java
+```groovy
 dependencies {
     // !Always needed! 
-    compile 'eu.koboo:endpoint-core:2.3'
+    compile 'eu.koboo:endpoint-core:2.6'
+  
+   // (optional) networkable-related
+   compile 'eu.koboo:endpoint-networkable:2.6'
         
     // client-related     
-    compile 'eu.koboo:endpoint-client:2.3'
+    compile 'eu.koboo:endpoint-client:2.6'
         
     // server-related     
-    compile 'eu.koboo:endpoint-server:2.3'
+    compile 'eu.koboo:endpoint-server:2.6'
 }
 ```
 
