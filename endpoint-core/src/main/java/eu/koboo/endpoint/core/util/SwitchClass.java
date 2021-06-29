@@ -3,6 +3,7 @@ package eu.koboo.endpoint.core.util;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+@SuppressWarnings("all")
 public class SwitchClass {
 
     static public <T> void cswitch(Object object, Consumer... consumers) {
