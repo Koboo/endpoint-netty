@@ -2,6 +2,7 @@ package eu.koboo.endpoint.client;
 
 import eu.koboo.endpoint.core.AbstractEndpoint;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
+import eu.koboo.endpoint.core.codec.EndpointPacket;
 import io.netty.channel.ChannelFuture;
 
 public abstract class AbstractClient extends AbstractEndpoint {
@@ -50,14 +51,8 @@ public abstract class AbstractClient extends AbstractEndpoint {
         return port;
     }
 
-    /**
-     * @param object Send object to server
-     */
-    public abstract ChannelFuture send(Object object);
+    public abstract <P extends EndpointPacket> ChannelFuture send(P packet);
 
-    /**
-     * @param object Send object to server
-     */
-    public abstract void sendAndForget(Object object);
+    public abstract <P extends EndpointPacket> void sendAndForget(P packet);
 
 }

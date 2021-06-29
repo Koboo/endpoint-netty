@@ -75,7 +75,6 @@ public class BenchmarkTest {
             System.out.println("Sleeping.. (" + counter.get() + "/" + amount + ")");
         }
         System.out.println(amount + "/" + counter.get() + " successful in " + (time * (1 / 1000000000f)) + " seconds");
-        System.out.println(packetsPerSec + " packets/sec");
         counter.set(0);
     }
 
