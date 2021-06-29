@@ -2,6 +2,7 @@
 package eu.koboo.endpoint.client;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
+import eu.koboo.endpoint.core.codec.EndpointPacket;
 import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
 import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
@@ -119,13 +120,13 @@ public class EndpointClient extends AbstractClient {
      * Write the given object to the server
      * and do something with the returned ChannelFuture.
      *
-     * @param object
+     * @param packet the packet, which get send to the server
      */
     @Override
-    public ChannelFuture send(Object object) {
+    public <P extends EndpointPacket> ChannelFuture send(P packet) {
         try {
             if (isConnected()) {
-                return channel.writeAndFlush(object);
+                return channel.writeAndFlush(packet);
             }
         } catch (Exception e) {
             onException(getClass(), e);
@@ -134,14 +135,15 @@ public class EndpointClient extends AbstractClient {
     }
 
     /**
+     *
      * Write the given object to the server
      * and forget the send-future
      *
-     * @param object
+     * @param packet the packet, which get send to the server
      */
     @Override
-    public void sendAndForget(Object object) {
-        send(object);
+    public <P extends EndpointPacket> void sendAndForget(P packet) {
+        sendAndForget(packet);
     }
 
     private void scheduleReconnect() {

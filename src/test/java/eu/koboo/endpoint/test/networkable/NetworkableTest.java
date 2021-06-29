@@ -1,5 +1,6 @@
 package eu.koboo.endpoint.test.networkable;
 
+import eu.koboo.endpoint.networkable.Networkable;
 import eu.koboo.endpoint.networkable.NetworkableEncoder;
 
 import eu.koboo.endpoint.test.TestConstants;
@@ -7,6 +8,8 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.function.Supplier;
 
 import static org.junit.Assert.*;
 
@@ -60,5 +63,22 @@ public class NetworkableTest {
     @AfterClass
     public static void afterClass() {
         System.out.println("== Finished NetworkableTest Behaviour == ");
+    }
+
+    public static void main(String[] args) {
+        NetworkableEncoder networkableEncoder = new NetworkableEncoder();
+        networkableEncoder
+                .register(1, new Supplier<Networkable>() {
+                    @Override
+                    public Networkable get() {
+                        return new NetworkTestObject();
+                    }
+                })
+                .register(2, NetworkTestObject::new);
+
+        byte[] objectEncoded = networkableEncoder.encode(networkTestObject);
+
+        NetworkTestObject objectDecoded = networkableEncoder.decode(objectEncoded);
+
     }
 }

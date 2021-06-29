@@ -6,6 +6,9 @@ import eu.koboo.endpoint.core.builder.param.ErrorMode;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+
 public class TestConstants {
 
     public static EndpointBuilder BUILDER;
@@ -18,7 +21,8 @@ public class TestConstants {
 
     static {
         BUILDER = EndpointBuilder.builder()
-                .framing(false)
+                .framing(true)
+                .asyncProcessing(true)
                 .logging(false)
                 .errorMode(ErrorMode.STACK_TRACE)
                 .registerPacket(1, TestRequest::new);
@@ -56,5 +60,11 @@ public class TestConstants {
             }
         }
         System.out.println(prefix + setBuilder.toString());
+    }
+
+    public static void assertRequest(TestRequest request) {
+        assertEquals(request.getTestString(), TestConstants.testString);
+        assertEquals(request.getTestLong(), TestConstants.testLong);
+        assertArrayEquals(request.getTestBytes(), TestConstants.testBytes);
     }
 }

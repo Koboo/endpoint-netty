@@ -20,6 +20,7 @@ public class ReceiveEvent implements ConsumerEvent {
         return object;
     }
 
+    @SuppressWarnings("unchecked")
     public <T> T getTypeObject() {
         return (T) object;
     }
