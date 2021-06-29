@@ -6,11 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SharedFutures {
 
-    private final static ConcurrentHashMap<String, CompletableFuture<?>> futureMap;
-
-    static {
-        futureMap = new ConcurrentHashMap<>();
-    }
+    private final static ConcurrentHashMap<String, CompletableFuture<?>> futureMap = new ConcurrentHashMap<>();
 
     public static boolean hasFuture(String futureId) {
         return futureMap.containsKey(futureId);
@@ -38,10 +34,13 @@ public class SharedFutures {
         return new AbstractMap.SimpleEntry<>(futureId, future);
     }
 
+    @Deprecated
     public static <O> Map.Entry<String, CompletableFuture<O>> generateFuture(Class<O> classO) {
         return generateFuture();
     }
 
+
+    @Deprecated
     public static <O> Map.Entry<String, CompletableFuture<HashMap<String, O>>> generateMapFuture() {
         String futureId = createFutureId();
         CompletableFuture<HashMap<String, O>> future = new CompletableFuture<>();
@@ -49,10 +48,14 @@ public class SharedFutures {
         return new AbstractMap.SimpleEntry<>(futureId, future);
     }
 
+
+    @Deprecated
     public static <O> Map.Entry<String, CompletableFuture<HashMap<String, O>>> generateMapFuture(Class<O> classO) {
         return generateMapFuture();
     }
 
+
+    @Deprecated
     public static <O> Map.Entry<String, CompletableFuture<HashSet<O>>> generateSetFuture() {
         String futureId = createFutureId();
         CompletableFuture<HashSet<O>> future = new CompletableFuture<>();
@@ -60,10 +63,14 @@ public class SharedFutures {
         return new AbstractMap.SimpleEntry<>(futureId, future);
     }
 
+
+    @Deprecated
     public static <O> Map.Entry<String, CompletableFuture<HashSet<O>>> generateSetFuture(Class<O> classO) {
         return generateSetFuture();
     }
 
+
+    @Deprecated
     public static <O> Map.Entry<String, CompletableFuture<List<O>>> generateListFuture() {
         String futureId = createFutureId();
         CompletableFuture<List<O>> future = new CompletableFuture<>();
@@ -71,6 +78,8 @@ public class SharedFutures {
         return new AbstractMap.SimpleEntry<>(futureId, future);
     }
 
+
+    @Deprecated
     public static <O> Map.Entry<String, CompletableFuture<List<O>>> generateListFuture(Class<O> classO) {
         return generateListFuture();
     }
