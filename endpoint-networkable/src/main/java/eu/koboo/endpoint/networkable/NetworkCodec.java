@@ -8,14 +8,14 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
-public class NetworkableEncoder {
+public class NetworkCodec {
 
     private final Map<Integer, Supplier<? extends Networkable>> supplierMap = new ConcurrentHashMap<>();
 
-    public NetworkableEncoder() {
+    public NetworkCodec() {
     }
 
-    public <Obj extends Networkable> NetworkableEncoder register(int id, Supplier<Obj> supplier) {
+    public <Obj extends Networkable> NetworkCodec register(int id, Supplier<Obj> supplier) {
         if(supplierMap.containsKey(id)) {
             throw new IllegalArgumentException("Id '" + id + "' in NetworkSerializer is already used.");
         }

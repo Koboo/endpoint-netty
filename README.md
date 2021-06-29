@@ -460,8 +460,8 @@ Here is the example how to define the ``NetworkableEncoder`` and how to encode/d
 public class NetworkableExample {
     
     public static void main(String[] args) {
-        NetworkableEncoder networkableEncoder = new NetworkableEncoder();
-        networkableEncoder
+        NetworkableEncoder networkCodec = new NetworkableEncoder();
+        networkCodec
               .register(1, new Supplier<Networkable>() {
                   @Override 
                   public Networkable get() {
@@ -469,8 +469,8 @@ public class NetworkableExample {
                   }
               })
               .register(2, NetworkTestObject::new);
-        byte[] objectEncoded = networkableEncoder.encode(networkTestObject);
-        NetworkTestObject objectDecoded = networkableEncoder.decode(objectEncoded);
+        byte[] objectEncoded = networkCodec.encode(networkTestObject);
+        NetworkTestObject objectDecoded = networkCodec.decode(objectEncoded);
     }
 
 }

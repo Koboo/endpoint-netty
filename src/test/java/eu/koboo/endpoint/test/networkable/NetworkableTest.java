@@ -1,7 +1,7 @@
 package eu.koboo.endpoint.test.networkable;
 
+import eu.koboo.endpoint.networkable.NetworkCodec;
 import eu.koboo.endpoint.networkable.Networkable;
-import eu.koboo.endpoint.networkable.NetworkableEncoder;
 
 import eu.koboo.endpoint.test.TestConstants;
 import org.junit.AfterClass;
@@ -15,14 +15,14 @@ import static org.junit.Assert.*;
 
 public class NetworkableTest {
 
-    public static NetworkableEncoder encoder;
+    public static NetworkCodec encoder;
 
     static NetworkTestObject networkTestObject;
     static byte[] bytes;
 
     @BeforeClass
     public static void setupClass() {
-        encoder = new NetworkableEncoder();
+        encoder = new NetworkCodec();
         encoder.register(1, NetworkTestObject::new);
         System.out.println("== Test NetworkableTest Behaviour == ");
     }
@@ -66,8 +66,8 @@ public class NetworkableTest {
     }
 
     public static void main(String[] args) {
-        NetworkableEncoder networkableEncoder = new NetworkableEncoder();
-        networkableEncoder
+        NetworkCodec networkCodec = new NetworkCodec();
+        networkCodec
                 .register(1, new Supplier<Networkable>() {
                     @Override
                     public Networkable get() {
@@ -76,9 +76,9 @@ public class NetworkableTest {
                 })
                 .register(2, NetworkTestObject::new);
 
-        byte[] objectEncoded = networkableEncoder.encode(networkTestObject);
+        byte[] objectEncoded = networkCodec.encode(networkTestObject);
 
-        NetworkTestObject objectDecoded = networkableEncoder.decode(objectEncoded);
+        NetworkTestObject objectDecoded = networkCodec.decode(objectEncoded);
 
     }
 }
