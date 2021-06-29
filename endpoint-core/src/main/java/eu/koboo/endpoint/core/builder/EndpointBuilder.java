@@ -28,7 +28,7 @@ public class EndpointBuilder {
     private Compression compression = Compression.NONE;
     private ErrorMode errorMode = ErrorMode.STACK_TRACE;
 
-    private String udsFile = null;
+    private String udsFile;
 
     private int writeTimeout = 15;
     private int readTimeout = 0;
@@ -138,6 +138,7 @@ public class EndpointBuilder {
         return Integer.MIN_VALUE;
     }
 
+    @SuppressWarnings("unchecked")
     public <Type extends EndpointPacket> Supplier<Type> getSupplier(int id) {
         return (Supplier<Type>) supplierMap.get(id);
     }
