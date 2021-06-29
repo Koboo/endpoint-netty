@@ -36,10 +36,10 @@ called **EndpointNetty**. The biggest difference between **EndpointNetty** and *
   * [Registering Events](#register-events)
   * [Unregistering Events](#unregister-events)
   * [Creating new Events](#create-new-events)  
-#### Networkable
-  * [What is a Networkables](#what-is-a-networkable)
-  * [Creating Networkable](#how-to-create-networkables)
-  * [En-/Decoding Networkable](#how-to-encode-or-decode-networkable)
+#### Transferable
+  * [What is a Transferables](#what-is-a-transferable)
+  * [Creating Transferable](#how-to-create-Transferables)
+  * [En-/Decoding Transferable](#how-to-encode-or-decode-transferable)
 #### Build and Download
   * [Download](#add-as-dependency)  
   * [Build From Source](#build-from-source)
@@ -400,14 +400,14 @@ client.start();
 
 If you call `client.stop()`, all events get unregistered.
 
-## What is a Networkable
+## What is a Transferable
 
-The ``Networkable`` object specifies the ``readStream(DataInputStream input)`` and ``writeStream(DataOutputStream output)`` methods. 
-This allows the ``NetworkableEncoder`` to read/write instances of the object to/from a ``DataOutputStream``/``DataInputStream``.
+The ``Transferable`` object specifies the ``readStream(DataInputStream input)`` and ``writeStream(DataOutputStream output)`` methods. 
+This allows the ``TransferCodec`` to read/write instances of the object to/from a ``DataOutputStream``/``DataInputStream``.
 The interface is defined as follows:
 
 ````java
-public interface Networkable {
+public interface Transferable {
 
   void readStream(DataInputStream input) throws Exception;
 
@@ -425,17 +425,17 @@ public interface Networkable {
 ````
 
 The ``read(DataInputStream input, Class<Primitive> primitiveClass)`` and ``write(DataOutputStream output, Object object)``
-methods are declared as default in the ``Networkable`` interface, which saves some code.
+methods are declared as default in the ``Transferable`` interface, which saves some code.
 
 
 **Attention, both methods can only work with java primitives!**
 
-## How to create Networkables
+## How to create Transferable
 
-To define a new ``Networkable`` object, the corresponding class must implement the ``Networkable`` interface. 
+To define a new ``Transferable`` object, the corresponding class must implement the ``Transferable`` interface. 
 Then the data to be processed must be written or read from/to the respective stream.
 ````java
-public class NetworkTestObject extends TestRequest implements Networkable {
+public class TransferObject extends TestRequest implements Transferable {
 
     @Override
     public void readStream(DataInputStream input) throws Exception {
@@ -453,30 +453,30 @@ public class NetworkTestObject extends TestRequest implements Networkable {
 }
 ````
 
-## How to encode or decode Networkable
+## How to encode or decode Transferable
 
-Here is the example how to define the ``NetworkableEncoder`` and how to encode/decode with it.
+Here is the example how to define the ``TransferCodec`` and how to encode/decode with it.
 ````java
-public class NetworkableExample {
+public class TransferableExample {
     
     public static void main(String[] args) {
-        NetworkableEncoder networkableEncoder = new NetworkableEncoder();
-        networkableEncoder
-              .register(1, new Supplier<Networkable>() {
+        TransferCodec transferCodec = new TransferCodec();
+        transferCodec
+              .register(1, new Supplier<Transferable>() {
                   @Override 
-                  public Networkable get() {
-                    return new NetworkTestObject();
+                  public Transferable get() {
+                    return new TransferObject();
                   }
               })
-              .register(2, NetworkTestObject::new);
-        byte[] objectEncoded = networkableEncoder.encode(networkTestObject);
-        NetworkTestObject objectDecoded = networkableEncoder.decode(objectEncoded);
+              .register(2, TransferObject::new);
+        byte[] objectEncoded = transferCodec.encode(networkTestObject);
+        TransferObject objectDecoded = transferCodec.decode(objectEncoded);
     }
 
 }
 ````
 
-**Attention: if no supplier is registered for the ``Networkable``, the ``NetworkableEncoder`` throws an ``NullPointerException``.**
+**Attention: if no supplier is registered for the ``Transferable``, the ``TransferCodec`` throws an ``NullPointerException``.**
 
 ## Add as dependency
 
@@ -490,14 +490,14 @@ repositories {
 }
 ```
 
-And add it as dependency. (e.g. `2.3` is the release-version)
+And add it as dependency. (e.g. `2.6` is the release-version)
 ```groovy
 dependencies {
     // !Always needed! 
     compile 'eu.koboo:endpoint-core:2.6'
   
-   // (optional) networkable-related
-   compile 'eu.koboo:endpoint-networkable:2.6'
+   // (optional) transferable-related
+   compile 'eu.koboo:endpoint-transferable:2.6'
         
     // client-related     
     compile 'eu.koboo:endpoint-client:2.6'
