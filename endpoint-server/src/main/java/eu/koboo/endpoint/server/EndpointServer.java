@@ -1,6 +1,7 @@
 package eu.koboo.endpoint.server;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
+import eu.koboo.endpoint.core.codec.EndpointPacket;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
 import eu.koboo.endpoint.core.util.LocalThreadFactory;
 import io.netty.bootstrap.ServerBootstrap;
@@ -108,47 +109,43 @@ public class EndpointServer extends AbstractServer {
     }
 
     /**
-     * Write the given object to the channel.
+     * Write the given packet to the channel.
      *
-     * @param object
+     * @param packet the packet, which get send to the channel
      */
     @Override
-    public ChannelFuture send(Channel channel, Object object) {
-        return channel.writeAndFlush(object);
-    }
-
-    /**
-     * Write the given object to the channel.
-     *
-     * @param object
-     */
-    public void sendAndForget(Channel channel, Object object) {
-        send(channel, object);
-    }
-
-    /**
-     * Write the given object to all channels.
-     *
-     * @param object
-     */
-    @Override
-    public Map<Channel, ChannelFuture> broadcast(Object object) {
-        Map<Channel, ChannelFuture> channelFutureMap = new ConcurrentHashMap<>();
-        for (Channel channel : channelGroup) {
-            ChannelFuture future = send(channel, object);
-            channelFutureMap.put(channel, future);
+    public <P extends EndpointPacket> ChannelFuture send(Channel channel, P packet) {
+        try {
+            if (isConnected()) {
+                return channel.writeAndFlush(packet);
+            }
+        } catch (Exception e) {
+            onException(getClass(), e);
         }
-        return channelFutureMap;
+        return null;
+    }
+
+
+    /**
+     * Write the given object to the channel.
+     *
+     * @param packet the packet, which get send to the channel
+     */
+    @Override
+    public <P extends EndpointPacket> void sendAndForget(Channel channel, P packet) {
+        send(channel, packet);
     }
 
     /**
-     * Write the given object to all channels.
+     * Write the given packet to all channels.
      *
-     * @param object
+     * @param packet the packet, which get send to all connected channels
      */
     @Override
-    public void broadcastAndForget(Object object) {
-        broadcast(object).clear();
+    public <P extends EndpointPacket> void broadcast(P packet) {
+        for(Channel channel : channelGroup) {
+            sendAndForget(channel, packet);
+        }
     }
 
     /**

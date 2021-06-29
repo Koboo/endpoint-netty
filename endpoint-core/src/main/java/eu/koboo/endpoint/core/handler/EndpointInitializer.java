@@ -1,7 +1,6 @@
 package eu.koboo.endpoint.core.handler;
 
 import eu.koboo.endpoint.core.AbstractEndpoint;
-import eu.koboo.endpoint.core.Endpoint;
 import eu.koboo.endpoint.core.codec.EndpointCodec;
 import eu.koboo.endpoint.core.util.Compression;
 import io.netty.channel.Channel;
@@ -13,9 +12,26 @@ import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
-import io.netty.util.concurrent.EventExecutorGroup;
 
 public class EndpointInitializer extends ChannelInitializer<Channel> {
+
+    public static final String LENGTH_DECODER = "length-decoder";
+    public static final String LENGTH_ENCODER = "length-encoder";
+
+    public static final String LOGGING_HANDLER = "logging-handler";
+
+    public static final String COMPRESSION_DECODER = "compression-decoder";
+    public static final String COMPRESSION_ENCODER = "compression-encoder";
+
+    public static final String IDLE_STATE_THROWER = "idle-state-thrower";
+    public static final String IDLE_STATE_HANDLER = "idle-state-handler";
+
+    public static final String CODEC_HANDLER = "codec-handler";
+
+    public static final String ENDPOINT_HANDLER = "endpoint-handler";
+
+    private static final LoggingHandler LOGGING_HANDLER_INSTANCE = new LoggingHandler(LogLevel.TRACE);
+    private static final LengthFieldPrepender LENGTH_FIELD_PREPENDER = new LengthFieldPrepender(4);
 
     private final AbstractEndpoint endpoint;
     private final ChannelGroup channels;
@@ -32,30 +48,30 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
             ChannelPipeline pipeline = ch.pipeline();
 
             if (endpoint.builder().isFraming()) {
-                pipeline.addLast("length-decoder", new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
-                pipeline.addLast("length-encoder", new LengthFieldPrepender(4));
+                pipeline.addLast(LENGTH_DECODER, new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
+                pipeline.addLast(LENGTH_ENCODER, LENGTH_FIELD_PREPENDER);
             }
 
             //Add logging-handler if enabled
             if (endpoint.builder().isLogging())
-                pipeline.addLast("logging-handler", new LoggingHandler(LogLevel.INFO));
+                pipeline.addLast(LOGGING_HANDLER, LOGGING_HANDLER_INSTANCE);
 
             if (endpoint.builder().getCompression() != null && endpoint.builder().getCompression() != Compression.NONE) {
-                pipeline.addLast(endpoint.builder().getCompression().getEncoder());
-                pipeline.addLast(endpoint.builder().getCompression().getDecoder());
+                pipeline.addLast(COMPRESSION_DECODER, endpoint.builder().getCompression().getDecoder());
+                pipeline.addLast(COMPRESSION_ENCODER, endpoint.builder().getCompression().getEncoder());
             }
 
             if(endpoint.builder().isUsingTimeouts()) {
-                pipeline.addLast("idle-state", new IdleStateHandler(endpoint.builder().getReadTimeout(), endpoint.builder().getWriteTimeout(), 0));
-                pipeline.addLast("idle-handler", new EndpointIdleHandler(endpoint));
+                pipeline.addLast(IDLE_STATE_THROWER, new IdleStateHandler(endpoint.builder().getReadTimeout(), endpoint.builder().getWriteTimeout(), 0));
+                pipeline.addLast(IDLE_STATE_HANDLER, new EndpointIdleHandler(endpoint));
             }
 
-            pipeline.addLast("endpoint-codec", new EndpointCodec(endpoint));
+            pipeline.addLast(CODEC_HANDLER, new EndpointCodec(endpoint));
 
             if (endpoint.builder().isProcessing() && endpoint.executorGroup() != null) {
-                pipeline.addLast(endpoint.executorGroup(), "endpoint-handler", new EndpointHandler(endpoint, channels));
+                pipeline.addLast(endpoint.executorGroup(), ENDPOINT_HANDLER, new EndpointHandler(endpoint, channels));
             } else {
-                pipeline.addLast("endpoint-handler", new EndpointHandler(endpoint, channels));
+                pipeline.addLast(ENDPOINT_HANDLER, new EndpointHandler(endpoint, channels));
             }
         } catch (Exception e) {
             endpoint.onException(getClass(), e);

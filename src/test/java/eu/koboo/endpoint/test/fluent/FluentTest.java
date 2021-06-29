@@ -56,7 +56,7 @@ public class FluentTest {
                 .changeAddress("localhost", 54321)
                 .onConnect(() -> {
                     System.out.println("Client connected!");
-                    client.send(TestConstants.TEST_REQUEST);
+                    client.sendPacket(TestConstants.TEST_REQUEST);
                 })
                 .onDisconnect(() -> System.out.println("Client disconnected!"))
                 .onStart(() -> System.out.println("Client started!"))

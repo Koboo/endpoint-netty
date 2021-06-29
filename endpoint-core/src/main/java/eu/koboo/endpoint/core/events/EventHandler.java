@@ -8,6 +8,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
+@SuppressWarnings("all")
 public class EventHandler {
 
     private final ConcurrentHashMap<Class<?>, List<Consumer<? extends ConsumerEvent>>> consumerMap = new ConcurrentHashMap<>();
@@ -18,21 +19,25 @@ public class EventHandler {
         this.endpoint = endpoint;
     }
 
-    @SuppressWarnings("unchecked")
     public <T extends ConsumerEvent> void register(Class<T> eventClass, Consumer<? super T> consumer) {
-        List<Consumer<? extends ConsumerEvent>> consumerList = new ArrayList<>();
+        List<Consumer<? extends ConsumerEvent>> consumerList = consumerMap.get(eventClass);
 
-        if (consumerMap.containsKey(eventClass))
-            consumerList = consumerMap.get(eventClass);
+        if (consumerList == null) {
+            consumerList = new ArrayList<>();
+        }
 
-        if (!consumerList.contains(consumer))
+        if (!consumerList.contains(consumer)) {
             consumerList.add((Consumer<? extends ConsumerEvent>) consumer);
+        }
 
-        consumerMap.put(eventClass, consumerList);
+        if (!consumerMap.containsKey(eventClass)) {
+            consumerMap.put(eventClass, consumerList);
+        }
     }
 
     public <T extends ConsumerEvent> boolean hasListener(Class<T> eventClass) {
-        return !consumerMap.getOrDefault(eventClass, new ArrayList<>()).isEmpty();
+        List<Consumer<? extends ConsumerEvent>> consumerList = consumerMap.get(eventClass);
+        return consumerList != null && !consumerList.isEmpty();
     }
 
     public <T extends ConsumerEvent> CompletableFuture<T> fireEvent(T event) {
@@ -40,20 +45,21 @@ public class EventHandler {
             return CompletableFuture.completedFuture(event);
         }
         return CompletableFuture.supplyAsync(() -> {
-            List<Consumer<? extends ConsumerEvent>> unknownConsumerList = consumerMap.getOrDefault(event.getClass(), new ArrayList<>());
-            if (!unknownConsumerList.isEmpty())
+            List<Consumer<? extends ConsumerEvent>> unknownConsumerList = consumerMap.get(event.getClass());
+            if (unknownConsumerList != null && !unknownConsumerList.isEmpty()) {
                 for (Consumer<? extends ConsumerEvent> consumer : unknownConsumerList) {
-                    @SuppressWarnings("unchecked")
                     Consumer<? super T> castedConsumer = (Consumer<? super T>) consumer;
                     castedConsumer.accept(event);
                 }
+            }
             return event;
         }, endpoint.executorGroup());
     }
 
     public <T extends ConsumerEvent> void unregister(Class<T> eventClass, Consumer<T> consumer) {
-        List<Consumer<? extends ConsumerEvent>> unknownConsumerList = consumerMap.getOrDefault(eventClass, null);
-        if (unknownConsumerList != null && !unknownConsumerList.isEmpty())
+        List<Consumer<? extends ConsumerEvent>> unknownConsumerList = consumerMap.get(eventClass);
+        if (unknownConsumerList != null && !unknownConsumerList.isEmpty()) {
             unknownConsumerList.remove(consumer);
+        }
     }
 }

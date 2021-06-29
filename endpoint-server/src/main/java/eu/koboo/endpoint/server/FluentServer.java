@@ -72,13 +72,13 @@ public class FluentServer extends EndpointServer {
         return this;
     }
 
-    public <P extends EndpointPacket> FluentServer send(Channel channel, P packet) {
-        super.send(channel, packet).syncUninterruptibly();
+    public <P extends EndpointPacket> FluentServer sendPacket(Channel channel, P packet) {
+        super.sendAndForget(channel, packet);
         return this;
     }
 
-    public <P extends EndpointPacket> FluentServer broadcast(P packet) {
-        super.broadcastAndForget(packet);
+    public <P extends EndpointPacket> FluentServer broadcastPacket(P packet) {
+        super.broadcast(packet);
         return this;
     }
 
