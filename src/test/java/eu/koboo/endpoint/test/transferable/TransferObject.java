@@ -1,12 +1,12 @@
-package eu.koboo.endpoint.test.networkable;
+package eu.koboo.endpoint.test.transferable;
 
-import eu.koboo.endpoint.networkable.Networkable;
+import eu.koboo.endpoint.transferable.Transferable;
 import eu.koboo.endpoint.test.TestRequest;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 
-public class NetworkTestObject extends TestRequest implements Networkable {
+public class TransferObject extends TestRequest implements Transferable {
 
     @Override
     public void readStream(DataInputStream input) throws Exception {
