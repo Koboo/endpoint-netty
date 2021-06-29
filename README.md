@@ -38,7 +38,7 @@ called **EndpointNetty**. The biggest difference between **EndpointNetty** and *
   * [Unregistering Events](#unregister-events)
   * [Creating new Events](#create-new-events)  
 #### Transferable
-  * [What is a Transferables](#what-is-a-transferable)
+  * [What is a Transferable](#what-is-a-transferable)
   * [Creating Transferable](#how-to-create-transferable)
   * [En-/Decoding Transferable](#how-to-encode-or-decode-transferable)
 #### Build and Download
@@ -434,7 +434,7 @@ Therefore they inherit all methods and functions
 ## What is a Transferable
 
 The ``Transferable`` object specifies the ``readStream(DataInputStream input)`` and ``writeStream(DataOutputStream output)`` methods. 
-This allows the ``TransferCodec`` to read/write instances of the object to/from a ``DataOutputStream``/``DataInputStream``.
+This allows the ``TransferCodec`` to read/write instances of the object from/to a ``DataOutputStream``/``DataInputStream``.
 The interface is defined as follows:
 
 ````java
@@ -464,7 +464,7 @@ methods are declared as default in the ``Transferable`` interface, which saves s
 ## How to create Transferable
 
 To define a new ``Transferable`` object, the corresponding class must implement the ``Transferable`` interface. 
-Then the data to be processed must be written or read from/to the respective stream.
+Then the data to be processed must be written/read to/from the respective stream.
 ````java
 public class TransferObject extends TestRequest implements Transferable {
 
