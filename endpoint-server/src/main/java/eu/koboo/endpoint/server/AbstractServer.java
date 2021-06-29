@@ -7,8 +7,6 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.group.ChannelGroup;
 
-import java.util.Map;
-
 public abstract class AbstractServer extends AbstractEndpoint {
 
     private int port;

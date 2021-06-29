@@ -1,7 +1,7 @@
 package eu.koboo.endpoint.test.transferable;
 
-import eu.koboo.endpoint.transferable.Transferable;
 import eu.koboo.endpoint.test.TestRequest;
+import eu.koboo.endpoint.transferable.Transferable;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

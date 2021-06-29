@@ -1,9 +1,8 @@
 package eu.koboo.endpoint.test.transferable;
 
+import eu.koboo.endpoint.test.TestConstants;
 import eu.koboo.endpoint.transferable.TransferCodec;
 import eu.koboo.endpoint.transferable.Transferable;
-
-import eu.koboo.endpoint.test.TestConstants;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -11,7 +10,7 @@ import org.junit.Test;
 
 import java.util.function.Supplier;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
 
 public class TransferableTest {
 

@@ -3,7 +3,6 @@ package eu.koboo.endpoint.core.util;
 import io.netty.util.concurrent.FastThreadLocalThread;
 
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class LocalThreadFactory implements ThreadFactory {
