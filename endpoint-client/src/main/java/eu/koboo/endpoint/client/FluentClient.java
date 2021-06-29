@@ -76,7 +76,7 @@ public class FluentClient extends EndpointClient {
         return this;
     }
 
-    public <P extends EndpointPacket> FluentClient send(P packet) {
+    public <P extends EndpointPacket> FluentClient sendPacket(P packet) {
         super.send(packet).syncUninterruptibly();
         return this;
     }
