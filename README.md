@@ -521,20 +521,20 @@ repositories {
 }
 ```
 
-And add it as dependency. (e.g. `2.6` is the release-version)
+And add it as dependency. (e.g. `2.7` is the release-version)
 ```groovy
 dependencies {
     // !Always needed! 
-    compile 'eu.koboo:endpoint-core:2.6'
+    compile 'eu.koboo:endpoint-core:2.7'
   
    // (optional) transferable-related
-   compile 'eu.koboo:endpoint-transferable:2.6'
+   compile 'eu.koboo:endpoint-transferable:2.7'
         
     // client-related     
-    compile 'eu.koboo:endpoint-client:2.6'
+    compile 'eu.koboo:endpoint-client:2.7'
         
     // server-related     
-    compile 'eu.koboo:endpoint-server:2.6'
+    compile 'eu.koboo:endpoint-server:2.7'
 }
 ```
 
