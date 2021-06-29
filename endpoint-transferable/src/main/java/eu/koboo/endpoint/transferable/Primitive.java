@@ -1,4 +1,4 @@
-package eu.koboo.endpoint.networkable;
+package eu.koboo.endpoint.transferable;
 
 public enum Primitive {
 

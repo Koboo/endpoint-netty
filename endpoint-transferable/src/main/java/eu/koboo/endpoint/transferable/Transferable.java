@@ -1,14 +1,10 @@
-package eu.koboo.endpoint.networkable;
+package eu.koboo.endpoint.transferable;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
 
 @SuppressWarnings("all")
-public interface Networkable {
+public interface Transferable {
 
     void readStream(DataInputStream input) throws Exception;
 
