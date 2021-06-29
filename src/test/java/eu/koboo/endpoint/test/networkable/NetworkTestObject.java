@@ -1,6 +1,5 @@
 package eu.koboo.endpoint.test.networkable;
 
-import eu.koboo.endpoint.networkable.NetworkUtil;
 import eu.koboo.endpoint.networkable.Networkable;
 import eu.koboo.endpoint.test.TestRequest;
 
@@ -11,15 +10,15 @@ public class NetworkTestObject extends TestRequest implements Networkable {
 
     @Override
     public void readStream(DataInputStream input) throws Exception {
-        setTestString(input.readUTF());
-        setTestLong(input.readLong());
-        setTestBytes(NetworkUtil.readArray(input));
+        setTestString(read(input, String.class));
+        setTestLong(read(input, Long.class));
+        setTestBytes(readArray(input));
     }
 
     @Override
     public void writeStream(DataOutputStream output) throws Exception {
-        output.writeUTF(getTestString());
-        output.writeLong(getTestLong());
-        NetworkUtil.writeArray(getTestBytes(), output);
+        write(output, getTestString());
+        write(output, getTestLong());
+        writeArray(output, getTestBytes());
     }
 }
