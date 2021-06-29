@@ -32,7 +32,7 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
             ChannelPipeline pipeline = ch.pipeline();
 
             if (endpoint.builder().isFraming()) {
-                pipeline.addLast("length-decoder", new LengthFieldBasedFrameDecoder(2048, 0, 4, 0, 4));
+                pipeline.addLast("length-decoder", new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE, 0, 4, 0, 4));
                 pipeline.addLast("length-encoder", new LengthFieldPrepender(4));
             }
 
