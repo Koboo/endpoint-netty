@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("unchecked")
@@ -23,6 +24,10 @@ public class TransferMap extends ConcurrentHashMap<String, Object> {
 
     public <T> T getOrDefault(String key, T defaultT) {
         return (T) super.getOrDefault(key, defaultT);
+    }
+
+    public <T> Optional<T> optional(String key) {
+        return Optional.ofNullable(get(key));
     }
 
     public TransferMap append(String key, Object object) {
@@ -52,7 +57,7 @@ public class TransferMap extends ConcurrentHashMap<String, Object> {
                 }
                 outputStream.writeUTF(primitive.name());
                 outputStream.writeUTF(key);
-                Primitive.write(outputStream, object);
+                Primitive.writeDynamic(outputStream, object);
             }
             buffer.close();
             return buffer.toByteArray();
@@ -71,7 +76,7 @@ public class TransferMap extends ConcurrentHashMap<String, Object> {
             for(int i = 0; i < keyLength; i++) {
                 Primitive primitive = Primitive.valueOf(inputStream.readUTF());
                 String key = inputStream.readUTF();
-                Object object = Primitive.read(inputStream, primitive.getPrimitiveClass());
+                Object object = Primitive.readDynamic(inputStream, primitive);
                 transferMap.put(key, object);
             }
             return transferMap;

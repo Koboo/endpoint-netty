@@ -7,11 +7,11 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class PrimitiveTest {
+public class PrimitiveOfTest {
 
     @BeforeClass
     public static void setupClass() {
-        System.out.println("== Test PrimitiveTest Behaviour == ");
+        System.out.println("== Test PrimitiveOfTest Behaviour == ");
     }
 
     @Test
@@ -39,7 +39,7 @@ public class PrimitiveTest {
 
     @AfterClass
     public static void afterClass() {
-        System.out.println("== Finished PrimitiveTest Behaviour == ");
+        System.out.println("== Finished PrimitiveOfTest Behaviour == ");
     }
 
 }

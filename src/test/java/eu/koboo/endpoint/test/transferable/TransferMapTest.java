@@ -27,6 +27,7 @@ public class TransferMapTest {
 
         map.put("testString", TestConstants.testString);
         map.put("testLong", TestConstants.testLong);
+        map.put("testBytes", TestConstants.testBytes);
 
         System.out.println("Initialized TransferMap");
 
@@ -42,9 +43,11 @@ public class TransferMapTest {
 
         String testString = decoded.get("testString", String.class);
         long testLong = decoded.get("testLong", Long.class);
+        byte[] testBytes = decoded.get("testBytes", byte[].class);
 
         Assert.assertEquals(testString, TestConstants.testString);
         Assert.assertEquals(testLong, TestConstants.testLong);
+        Assert.assertArrayEquals(testBytes, TestConstants.testBytes);
         System.out.println("Asserted against TestConstants");
 
         byte[] rencoded = TransferMap.encode(decoded);
