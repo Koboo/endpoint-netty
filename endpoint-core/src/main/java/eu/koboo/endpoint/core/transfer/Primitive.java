@@ -1,4 +1,4 @@
-package eu.koboo.endpoint.transferable;
+package eu.koboo.endpoint.core.transfer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -6,7 +6,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum Primitive {
-
 
     BOOLEAN(Boolean.class, boolean.class),
     BYTE(Byte.class, byte.class),
@@ -174,6 +173,7 @@ public enum Primitive {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public static <Prim> Prim readDynamic(DataInputStream inputStream, Primitive primitive) {
         try {
             int len;
