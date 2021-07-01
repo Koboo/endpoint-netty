@@ -409,7 +409,7 @@ there are the so-called ``FluentEndpoints``. The following possibilities are ava
 
 EndpointBuilder builder = EndpointBuilder.builder();
 
-server = ServerBuilder.fluentOf(builder)
+FluentServer server = ServerBuilder.fluentOf(builder)
         .changePort(54321)
         .onConnect(channel -> System.out.println("Server connected! " + channel.toString()))
         .onDisconnect(channel -> System.out.println("Server disconnected! " + channel.toString()))
@@ -418,7 +418,7 @@ server = ServerBuilder.fluentOf(builder)
         .onPacket(TestRequest.class, (channel, packet) -> System.out.println("Server received! " + channel.toString() + "/" + packet.toString()))
         .bind();
 
-client = ClientBuilder.fluentOf(builder)
+FluenClient client = ClientBuilder.fluentOf(builder)
         .changeAddress("localhost", 54321)
         .onConnect(() -> System.out.println("Client connected!"))
         .onDisconnect(() -> System.out.println("Client disconnected!"))
