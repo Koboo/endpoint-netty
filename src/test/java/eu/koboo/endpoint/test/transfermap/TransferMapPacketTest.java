@@ -58,7 +58,7 @@ public class TransferMapPacketTest {
                 .changeAddress("localhost", 54321)
                 .onConnect(() -> {
                     System.out.println("Client connected!");
-                    client.sendPacket(TestConstants.TEST_MAP_PACKET);
+                    client.sendPacket(TestConstants.TEST_TRANSFER_MAP);
                 })
                 .onDisconnect(() -> System.out.println("Client disconnected!"))
                 .onStart(() -> System.out.println("Client started!"))
