@@ -1,15 +1,11 @@
-package eu.koboo.endpoint.test.transferable;
+package eu.koboo.endpoint.test.transfermap;
 
+import eu.koboo.endpoint.core.transfer.TransferMap;
 import eu.koboo.endpoint.test.TestConstants;
-import eu.koboo.endpoint.transferable.TransferCodec;
-import eu.koboo.endpoint.transferable.TransferMap;
-import eu.koboo.endpoint.transferable.Transferable;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.function.Supplier;
 
 import static org.junit.Assert.assertArrayEquals;
 
@@ -34,12 +30,8 @@ public class TransferMapTest {
         byte[] encoded = TransferMap.encode(map);
         System.out.println("Encoded");
 
-        assert encoded != null;
-
         TransferMap decoded = TransferMap.decode(encoded);
         System.out.println("Decoded");
-
-        assert decoded != null;
 
         String testString = decoded.get("testString", String.class);
         long testLong = decoded.get("testLong", Long.class);

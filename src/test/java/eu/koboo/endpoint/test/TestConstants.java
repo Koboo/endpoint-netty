@@ -2,7 +2,11 @@ package eu.koboo.endpoint.test;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
+import eu.koboo.endpoint.core.transfer.TransferMap;
+import eu.koboo.endpoint.core.transfer.TransferMapPacket;
+import org.junit.Assert;
 
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -15,6 +19,9 @@ public class TestConstants {
 
     public static TestRequest TEST_REQUEST;
 
+    public static TransferMap TEST_TRANSFER_MAP;
+    public static TransferMapPacket TEST_MAP_PACKET;
+
     public static String testString;
     public static long testLong;
     public static byte[] testBytes;
@@ -22,7 +29,7 @@ public class TestConstants {
     static {
         BUILDER = EndpointBuilder.builder()
                 .framing(true)
-                .asyncProcessing(true)
+                .processing(true)
                 .logging(false)
                 .errorMode(ErrorMode.STACK_TRACE)
                 .registerPacket(1, TestRequest::new);
@@ -38,6 +45,15 @@ public class TestConstants {
                 .setTestString(testString)
                 .setTestLong(testLong)
                 .setTestBytes(testBytes);
+
+        TEST_TRANSFER_MAP = new TransferMap();
+
+        TEST_TRANSFER_MAP.put("testString", TestConstants.testString);
+        TEST_TRANSFER_MAP.put("testLong", TestConstants.testLong);
+        TEST_TRANSFER_MAP.put("testBytes", TestConstants.testBytes);
+
+        TEST_MAP_PACKET = new TransferMapPacket();
+        TEST_MAP_PACKET.setTransferMap(TEST_TRANSFER_MAP);
     }
 
     public static int getPacketsPerSec(int amount, long time) {
@@ -67,4 +83,17 @@ public class TestConstants {
         assertEquals(request.getTestLong(), TestConstants.testLong);
         assertArrayEquals(request.getTestBytes(), TestConstants.testBytes);
     }
+
+    public static void assertMap(TransferMapPacket transferMapPacket) {
+        TransferMap transferMap = transferMapPacket.getTransferMap();
+        Assert.assertNotNull(transferMap);
+        String testString = transferMap.get("testString", String.class);
+        long testLong = transferMap.get("testLong", Long.class);
+        byte[] testBytes = transferMap.get("testBytes", byte[].class);
+        Assert.assertEquals(testString, TestConstants.testString);
+        Assert.assertEquals(testLong, TestConstants.testLong);
+        Assert.assertArrayEquals(testBytes, TestConstants.testBytes);
+    }
+
+
 }

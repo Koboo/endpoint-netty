@@ -1,8 +1,9 @@
-package eu.koboo.endpoint.test.fluent;
+package eu.koboo.endpoint.test.transfermap;
 
 import eu.koboo.endpoint.client.ClientBuilder;
 import eu.koboo.endpoint.client.FluentClient;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
+import eu.koboo.endpoint.core.transfer.TransferMapPacket;
 import eu.koboo.endpoint.server.EndpointServer;
 import eu.koboo.endpoint.server.FluentServer;
 import eu.koboo.endpoint.server.ServerBuilder;
@@ -14,7 +15,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
-public class FluentTest {
+public class TransferMapPacketTest {
 
     public static FluentServer server;
     public static FluentClient client;
@@ -30,7 +31,7 @@ public class FluentTest {
     @Test
     public void test() throws Exception {
         System.out.println("== Init-Sequence == ");
-        System.out.println("== 'FluentTest' == ");
+        System.out.println("== 'TransferMapPacketTest' == ");
 
         System.out.println("== Endpoint-Build == ");
 
@@ -44,8 +45,8 @@ public class FluentTest {
                 .onDisconnect(c -> System.out.println("Server disconnected! " + c.toString()))
                 .onStart(() -> System.out.println("Server started!"))
                 .onStop(() -> System.out.println("Server stopped!"))
-                .onPacket(TestRequest.class, (c, p) -> {
-                    TestConstants.assertRequest(p);
+                .onPacket(TransferMapPacket.class, (c, p) -> {
+                    TestConstants.assertMap(p);
                     c.writeAndFlush(p).syncUninterruptibly();
                     System.out.println("Server received! " + c.toString());
                 })
@@ -57,15 +58,15 @@ public class FluentTest {
                 .changeAddress("localhost", 54321)
                 .onConnect(() -> {
                     System.out.println("Client connected!");
-                    client.sendPacket(TestConstants.TEST_REQUEST);
+                    client.sendPacket(TestConstants.TEST_MAP_PACKET);
                 })
                 .onDisconnect(() -> System.out.println("Client disconnected!"))
                 .onStart(() -> System.out.println("Client started!"))
                 .onStop(() -> System.out.println("Client stopped!"))
                 .onError((c, t) -> System.out.println("Client error: " + c.getSimpleName() + "/" + t.getClass().getSimpleName()))
-                .onPacket(TestRequest.class, p -> {
+                .onPacket(TransferMapPacket.class, p -> {
                     System.out.println("Client received!");
-                    TestConstants.assertRequest(p);
+                    TestConstants.assertMap(p);
 
                     System.out.println("== Stop-Sequence == ");
                     assertTrue(client.stop());

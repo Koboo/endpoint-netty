@@ -1,6 +1,6 @@
-package eu.koboo.endpoint.test.transferable;
+package eu.koboo.endpoint.test.transfermap;
 
-import eu.koboo.endpoint.transferable.Primitive;
+import eu.koboo.endpoint.core.transfer.Primitive;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
