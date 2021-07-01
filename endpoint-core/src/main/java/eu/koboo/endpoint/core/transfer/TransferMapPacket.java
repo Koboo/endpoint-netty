@@ -12,8 +12,9 @@ public class TransferMapPacket implements EndpointPacket {
         return transferMap;
     }
 
-    public void setTransferMap(TransferMap transferMap) {
+    public TransferMapPacket setTransferMap(TransferMap transferMap) {
         this.transferMap = transferMap;
+        return this;
     }
 
     @Override

@@ -1,11 +1,14 @@
 
 package eu.koboo.endpoint.client;
 
+import com.sun.org.apache.xpath.internal.objects.XObject;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.codec.EndpointPacket;
 import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
 import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
+import eu.koboo.endpoint.core.transfer.TransferMap;
+import eu.koboo.endpoint.core.transfer.TransferMapPacket;
 import eu.koboo.endpoint.core.util.LocalThreadFactory;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -18,6 +21,7 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.Map;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
@@ -120,11 +124,20 @@ public class EndpointClient extends AbstractClient {
      * Write the given object to the server
      * and do something with the returned ChannelFuture.
      *
-     * @param packet the packet, which get send to the server
+     * @param object the packet, which get send to the server
      */
     @Override
-    public <P extends EndpointPacket> ChannelFuture send(P packet) {
+    public ChannelFuture send(Object object) {
         try {
+            EndpointPacket packet;
+            if(!(object instanceof EndpointPacket) && !(object instanceof TransferMap)) {
+                throw new IllegalArgumentException("Object '" + object.getClass().getName() + "' doesn't implement " + EndpointPacket.class.getSimpleName() + " or " + TransferMap.class.getSimpleName());
+            }
+            if(object instanceof TransferMap) {
+                packet = new TransferMapPacket().setTransferMap((TransferMap) object);
+            } else {
+                packet = (EndpointPacket) object;
+            }
             if (isConnected()) {
                 return channel.writeAndFlush(packet);
             }
@@ -132,18 +145,6 @@ public class EndpointClient extends AbstractClient {
             onException(getClass(), e);
         }
         return null;
-    }
-
-    /**
-     *
-     * Write the given object to the server
-     * and forget the send-future
-     *
-     * @param packet the packet, which get send to the server
-     */
-    @Override
-    public <P extends EndpointPacket> void sendAndForget(P packet) {
-        sendAndForget(packet);
     }
 
     private void scheduleReconnect() {
