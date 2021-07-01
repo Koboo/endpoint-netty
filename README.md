@@ -382,7 +382,7 @@ If you want to reconnect a `EndpointClient`, do this:
 
 * Initial connect the client
 ```java
-EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
+EndpointClient client = ClientBuilder.of(endpointBuilder, "localhost", 54321);
 client.start(); 
 ```
 * Close/disconnect the client - do not call `stop()`
