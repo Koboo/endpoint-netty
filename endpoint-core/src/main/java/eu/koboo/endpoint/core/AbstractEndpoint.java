@@ -6,7 +6,7 @@ import eu.koboo.endpoint.core.events.EventHandler;
 import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
 import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
 import eu.koboo.endpoint.core.events.message.ErrorEvent;
-import eu.koboo.endpoint.core.transfer.TransferMapPacket;
+import eu.koboo.endpoint.core.primitive.PrimitivePacket;
 import io.netty.channel.Channel;
 import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
@@ -26,8 +26,8 @@ public abstract class AbstractEndpoint implements Endpoint {
 
     public AbstractEndpoint(EndpointBuilder builder) {
         endpointBuilder = builder;
-        if(builder.isTransfer() && builder.getSupplier(-100) == null) {
-            builder.registerPacket(-100, TransferMapPacket::new);
+        if(builder.isPrimitive() && builder.getSupplier(-100) == null) {
+            builder.registerPacket(-100, PrimitivePacket::new);
         }
         eventBus = new EventHandler(this);
         executorGroup = new DefaultEventExecutorGroup(EndpointBuilder.CORES * 2);

@@ -1,14 +1,13 @@
 
 package eu.koboo.endpoint.client;
 
-import com.sun.org.apache.xpath.internal.objects.XObject;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.codec.EndpointPacket;
 import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
 import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
-import eu.koboo.endpoint.core.transfer.TransferMap;
-import eu.koboo.endpoint.core.transfer.TransferMapPacket;
+import eu.koboo.endpoint.core.primitive.PrimitiveMap;
+import eu.koboo.endpoint.core.primitive.PrimitivePacket;
 import eu.koboo.endpoint.core.util.LocalThreadFactory;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -21,7 +20,6 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.Map;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
@@ -130,11 +128,11 @@ public class EndpointClient extends AbstractClient {
     public ChannelFuture send(Object object) {
         try {
             EndpointPacket packet;
-            if(!(object instanceof EndpointPacket) && !(object instanceof TransferMap)) {
-                throw new IllegalArgumentException("Object '" + object.getClass().getName() + "' doesn't implement " + EndpointPacket.class.getSimpleName() + " or " + TransferMap.class.getSimpleName());
+            if(!(object instanceof EndpointPacket) && !(object instanceof PrimitiveMap)) {
+                throw new IllegalArgumentException("Object '" + object.getClass().getName() + "' doesn't implement " + EndpointPacket.class.getSimpleName() + " or " + PrimitiveMap.class.getSimpleName());
             }
-            if(object instanceof TransferMap) {
-                packet = new TransferMapPacket().setTransferMap((TransferMap) object);
+            if(object instanceof PrimitiveMap) {
+                packet = new PrimitivePacket().setPrimitiveMap((PrimitiveMap) object);
             } else {
                 packet = (EndpointPacket) object;
             }

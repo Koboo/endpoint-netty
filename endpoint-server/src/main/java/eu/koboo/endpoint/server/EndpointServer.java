@@ -3,8 +3,8 @@ package eu.koboo.endpoint.server;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.codec.EndpointPacket;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
-import eu.koboo.endpoint.core.transfer.TransferMap;
-import eu.koboo.endpoint.core.transfer.TransferMapPacket;
+import eu.koboo.endpoint.core.primitive.PrimitiveMap;
+import eu.koboo.endpoint.core.primitive.PrimitivePacket;
 import eu.koboo.endpoint.core.util.LocalThreadFactory;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -118,11 +118,11 @@ public class EndpointServer extends AbstractServer {
         try {
 
             EndpointPacket packet;
-            if(!(object instanceof EndpointPacket) && !(object instanceof TransferMap)) {
-                throw new IllegalArgumentException("Object '" + object.getClass().getName() + "' doesn't implement " + EndpointPacket.class.getSimpleName() + " or " + TransferMap.class.getSimpleName());
+            if(!(object instanceof EndpointPacket) && !(object instanceof PrimitiveMap)) {
+                throw new IllegalArgumentException("Object '" + object.getClass().getName() + "' doesn't implement " + EndpointPacket.class.getSimpleName() + " or " + PrimitiveMap.class.getSimpleName());
             }
-            if(object instanceof TransferMap) {
-                packet = new TransferMapPacket().setTransferMap((TransferMap) object);
+            if(object instanceof PrimitiveMap) {
+                packet = new PrimitivePacket().setPrimitiveMap((PrimitiveMap) object);
             } else {
                 packet = (EndpointPacket) object;
             }
