@@ -37,6 +37,9 @@ called **EndpointNetty**. The biggest difference between **EndpointNetty** and *
   * [Registering Events](#register-events)
   * [Unregistering Events](#unregister-events)
   * [Creating new Events](#create-new-events)  
+#### PrimitiveMap
+  * [What is a PrimitiveMap](#what-is-a-primitivemap)
+  * [Sending PrimitiveMap](#how-to-send-primitivemap)
 #### Transferable
   * [What is a Transferable](#what-is-a-transferable)
   * [Creating Transferable](#how-to-create-transferable)
@@ -45,6 +48,7 @@ called **EndpointNetty**. The biggest difference between **EndpointNetty** and *
   * [Download](#add-as-dependency)  
   * [Build From Source](#build-from-source)
 
+# Endpoints
 
 ## What is the EndpointBuilder
 ``EndpointBuilder`` passes options to endpoints. To create a new instance:
@@ -67,6 +71,9 @@ EndpointBuilder builder = EndpointBuilder.builder()
     * default: ``true`` (enabled)
 * ``processing(boolean value)``
     * enables/disables asynchronous packet-processing by usage of ``EventExecutorGroup``
+    * default: ``true`` (enabled)
+* ``primitive(boolean value)``
+    * enables/disables usage of ``PrimitiveMap``. (packetId of ``PrimitivePacket`` is ``-100``)
     * default: ``true`` (enabled)
 * ``compression(Compression compression)``
     * Compressions: ``GZIP``, ``ZLIB``, ``SNAPPY`` and ``NONE``
@@ -142,6 +149,63 @@ server.start();
 EndpointClient client = ClientBuilder.of(endpointBuilder, "localhost", 54321);
 client.start();
 ```
+
+## Reconnecting with EndpointClient
+
+If you want to reconnect a ``EndpointClient``, do this:
+
+* Initial connect the client
+```java
+EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
+client.start(); 
+```
+* Close/disconnect the client (do not call ``stop()``)
+```java
+client.close();
+```
+
+* (optional) Change address
+```java
+client.setAddress("localhost", 12345);
+```
+* Start again
+```java
+client.start();
+```
+
+If you call ``client.stop()``, all events get unregistered.
+
+## How to use FluentEndpoints
+
+To enable a quick and easy integration into existing source codes,
+there are the so-called ``FluentEndpoints``. The following possibilities are available:
+````java
+
+EndpointBuilder builder = EndpointBuilder.builder();
+
+server = ServerBuilder.fluentOf(builder)
+        .changePort(54321)
+        .onConnect(channel -> System.out.println("Server connected! " + channel.toString()))
+        .onDisconnect(channel -> System.out.println("Server disconnected! " + channel.toString()))
+        .onStart(() -> System.out.println("Server started!"))
+        .onStop(() -> System.out.println("Server stopped!"))
+        .onPacket(TestRequest.class, (channel, packet) -> System.out.println("Server received! " + channel.toString() + "/" + packet.toString()))
+        .bind();
+
+client = ClientBuilder.fluentOf(builder)
+        .changeAddress("localhost", 54321)
+        .onConnect(() -> System.out.println("Client connected!"))
+        .onDisconnect(() -> System.out.println("Client disconnected!"))
+        .onStart(() -> System.out.println("Client started!"))
+        .onStop(() -> System.out.println("Client stopped!"))
+        .onError((clazz, throwable) -> System.out.println("Client error: " + clazz.getSimpleName() + "/" + throwable.getClass().getSimpleName()))
+        .onPacket(TestRequest.class, packet -> System.out.println("Client received! " + packet.toString()))
+        .connect();
+````
+The two ``FluentEndpoints`` are an extension of the regular ``EndpointClient`` and ``EndpointServer``.
+Therefore they inherit all methods and functions
+
+# Packets
 
 ## How to create Packets
 This is a sample ``EndpointPacket`` with a ``String``, a ``long``, and a ``byte[]`` as attributes.
@@ -250,6 +314,8 @@ Map<String, ChannelFuture> futureMap = server.broadcast(request);
 // Send the packet to each connected client and ignore result.
 server.broadcastAndForget(request);
 ````
+
+# Events
 
 ## Default Events
 
@@ -375,61 +441,44 @@ future.whenComplete((event, error) -> {
     // Do something, after event got processed.
 });
 ````
+# PrimitiveMap
 
-## Reconnecting with EndpointClient
+# What is a PrimitiveMap
 
-If you want to reconnect a ``EndpointClient``, do this:
+A ``PrimitiveMap`` allows the transfer of a key-value map, where the value 
+must be a primitive data type or a primitive array.
 
-* Initial connect the client
-```java
-EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
-client.start(); 
-```
-* Close/disconnect the client (do not call ``stop()``)
-```java
-client.close();
-```
+````java
+PrimitiveMap primitiveMap = new PrimitiveMap();
 
-* (optional) Change address
-```java
-client.setAddress("localhost", 12345);
-```
-* Start again
-```java
-client.start();
-```
+primitiveMap.put(String key, Object value);
+primitiveMap.append(String key, Object value);
+primitiveMap.get(String key);
+primitiveMap.get(String key, Class objectClass);
+primitiveMap.optional(String key);
+primitiveMap.optional(String key, Class objectClass);
+````
 
-If you call ``client.stop()``, all events get unregistered.
+Besides some additional methods, the PrimitiveMap inherits all methods of a ConcurrentHashMap.
 
-## How to use FluentEndpoints
+# How to send PrimitiveMap
 
-To enable a quick and easy integration into existing source codes, 
-there are the so-called ``FluentEndpoints``. The following possibilities are available:
+A ``PrimitiveMap`` can be easily sent via the ``send(primitiveMap)`` call. The respective endpoint automatically 
+packages the ``PrimitiveMap`` into a ``PrimitivePacket``, which can be received with a ``ReceiveEvent``.
+
 ````java
 
-EndpointBuilder builder = EndpointBuilder.builder();
+PrimitiveMap primitiveMap = new PrimitiveMap();
 
-server = ServerBuilder.fluentOf(builder)
-        .changePort(54321)
-        .onConnect(channel -> System.out.println("Server connected! " + channel.toString()))
-        .onDisconnect(channel -> System.out.println("Server disconnected! " + channel.toString()))
-        .onStart(() -> System.out.println("Server started!"))
-        .onStop(() -> System.out.println("Server stopped!"))
-        .onPacket(TestRequest.class, (channel, packet) -> System.out.println("Server received! " + channel.toString() + "/" + packet.toString()))
-        .bind();
+primitiveMap.put("testString", TestConstants.testString);
+primitiveMap.put("testLong", TestConstants.testLong);
+primitiveMap.put("testBytes", TestConstants.testBytes);
 
-client = ClientBuilder.fluentOf(builder)
-        .changeAddress("localhost", 54321)
-        .onConnect(() -> System.out.println("Client connected!"))
-        .onDisconnect(() -> System.out.println("Client disconnected!"))
-        .onStart(() -> System.out.println("Client started!"))
-        .onStop(() -> System.out.println("Client stopped!"))
-        .onError((clazz, throwable) -> System.out.println("Client error: " + clazz.getSimpleName() + "/" + throwable.getClass().getSimpleName()))
-        .onPacket(TestRequest.class, packet -> System.out.println("Client received! " + packet.toString()))
-        .connect();
+client.send(primitiveMap);
+
 ````
-The two ``FluentEndpoints`` are an extension of the regular ``EndpointClient`` and ``EndpointServer``.
-Therefore they inherit all methods and functions
+
+# Transferable
 
 ## What is a Transferable
 
@@ -508,6 +557,8 @@ public class TransferableExample {
 ````
 
 **Attention: if no supplier is registered for the ``Transferable``, the ``TransferCodec`` throws an ``NullPointerException``.**
+
+# Build and Download
 
 ## Add as dependency
 
