@@ -1,10 +1,5 @@
-package eu.koboo.endpoint.core.transfer;
+package eu.koboo.endpoint.core.primitive;
 
-import eu.koboo.endpoint.core.util.BufUtils;
-import io.netty.buffer.ByteBuf;
-
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
