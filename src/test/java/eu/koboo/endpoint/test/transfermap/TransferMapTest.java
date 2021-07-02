@@ -1,5 +1,6 @@
 package eu.koboo.endpoint.test.transfermap;
 
+import eu.koboo.endpoint.core.transfer.PrimitiveUtils;
 import eu.koboo.endpoint.core.transfer.TransferMap;
 import eu.koboo.endpoint.test.TestConstants;
 import org.junit.AfterClass;
@@ -27,10 +28,10 @@ public class TransferMapTest {
 
         System.out.println("Initialized TransferMap");
 
-        byte[] encoded = TransferMap.encode(map);
+        byte[] encoded = PrimitiveUtils.encodeByteArray(map);
         System.out.println("Encoded");
 
-        TransferMap decoded = TransferMap.decode(encoded);
+        TransferMap decoded = PrimitiveUtils.decodeByteArray(encoded);
         System.out.println("Decoded");
 
         String testString = decoded.get("testString", String.class);
@@ -42,7 +43,7 @@ public class TransferMapTest {
         Assert.assertArrayEquals(testBytes, TestConstants.testBytes);
         System.out.println("Asserted against TestConstants");
 
-        byte[] rencoded = TransferMap.encode(decoded);
+        byte[] rencoded = PrimitiveUtils.encodeByteArray(decoded);
         System.out.println("Encoded/2");
 
         assertArrayEquals(encoded, rencoded);
