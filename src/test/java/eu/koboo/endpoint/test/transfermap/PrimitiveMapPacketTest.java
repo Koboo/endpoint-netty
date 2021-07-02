@@ -3,19 +3,17 @@ package eu.koboo.endpoint.test.transfermap;
 import eu.koboo.endpoint.client.ClientBuilder;
 import eu.koboo.endpoint.client.FluentClient;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
-import eu.koboo.endpoint.core.transfer.TransferMapPacket;
-import eu.koboo.endpoint.server.EndpointServer;
+import eu.koboo.endpoint.core.primitive.PrimitivePacket;
 import eu.koboo.endpoint.server.FluentServer;
 import eu.koboo.endpoint.server.ServerBuilder;
 import eu.koboo.endpoint.test.TestConstants;
-import eu.koboo.endpoint.test.TestRequest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertTrue;
 
-public class TransferMapPacketTest {
+public class PrimitiveMapPacketTest {
 
     public static FluentServer server;
     public static FluentClient client;
@@ -31,7 +29,7 @@ public class TransferMapPacketTest {
     @Test
     public void test() throws Exception {
         System.out.println("== Init-Sequence == ");
-        System.out.println("== 'TransferMapPacketTest' == ");
+        System.out.println("== 'PrimitiveMapPacketTest' == ");
 
         System.out.println("== Endpoint-Build == ");
 
@@ -45,7 +43,7 @@ public class TransferMapPacketTest {
                 .onDisconnect(c -> System.out.println("Server disconnected! " + c.toString()))
                 .onStart(() -> System.out.println("Server started!"))
                 .onStop(() -> System.out.println("Server stopped!"))
-                .onPacket(TransferMapPacket.class, (c, p) -> {
+                .onPacket(PrimitivePacket.class, (c, p) -> {
                     TestConstants.assertMap(p);
                     c.writeAndFlush(p).syncUninterruptibly();
                     System.out.println("Server received! " + c.toString());
@@ -64,7 +62,7 @@ public class TransferMapPacketTest {
                 .onStart(() -> System.out.println("Client started!"))
                 .onStop(() -> System.out.println("Client stopped!"))
                 .onError((c, t) -> System.out.println("Client error: " + c.getSimpleName() + "/" + t.getClass().getSimpleName()))
-                .onPacket(TransferMapPacket.class, p -> {
+                .onPacket(PrimitivePacket.class, p -> {
                     System.out.println("Client received!");
                     TestConstants.assertMap(p);
 
