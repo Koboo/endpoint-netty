@@ -1,4 +1,4 @@
-package eu.koboo.endpoint.test.transfermap;
+package eu.koboo.endpoint.test.primitivemap;
 
 import eu.koboo.endpoint.core.primitive.PrimitiveMap;
 import eu.koboo.endpoint.core.primitive.PrimitiveUtils;

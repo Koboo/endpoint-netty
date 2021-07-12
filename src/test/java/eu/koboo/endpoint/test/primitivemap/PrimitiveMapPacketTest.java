@@ -1,4 +1,4 @@
-package eu.koboo.endpoint.test.transfermap;
+package eu.koboo.endpoint.test.primitivemap;
 
 import eu.koboo.endpoint.client.ClientBuilder;
 import eu.koboo.endpoint.client.FluentClient;
