@@ -1,6 +1,8 @@
 package eu.koboo.endpoint.core.primitive;
 
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 public enum Primitive {
@@ -14,6 +16,7 @@ public enum Primitive {
     LONG(Long.class, long.class),
     INTEGER(Integer.class, int.class),
     STRING(String.class, String.class),
+    UUID(UUID.class, UUID.class),
 
     BOOLEAN_ARRAY(Boolean[].class, boolean[].class),
     BYTE_ARRAY(Byte[].class, byte[].class),
@@ -23,7 +26,9 @@ public enum Primitive {
     SHORT_ARRAY(Short[].class, short[].class),
     LONG_ARRAY(Long[].class, long[].class),
     INTEGER_ARRAY(Integer[].class, int[].class),
-    STRING_ARRAY(String[].class, String[].class);
+    STRING_ARRAY(String[].class, String[].class),
+    UUID_ARRAY(UUID[].class, UUID[].class),
+    ;
 
 
     public static final Primitive[] PRIMITIVES = Primitive.values();

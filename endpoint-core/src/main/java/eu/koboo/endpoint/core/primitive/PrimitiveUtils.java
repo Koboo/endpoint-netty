@@ -9,6 +9,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.util.Map;
+import java.util.UUID;
 
 @SuppressWarnings("all")
 public class PrimitiveUtils {
@@ -174,6 +175,18 @@ public class PrimitiveUtils {
                             outputStream.writeByte(b);
                         }
                         break;
+                    case UUID:
+                        UUID uuid = (UUID) object;
+                        outputStream.writeUTF(uuid.toString());
+                        break;
+                    case UUID_ARRAY:
+                        UUID[] uuids = (UUID[]) object;
+                        len = uuids.length;
+                        outputStream.writeInt(len);
+                        for(UUID u : uuids) {
+                            outputStream.writeUTF(u.toString());
+                        }
+                        break;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -265,6 +278,15 @@ public class PrimitiveUtils {
                             bytes[i] = inputStream.readByte();
                         }
                         return (Prim) bytes;
+                    case UUID:
+                        return (Prim) UUID.fromString(inputStream.readUTF());
+                    case UUID_ARRAY:
+                        len = inputStream.readInt();
+                        UUID[] uuids = new UUID[len];
+                        for(int i = 0; i < len; i++) {
+                            uuids[i] = UUID.fromString(inputStream.readUTF());
+                        }
+                        return (Prim) uuids;
                 }
             } catch (Exception e) {
                 e.printStackTrace();
@@ -275,7 +297,6 @@ public class PrimitiveUtils {
     }
 
     public static class Buf {
-
 
         public static ByteBuf encodeByteBuf(PrimitiveMap primitiveMap) {
             ByteBuf byteBuf = Unpooled.directBuffer();
