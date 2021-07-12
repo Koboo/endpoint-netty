@@ -8,6 +8,6 @@ public class NoProcessNoFramesTest extends AbstractBuilderTest {
     public EndpointBuilder changeBuilder(EndpointBuilder builder) {
         return builder.logging(false)
                 .framing(false)
-                .asyncProcessing(false);
+                .processing(false);
     }
 }

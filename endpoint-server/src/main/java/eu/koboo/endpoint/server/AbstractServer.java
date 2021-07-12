@@ -21,11 +21,9 @@ public abstract class AbstractServer extends AbstractEndpoint {
 
     public abstract ChannelGroup getChannelGroup();
 
-    public abstract <P extends EndpointPacket> ChannelFuture send(Channel channel, P packet);
+    public abstract ChannelFuture send(Channel channel, Object object);
 
-    public abstract <P extends EndpointPacket> void sendAndForget(Channel channel, P packet);
-
-    public abstract <P extends EndpointPacket> void broadcast(P packet);
+    public abstract void broadcast(Object object);
 
     /**
      * @return false, because we are the server

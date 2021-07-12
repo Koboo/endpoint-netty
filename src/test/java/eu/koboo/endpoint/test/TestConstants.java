@@ -2,6 +2,9 @@ package eu.koboo.endpoint.test;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
+import eu.koboo.endpoint.core.primitive.PrimitiveMap;
+import eu.koboo.endpoint.core.primitive.PrimitivePacket;
+import org.junit.Assert;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,6 +18,9 @@ public class TestConstants {
 
     public static TestRequest TEST_REQUEST;
 
+    public static PrimitiveMap TEST_TRANSFER_MAP;
+    public static PrimitivePacket TEST_MAP_PACKET;
+
     public static String testString;
     public static long testLong;
     public static byte[] testBytes;
@@ -22,7 +28,7 @@ public class TestConstants {
     static {
         BUILDER = EndpointBuilder.builder()
                 .framing(true)
-                .asyncProcessing(true)
+                .processing(true)
                 .logging(false)
                 .errorMode(ErrorMode.STACK_TRACE)
                 .registerPacket(1, TestRequest::new);
@@ -38,6 +44,15 @@ public class TestConstants {
                 .setTestString(testString)
                 .setTestLong(testLong)
                 .setTestBytes(testBytes);
+
+        TEST_TRANSFER_MAP = new PrimitiveMap();
+
+        TEST_TRANSFER_MAP.put("testString", TestConstants.testString);
+        TEST_TRANSFER_MAP.put("testLong", TestConstants.testLong);
+        TEST_TRANSFER_MAP.put("testBytes", TestConstants.testBytes);
+
+        TEST_MAP_PACKET = new PrimitivePacket();
+        TEST_MAP_PACKET.setPrimitiveMap(TEST_TRANSFER_MAP);
     }
 
     public static int getPacketsPerSec(int amount, long time) {
@@ -67,4 +82,17 @@ public class TestConstants {
         assertEquals(request.getTestLong(), TestConstants.testLong);
         assertArrayEquals(request.getTestBytes(), TestConstants.testBytes);
     }
+
+    public static void assertMap(PrimitivePacket primitivePacket) {
+        PrimitiveMap primitiveMap = primitivePacket.getPrimitiveMap();
+        Assert.assertNotNull(primitiveMap);
+        String testString = primitiveMap.get("testString", String.class);
+        long testLong = primitiveMap.get("testLong", Long.class);
+        byte[] testBytes = primitiveMap.get("testBytes", byte[].class);
+        Assert.assertEquals(testString, TestConstants.testString);
+        Assert.assertEquals(testLong, TestConstants.testLong);
+        Assert.assertArrayEquals(testBytes, TestConstants.testBytes);
+    }
+
+
 }

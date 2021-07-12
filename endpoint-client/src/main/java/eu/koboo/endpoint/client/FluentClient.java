@@ -9,6 +9,7 @@ import eu.koboo.endpoint.core.events.channel.ChannelActionEvent;
 import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
 import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
 import eu.koboo.endpoint.core.events.message.ErrorEvent;
+import io.netty.channel.ChannelFuture;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -21,7 +22,7 @@ public class FluentClient extends EndpointClient {
 
     public FluentClient onStart(Runnable runnable) {
         registerEvent(EndpointActionEvent.class, event -> {
-            if(event.getAction() == EndpointAction.START) {
+            if (event.getAction() == EndpointAction.START) {
                 runnable.run();
             }
         });
@@ -30,7 +31,7 @@ public class FluentClient extends EndpointClient {
 
     public FluentClient onStop(Runnable runnable) {
         registerEvent(EndpointActionEvent.class, event -> {
-            if(event.getAction() == EndpointAction.STOP) {
+            if (event.getAction() == EndpointAction.STOP) {
                 runnable.run();
             }
         });
@@ -39,7 +40,7 @@ public class FluentClient extends EndpointClient {
 
     public FluentClient onConnect(Runnable runnable) {
         registerEvent(ChannelActionEvent.class, event -> {
-            if(event.getAction() == ChannelAction.CONNECT) {
+            if (event.getAction() == ChannelAction.CONNECT) {
                 runnable.run();
             }
         });
@@ -48,7 +49,7 @@ public class FluentClient extends EndpointClient {
 
     public FluentClient onDisconnect(Runnable runnable) {
         registerEvent(ChannelActionEvent.class, event -> {
-            if(event.getAction() == ChannelAction.DISCONNECT) {
+            if (event.getAction() == ChannelAction.DISCONNECT) {
                 runnable.run();
             }
         });
@@ -63,7 +64,7 @@ public class FluentClient extends EndpointClient {
 
     public <P extends EndpointPacket> FluentClient onPacket(Class<P> packetClass, Consumer<P> biConsumer) {
         registerEvent(ReceiveEvent.class, event -> {
-            if(event.getTypeObject().getClass().getName().equalsIgnoreCase(packetClass.getName())) {
+            if (event.getTypeObject().getClass().getName().equalsIgnoreCase(packetClass.getName())) {
                 P packet = event.getTypeObject();
                 biConsumer.accept(packet);
             }
@@ -76,8 +77,11 @@ public class FluentClient extends EndpointClient {
         return this;
     }
 
-    public <P extends EndpointPacket> FluentClient sendPacket(P packet) {
-        super.send(packet).syncUninterruptibly();
+    public FluentClient sendPacket(Object object) {
+        ChannelFuture future = super.send(object);
+        if (future != null) {
+            future.syncUninterruptibly();
+        }
         return this;
     }
 

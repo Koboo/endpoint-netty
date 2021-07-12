@@ -37,6 +37,9 @@ called **EndpointNetty**. The biggest difference between **EndpointNetty** and *
   * [Registering Events](#register-events)
   * [Unregistering Events](#unregister-events)
   * [Creating new Events](#create-new-events)  
+#### PrimitiveMap
+  * [What is a PrimitiveMap](#what-is-a-primitivemap)
+  * [Sending PrimitiveMap](#how-to-send-primitivemap)
 #### Transferable
   * [What is a Transferable](#what-is-a-transferable)
   * [Creating Transferable](#how-to-create-transferable)
@@ -45,9 +48,10 @@ called **EndpointNetty**. The biggest difference between **EndpointNetty** and *
   * [Download](#add-as-dependency)  
   * [Build From Source](#build-from-source)
 
+# Endpoints
 
 ## What is the EndpointBuilder
-`EndpointBuilder` passes options to endpoints. To create a new instance:
+``EndpointBuilder`` passes options to endpoints. To create a new instance:
 
 ```java
 EndpointBuilder builder = EndpointBuilder.builder()
@@ -59,58 +63,61 @@ EndpointBuilder builder = EndpointBuilder.builder()
 ```
 
 #### Options:
-* `logging(boolean value)` 
-    * enables/disables built-in `LoggingHandler.class` of netty (helpful for debugging)
-    * default: `false` (disabled)
-* `framing(boolean value)`
+* ``logging(boolean value)`` 
+    * enables/disables built-in ``LoggingHandler.class`` of netty (helpful for debugging)
+    * default: ``false`` (disabled)
+* ``framing(boolean value)``
     * enables/disables built-in packet-framing codec of netty 
-    * default: `true` (enabled)
-* `processing(boolean value)`
-    * enables/disables asynchronous packet-processing by usage of `EventExecutorGroup`
-    * default: `true` (enabled)
-* `compression(Compression compression)`
-    * Compressions: `GZIP`, `ZLIB`, `SNAPPY` and `NONE`
-    * default: `Compression.NONE`
-* `errorMode(ErrorMode errorMode)`
-    * ErrorModes: `SILENT`, `STACK_TRACE`, `EVENT`
-    * default: `ErrorMode.STACK_TRACE`
-* `autoReconnect(int seconds)`
-    * automatic reconnect after `int seconds`
-    * default: `-1` (disabled)
-    * `-1` to disable reconnect (or use `builder.disableReconnect()`)
-* `useUDS(String udsFile)`
-    * Try to use Unix-Domain-Sockets (short: `UDS`)
-    * default: `null` (disabled)
-    * default-path: `tmp/endpoint-netty/uds.sock`
-* `password(String password)`
+    * default: ``true`` (enabled)
+* ``processing(boolean value)``
+    * enables/disables asynchronous packet-processing by usage of ``EventExecutorGroup``
+    * default: ``true`` (enabled)
+* ``primitive(boolean value)``
+    * enables/disables usage of ``PrimitiveMap``. (packetId of ``PrimitivePacket`` is ``-100``)
+    * default: ``true`` (enabled)
+* ``compression(Compression compression)``
+    * Compressions: ``GZIP``, ``ZLIB``, ``SNAPPY`` and ``NONE``
+    * default: ``Compression.NONE``
+* ``errorMode(ErrorMode errorMode)``
+    * ErrorModes: ``SILENT``, ``STACK_TRACE``, ``EVENT``
+    * default: ``ErrorMode.STACK_TRACE``
+* ``autoReconnect(int seconds)``
+    * automatic reconnect after ``int seconds``
+    * default: ``-1`` (disabled)
+    * ``-1`` to disable reconnect (or use ``builder.disableReconnect()``)
+* ``useUDS(String udsFile)``
+    * Try to use Unix-Domain-Sockets (short: ``UDS``)
+    * default: ``null`` (disabled)
+    * default-path: ``tmp/endpoint-netty/uds.sock``
+* ``password(String password)``
     * Automatic encryption
-    * Algorithms: `AES-128` and `SHA-256`
-    * default: `null` (disabled)
+    * Algorithms: ``AES-128`` and ``SHA-256``
+    * default: ``null`` (disabled)
 
 #### Timeout options:
-* `timeout(int writeTimeout, int readTimeout)`
-    * default: disabled (write-timeout: `15`, read-timeout: `0`) 
-    * `0` = disabled
-* `disableTimeouts()`
-    * disable usage of `IdleStateHandler` and timeout-events 
+* ``timeout(int writeTimeout, int readTimeout)``
+    * default: disabled (write-timeout: ``15``, read-timeout: ``0``) 
+    * ``0`` = disabled
+* ``disableTimeouts()``
+    * disable usage of ``IdleStateHandler`` and timeout-events 
 
-What does mean `ReadTimeout` and `WriteTimeout`?
+What does mean ``ReadTimeout`` and ``WriteTimeout``?
 
-If after the time (`writeTimeout` in seconds) no object has been transferred 
+If after the time (``writeTimeout`` in seconds) no object has been transferred 
 from the client to the server, a WriteTimeout is thrown.
 
-If after the time (`readTimeout` in seconds) no object has been transferred 
+If after the time (``readTimeout`` in seconds) no object has been transferred 
 from the server to the client, a ReadTimeout is thrown.
 
 Default behaviour:
-* `WriteTimeout`
-    * default: `int 1` is sent after timeout to keep alive the channel if no further listener is registered.
-* `ReadTimeout`
+* ``WriteTimeout``
+    * default: ``int 1`` is sent after timeout to keep alive the channel if no further listener is registered.
+* ``ReadTimeout``
     * default: no action
 
 ## How to build the Endpoints:
 
-To build the `EndpointServer` or `EndpointClient`:
+To build the ``EndpointServer`` or ``EndpointClient``:
 ```java
 EndpointBuilder builder = EndpointBuilder.builder()
         // Add more options by fluent calls
@@ -126,7 +133,7 @@ EndpointServer server = ServerBuilder.of(builder, int port);
     
 ## How to start the Endpoints
 
-To start the `EndpointServer` or `EndpointClient` call `start()`. 
+To start the ``EndpointServer`` or ``EndpointClient`` call ``start()``. 
 
 ```java
 EndpointBuilder builder = EndpointBuilder.builder()
@@ -142,6 +149,63 @@ server.start();
 EndpointClient client = ClientBuilder.of(endpointBuilder, "localhost", 54321);
 client.start();
 ```
+
+## Reconnecting with EndpointClient
+
+If you want to reconnect a ``EndpointClient``, do this:
+
+* Initial connect the client
+```java
+EndpointClient client = new EndpointClient(endpointBuilder, "localhost", 54321);
+client.start(); 
+```
+* Close/disconnect the client (do not call ``stop()``)
+```java
+client.close();
+```
+
+* (optional) Change address
+```java
+client.setAddress("localhost", 12345);
+```
+* Start again
+```java
+client.start();
+```
+
+If you call ``client.stop()``, all events get unregistered.
+
+## How to use FluentEndpoints
+
+To enable a quick and easy integration into existing source codes,
+there are the so-called ``FluentEndpoints``. The following possibilities are available:
+````java
+
+EndpointBuilder builder = EndpointBuilder.builder();
+
+server = ServerBuilder.fluentOf(builder)
+        .changePort(54321)
+        .onConnect(channel -> System.out.println("Server connected! " + channel.toString()))
+        .onDisconnect(channel -> System.out.println("Server disconnected! " + channel.toString()))
+        .onStart(() -> System.out.println("Server started!"))
+        .onStop(() -> System.out.println("Server stopped!"))
+        .onPacket(TestRequest.class, (channel, packet) -> System.out.println("Server received! " + channel.toString() + "/" + packet.toString()))
+        .bind();
+
+client = ClientBuilder.fluentOf(builder)
+        .changeAddress("localhost", 54321)
+        .onConnect(() -> System.out.println("Client connected!"))
+        .onDisconnect(() -> System.out.println("Client disconnected!"))
+        .onStart(() -> System.out.println("Client started!"))
+        .onStop(() -> System.out.println("Client stopped!"))
+        .onError((clazz, throwable) -> System.out.println("Client error: " + clazz.getSimpleName() + "/" + throwable.getClass().getSimpleName()))
+        .onPacket(TestRequest.class, packet -> System.out.println("Client received! " + packet.toString()))
+        .connect();
+````
+The two ``FluentEndpoints`` are an extension of the regular ``EndpointClient`` and ``EndpointServer``.
+Therefore they inherit all methods and functions
+
+# Packets
 
 ## How to create Packets
 This is a sample ``EndpointPacket`` with a ``String``, a ``long``, and a ``byte[]`` as attributes.
@@ -251,29 +315,31 @@ Map<String, ChannelFuture> futureMap = server.broadcast(request);
 server.broadcastAndForget(request);
 ````
 
+# Events
+
 ## Default Events
 
-The event system is completely `Consumer`-based. These are the default events:
+The event system is completely ``Consumer``-based. These are the default events:
 
-* `ChannelActionEvent`
+* ``ChannelActionEvent``
   * server/client: channel change connection state
-  * ChannelAction: `CONNECT`, `DISCONNECT`
+  * ChannelAction: ``CONNECT``, ``DISCONNECT``
   
-* `ChannelTimeoutEvent`
+* ``ChannelTimeoutEvent``
   * server/client: read-/write-timeout
-  * Timeout: `READ` or `WRITE`
+  * Timeout: ``READ`` or ``WRITE``
   
-* `EndpointActionEvent`
+* ``EndpointActionEvent``
   * server/client: Thrown if some action happens on the endpoint
-  * EndpointAction: `START`, `STOP`, `CLOSE` (`RECONNECT` only thrown by client)
+  * EndpointAction: ``START``, ``STOP``, ``CLOSE`` (``RECONNECT`` only thrown by the client)
   
-* `ReceiveEvent`
+* ``ReceiveEvent``
   * server/client: receives packet from client/server
     
-* `ErrorEvent`
-  * server/client: exception occured (only is thrown by `ErrorMode.EVENT`)
+* ``ErrorEvent``
+  * server/client: exception occurred (only is thrown by ``ErrorMode.EVENT``)
 
-* `LogEvent` / `DebugEvent`
+* ``LogEvent`` / ``DebugEvent``
   * server/client: something got logged
   
 ## Register Events
@@ -375,61 +441,44 @@ future.whenComplete((event, error) -> {
     // Do something, after event got processed.
 });
 ````
+# PrimitiveMap
 
-## Reconnecting with EndpointClient
+# What is a PrimitiveMap
 
-If you want to reconnect a `EndpointClient`, do this:
+A ``PrimitiveMap`` allows the transfer of a key-value map, where the value 
+must be a primitive data type or a primitive array.
 
-* Initial connect the client
-```java
-EndpointClient client = ClientBuilder.of(endpointBuilder, "localhost", 54321);
-client.start(); 
-```
-* Close/disconnect the client - do not call `stop()`
-```java
-client.close();
-```
+````java
+PrimitiveMap primitiveMap = new PrimitiveMap();
 
-* (optional) Change address
-```java
-client.setAddress("localhost", 12345);
-```
-* Start again
-```java
-client.start();
-```
+primitiveMap.put(String key, Object value);
+primitiveMap.append(String key, Object value);
+primitiveMap.get(String key);
+primitiveMap.get(String key, Class objectClass);
+primitiveMap.optional(String key);
+primitiveMap.optional(String key, Class objectClass);
+````
 
-If you call `client.stop()`, all events get unregistered.
+Besides some additional methods, the PrimitiveMap inherits all methods of a ConcurrentHashMap.
 
-## How to use FluentEndpoints
+# How to send PrimitiveMap
 
-To enable a quick and easy integration into existing source codes, 
-there are the so-called ``FluentEndpoints``. The following possibilities are available:
+A ``PrimitiveMap`` can be easily sent via the ``send(primitiveMap)`` call. The respective endpoint automatically 
+packages the ``PrimitiveMap`` into a ``PrimitivePacket``, which can be received with a ``ReceiveEvent``.
+
 ````java
 
-EndpointBuilder builder = EndpointBuilder.builder();
+PrimitiveMap primitiveMap = new PrimitiveMap();
 
-FluentServer server = ServerBuilder.fluentOf(builder)
-        .changePort(54321)
-        .onConnect(channel -> System.out.println("Server connected! " + channel.toString()))
-        .onDisconnect(channel -> System.out.println("Server disconnected! " + channel.toString()))
-        .onStart(() -> System.out.println("Server started!"))
-        .onStop(() -> System.out.println("Server stopped!"))
-        .onPacket(TestRequest.class, (channel, packet) -> System.out.println("Server received! " + channel.toString() + "/" + packet.toString()))
-        .bind();
+primitiveMap.put("testString", TestConstants.testString);
+primitiveMap.put("testLong", TestConstants.testLong);
+primitiveMap.put("testBytes", TestConstants.testBytes);
 
-FluenClient client = ClientBuilder.fluentOf(builder)
-        .changeAddress("localhost", 54321)
-        .onConnect(() -> System.out.println("Client connected!"))
-        .onDisconnect(() -> System.out.println("Client disconnected!"))
-        .onStart(() -> System.out.println("Client started!"))
-        .onStop(() -> System.out.println("Client stopped!"))
-        .onError((clazz, throwable) -> System.out.println("Client error: " + clazz.getSimpleName() + "/" + throwable.getClass().getSimpleName()))
-        .onPacket(TestRequest.class, packet -> System.out.println("Client received! " + packet.toString()))
-        .connect();
+client.send(primitiveMap);
+
 ````
-The two ``FluentEndpoints`` are an extension of the regular ``EndpointClient`` and ``EndpointServer``.
-Therefore they inherit all methods and functions
+
+# Transferable
 
 ## What is a Transferable
 
@@ -509,19 +558,33 @@ public class TransferableExample {
 
 **Attention: if no supplier is registered for the ``Transferable``, the ``TransferCodec`` throws an ``NullPointerException``.**
 
+# Build and Download
+
 ## Add as dependency
 
-Add `repo.koboo.eu` as repository. 
+1. Add ``repo.koboo.eu`` as repository. 
 
-```java
+**Gradle:**
+```groovy
 repositories {
     maven { 
         url 'https://repo.koboo.eu/releases' 
     }
 }
 ```
+**Maven:**
+````xml
+<repositories>
+   <repository>
+      <id>repo.koboo.eu</id>
+      <url>https://repo.koboo.eu/releases</url>
+   </repository>
+</repositories>
+````
 
-And add it as dependency. (e.g. `2.7` is the release-version)
+2. Add it as dependency. (e.g. ``2.7`` is the release-version)
+
+**Gradle:**
 ```groovy
 dependencies {
     // !Always needed! 
@@ -537,9 +600,48 @@ dependencies {
     compile 'eu.koboo:endpoint-server:2.7'
 }
 ```
+**Maven:**
+````xml
+<dependencies>
+    <!-- !Always needed! --> 
+   <dependency>
+      <groupId>eu.koboo</groupId>
+      <artifactId>endpoint-core</artifactId>
+      <version>2.7</version>
+   </dependency>
+   
+   <!-- (optional) transferable-related -->
+   <dependency>
+      <groupId>eu.koboo</groupId>
+      <artifactId>endpoint-transferable</artifactId>
+      <version>2.7</version>
+   </dependency>
+   
+    <!-- client-related -->     
+   <dependency>
+      <groupId>eu.koboo</groupId>
+      <artifactId>endpoint-client</artifactId>
+      <version>2.7</version>
+   </dependency>
+   
+    <!-- server-related -->    
+   <dependency>
+      <groupId>eu.koboo</groupId>
+      <artifactId>endpoint-server</artifactId>
+      <version>2.7</version>
+   </dependency>
+<dependencies>
+````
 
 ## Build from source
 
-* Clone repository
-* Run `./gradlew build`
-* Output `/build/libs/endpoint-netty-{version}.jar`
+Endpoint-Netty uses Gradle (6.7) to build the jar files.
+
+* Clone repository 
+  * ``git clone https://github.com/Koboo/endpoint-netty``
+  
+* Checkout the branch you want to build (default: ``master``)
+  * ``git checkout master``
+  
+* Execute the gradle build-routine
+  * ``gradle build`` (dependents on your os / ide)

@@ -10,6 +10,7 @@ import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
 import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
 import eu.koboo.endpoint.core.events.message.ErrorEvent;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -72,13 +73,16 @@ public class FluentServer extends EndpointServer {
         return this;
     }
 
-    public <P extends EndpointPacket> FluentServer sendPacket(Channel channel, P packet) {
-        super.sendAndForget(channel, packet);
+    public FluentServer sendPacket(Channel channel, Object object) {
+        ChannelFuture future = super.send(channel, object);
+        if(future != null) {
+            future.syncUninterruptibly();
+        }
         return this;
     }
 
-    public <P extends EndpointPacket> FluentServer broadcastPacket(P packet) {
-        super.broadcast(packet);
+    public FluentServer broadcastPacket(Object object) {
+        super.broadcast(object);
         return this;
     }
 

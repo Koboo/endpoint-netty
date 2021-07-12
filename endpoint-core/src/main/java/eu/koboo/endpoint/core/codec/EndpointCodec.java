@@ -70,7 +70,7 @@ public class EndpointCodec extends ByteToMessageCodec<EndpointPacket> {
                 out.add(packet);
             }
 
-            if(inBuffer.refCnt() > 1)
+            if (inBuffer.refCnt() > 1)
                 inBuffer.release();
         } catch (Exception e) {
             endpoint.onException(getClass(), e);
@@ -81,11 +81,11 @@ public class EndpointCodec extends ByteToMessageCodec<EndpointPacket> {
 
         ByteBuf payload = channel.alloc().buffer();
 
-        int oid = endpoint.builder().getId(packet);
+        int packetId = endpoint.builder().getId(packet);
 
-        if (oid != -1) {
+        if (packetId != Integer.MIN_VALUE) {
 
-            BufUtils.writeVarInt(oid, payload);
+            BufUtils.writeVarInt(packetId, payload);
             packet.write(payload);
 
             byte[] payloadBuffer = BufUtils.toArray(payload);
@@ -96,13 +96,14 @@ public class EndpointCodec extends ByteToMessageCodec<EndpointPacket> {
             }
 
             return payloadBuffer;
+        } else {
+            throw new NullPointerException("No id found of packet '" + packet.getClass().getName() + "'");
         }
-        return null;
     }
 
     public EndpointPacket decodePacket(Channel channel, ByteBuf in) throws Exception {
 
-        if(secretKey != null) {
+        if (secretKey != null) {
             byte[] encrypted = new byte[in.readableBytes()];
             in.readBytes(encrypted);
             in.release();
@@ -111,9 +112,9 @@ public class EndpointCodec extends ByteToMessageCodec<EndpointPacket> {
             in.writeBytes(decrypted);
         }
 
-        int oid = BufUtils.readVarInt(in);
+        int packetId = BufUtils.readVarInt(in);
 
-        Supplier<? extends EndpointPacket> supplier = endpoint.builder().getSupplier(oid);
+        Supplier<? extends EndpointPacket> supplier = endpoint.builder().getSupplier(packetId);
         if (supplier != null) {
             EndpointPacket endpointPacket = supplier.get();
             endpointPacket.read(in);
@@ -122,7 +123,7 @@ public class EndpointCodec extends ByteToMessageCodec<EndpointPacket> {
 
             return endpointPacket;
         } else {
-            throw new NullPointerException("No supplier found of id '" + oid + "'");
+            throw new NullPointerException("No supplier found of id '" + packetId + "'");
         }
     }
 

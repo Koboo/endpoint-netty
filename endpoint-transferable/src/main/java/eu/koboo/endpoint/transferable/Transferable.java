@@ -40,30 +40,27 @@ public interface Transferable {
 
     default <Prim> Prim read(DataInputStream inputStream, Class<Prim> primClass) {
         try {
-            Primitive primitive = Primitive.valueOf(primClass.getSimpleName());
-
-            switch (primitive) {
-                case BOOLEAN:
-                    return (Prim) Boolean.valueOf(inputStream.readBoolean());
-                case BYTE:
-                    return (Prim) Byte.valueOf(inputStream.readByte());
-                case CHAR:
-                    return (Prim) Character.valueOf(inputStream.readChar());
-                case LONG:
-                    return (Prim) Long.valueOf(inputStream.readLong());
-                case FLOAT:
-                    return (Prim) Float.valueOf(inputStream.readFloat());
-                case SHORT:
-                    return (Prim) Short.valueOf(inputStream.readShort());
-                case DOUBLE:
-                    return (Prim) Double.valueOf(inputStream.readDouble());
-                case STRING:
-                    return (Prim) inputStream.readUTF();
-                case INTEGER:
-                    return (Prim) Integer.valueOf(inputStream.readInt());
-                default:
-                    throw new IllegalStateException("No primitive found! Custom object?");
+            String className = primClass.getSimpleName();
+            if(className.equals(Boolean.class.getSimpleName())) {
+                return (Prim) Boolean.valueOf(inputStream.readBoolean());
+            } else if(className.equals(Byte.class.getSimpleName())) {
+                return (Prim) Byte.valueOf(inputStream.readByte());
+            } else if(className.equals(Character.class.getSimpleName())) {
+                return (Prim) Character.valueOf(inputStream.readChar());
+            } else if(className.equals(Long.class.getSimpleName())) {
+                return (Prim) Long.valueOf(inputStream.readLong());
+            } else if(className.equals(Float.class.getSimpleName())) {
+                return (Prim) Float.valueOf(inputStream.readFloat());
+            } else if(className.equals(Short.class.getSimpleName())) {
+                return (Prim) Short.valueOf(inputStream.readShort());
+            } else if(className.equals(Double.class.getSimpleName())) {
+                return (Prim) Double.valueOf(inputStream.readDouble());
+            } else if(className.equals(Integer.class.getSimpleName())) {
+                return (Prim) Integer.valueOf(inputStream.readInt());
+            } else if(className.equals(String.class.getSimpleName())) {
+                return (Prim) inputStream.readUTF();
             }
+            throw new IllegalStateException("No primitive! '" + primClass.getName() + "' is not a primitive type!");
         } catch (Exception e) {
             e.printStackTrace();
         }
