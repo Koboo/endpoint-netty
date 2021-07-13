@@ -10,9 +10,15 @@ import java.util.function.Supplier;
 
 public class TransferCodec {
 
+    private static final TransferCodec TRANSFER_CODEC = new TransferCodec();
+
+    public static TransferCodec getInstance() {
+        return TRANSFER_CODEC;
+    }
+
     private final Map<Integer, Supplier<? extends Transferable>> supplierMap = new ConcurrentHashMap<>();
 
-    public TransferCodec() {
+    private TransferCodec() {
     }
 
     public <Obj extends Transferable> TransferCodec register(int id, Supplier<Obj> supplier) {
