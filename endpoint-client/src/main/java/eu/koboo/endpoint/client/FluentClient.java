@@ -61,11 +61,11 @@ public class FluentClient extends EndpointClient {
         return this;
     }
 
-    public <P extends EndpointPacket> FluentClient onPacket(Class<P> packetClass, Consumer<P> biConsumer) {
+    public <P extends EndpointPacket> FluentClient onPacket(Class<P> packetClass, Consumer<P> consumer) {
         registerEvent(ReceiveEvent.class, event -> {
             if (event.getTypeObject().getClass().getName().equalsIgnoreCase(packetClass.getName())) {
                 P packet = event.getTypeObject();
-                biConsumer.accept(packet);
+                consumer.accept(packet);
             }
         });
         return this;

@@ -83,9 +83,11 @@ EndpointBuilder builder = EndpointBuilder.builder()
     * default: ``-1`` (disabled)
     * ``-1`` to disable reconnect (or use ``builder.disableReconnect()``)
 * ``useUDS(boolean value)``
-    * Try to use Unix-Domain-Sockets (short: ``UDS``)
-    * default: ``false`` (disabled)
+    * default: ``true`` (enabled)
     * default-path: ``tmp/endpoint-netty-uds.sock``
+    * ``UDS`` stands for ``UnixDomainSocket`` 
+    * Try to bind a separate server-socket as UDS
+    * Try to connect the client-socket to the UDS
 * ``password(String password)``
     * Automatic encryption
     * Algorithms: ``AES-128`` and ``SHA-256``
