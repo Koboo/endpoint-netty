@@ -22,7 +22,8 @@ public class UDSTest {
   public static void main(String[] args) throws InterruptedException {
     EndpointBuilder builder = EndpointBuilder.builder()
         .errorMode(ErrorMode.STACK_TRACE)
-        .logging(true);
+        .logging(true)
+        .registerPacket(1, UDSPacket::new);
     System.out.println("Setting up builder..");
 
     System.out.println("Creating universal EventListener..");
@@ -50,19 +51,33 @@ public class UDSTest {
     });
     System.out.println("Starting server..");
     server.start();
+    handleClient(builder, "localhost", 666, eventConsumer);
+    builder.useUDS(false);
+    handleClient(builder, "main.koboo.eu", 666, eventConsumer);
+  }
 
-    System.out.println("Initialize client..");
-    EndpointClient client = ClientBuilder.of(builder, "localhost", 666);
-    System.out.println("Registering listener (client)..");
-    client.registerEvent(ChannelActionEvent.class, eventConsumer);
-    System.out.println("Starting client..");
-    client.start();
+  private static void handleClient(EndpointBuilder builder, String host, int port, Consumer<ChannelActionEvent> consumer)
+      throws InterruptedException {
+
+
+    System.out.println("Initialize udsClient..");
+    EndpointClient udsClient = ClientBuilder.of(builder, host, port);
+    System.out.println("Registering listener (udsClient)..");
+    udsClient.registerEvent(ChannelActionEvent.class, consumer);
+    System.out.println("Starting udsClient..");
+    udsClient.start();
 
     System.out.println("Started client/server..");
     Thread.sleep(2500);
 
     System.out.println("Sending...");
-    client.send(new UDSPacket("Striiiiing", -5000, 123456789)).sync();
+
+    UDSPacket packet = new UDSPacket()
+        .setTestString("Striiiiiiing")
+        .setTestInt(-5000)
+        .setTestLong(Long.MAX_VALUE);
+
+    udsClient.send(packet).sync();
     System.out.println("Sent!");
   }
 
@@ -71,12 +86,6 @@ public class UDSTest {
     String testString;
     long testLong;
     int testInt;
-
-    public UDSPacket(String testString, long testLong, int testInt) {
-      this.testString = testString;
-      this.testLong = testLong;
-      this.testInt = testInt;
-    }
 
     public String getTestString() {
       return testString;
@@ -88,6 +97,21 @@ public class UDSTest {
 
     public int getTestInt() {
       return testInt;
+    }
+
+    public UDSPacket setTestString(String testString) {
+      this.testString = testString;
+      return this;
+    }
+
+    public UDSPacket setTestLong(long testLong) {
+      this.testLong = testLong;
+      return this;
+    }
+
+    public UDSPacket setTestInt(int testInt) {
+      this.testInt = testInt;
+      return this;
     }
 
     @Override
