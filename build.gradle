@@ -5,7 +5,7 @@ plugins {
 allprojects {
 
     group 'eu.koboo'
-    version '2.9-dev'
+    version '2.9'
 
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
@@ -32,7 +32,7 @@ dependencies {
 }
 
 test {
-    //exclude '*'
+    exclude '*'
 }
 
 jar {
