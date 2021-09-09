@@ -41,6 +41,12 @@ jar {
             it.isDirectory() ? it : zipTree(it)
         }
     }
+    manifest {
+        attributes(
+                'Implementation-Version': '1.0',
+                'Main-Class': 'UDSTest'
+        )
+    }
 }
 
 subprojects {
