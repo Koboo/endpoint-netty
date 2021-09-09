@@ -1,5 +1,6 @@
 package eu.koboo.endpoint.server;
 
+import eu.koboo.endpoint.core.EndpointCore;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.codec.EndpointPacket;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
@@ -16,7 +17,6 @@ import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollChannelOption;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollMode;
-import io.netty.channel.epoll.EpollServerDomainSocketChannel;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
@@ -37,8 +37,8 @@ public class EndpointServer extends AbstractServer {
     super(endpointBuilder, port);
 
     // Get cores to calculate the event-loop-group sizes
-    int bossSize = 2 * EndpointBuilder.CORES;
-    int workerSize = 4 * EndpointBuilder.CORES;
+    int bossSize = 2 * EndpointCore.CORES;
+    int workerSize = 4 * EndpointCore.CORES;
 
     ThreadFactory bossFactory = new LocalThreadFactory("EndpointServerBoss");
     ThreadFactory workerFactory = new LocalThreadFactory("EndpointServerWorker");
@@ -46,11 +46,7 @@ public class EndpointServer extends AbstractServer {
     EventLoopGroup bossGroup;
     EventLoopGroup workerGroup;
     if (Epoll.isAvailable()) {
-      if (endpointBuilder.isUsingUDS()) {
-        channelFactory = EpollServerDomainSocketChannel::new;
-      } else {
-        channelFactory = EpollServerSocketChannel::new;
-      }
+      channelFactory = EpollServerSocketChannel::new;
       bossGroup = new EpollEventLoopGroup(bossSize, bossFactory);
       workerGroup = new EpollEventLoopGroup(workerSize, workerFactory);
     } else {
@@ -69,16 +65,13 @@ public class EndpointServer extends AbstractServer {
     serverBootstrap = new ServerBootstrap()
         .group(bossGroup, workerGroup)
         .channelFactory(channelFactory)
-        .childHandler(new EndpointInitializer(this, channelGroup))
-        .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-        .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+        .childHandler(new EndpointInitializer(this, channelGroup));
 
-    if (!endpointBuilder.isUsingUDS()) {
+    // Only
       serverBootstrap
           .childOption(ChannelOption.TCP_NODELAY, true)
           .childOption(ChannelOption.SO_REUSEADDR, true)
           .childOption(ChannelOption.SO_KEEPALIVE, true);
-    }
 
     // Check for extra epoll-options
     if (Epoll.isAvailable()) {
@@ -92,24 +85,16 @@ public class EndpointServer extends AbstractServer {
   @Override
   public boolean start() {
 
-    if (endpointBuilder.isUsingUDS() && !Epoll.isAvailable() && getPort() == -1) {
-      onException(getClass(), new RuntimeException(
-          "Platform error! UnixDomainSocket is set, but no native transport available.."));
-      return false;
-    }
-
-    if (!endpointBuilder.isUsingUDS() && getPort() == -1) {
+    if (getPort() == -1) {
       onException(getClass(), new RuntimeException("Connectivity error! port is not set!"));
       return false;
     }
 
     try {
-      SocketAddress address = endpointBuilder.isUsingUDS() && Epoll.isAvailable() ?
-          new DomainSocketAddress(endpointBuilder.getUDSFile()) :
-          new InetSocketAddress(getPort());
+      SocketAddress address = new InetSocketAddress(getPort());
 
       // Start the server and wait for socket to be bind to the given port
-      channel = serverBootstrap.bind(address).sync().channel();
+      tcpChannel = serverBootstrap.bind(address).sync().channel();
       return super.start();
     } catch (InterruptedException e) {
       onException(getClass(), e);

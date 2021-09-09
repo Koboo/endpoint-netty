@@ -20,12 +20,12 @@ public abstract class AbstractEndpoint implements Endpoint {
   protected final EventHandler eventBus;
   protected final EventExecutorGroup executorGroup;
   protected final List<EventExecutorGroup> executorList;
-  protected Channel channel;
+  protected Channel tcpChannel;
 
   public AbstractEndpoint(EndpointBuilder builder) {
     endpointBuilder = builder;
     eventBus = new EventHandler(this);
-    executorGroup = new DefaultEventExecutorGroup(EndpointBuilder.CORES * 2);
+    executorGroup = new DefaultEventExecutorGroup(EndpointCore.CORES * 2);
     executorList = new ArrayList<>();
     executorList.add(executorGroup);
   }
@@ -59,8 +59,8 @@ public abstract class AbstractEndpoint implements Endpoint {
     try {
       eventBus.fireEvent(new EndpointActionEvent(this, EndpointAction.CLOSE));
 
-      if (channel != null && channel.isOpen() && channel.isActive()) {
-        channel.close().sync();
+      if (tcpChannel != null && tcpChannel.isOpen() && tcpChannel.isActive()) {
+        tcpChannel.close().sync();
       }
 
       return true;
@@ -77,7 +77,7 @@ public abstract class AbstractEndpoint implements Endpoint {
 
   @Override
   public boolean isConnected() {
-    return channel != null && channel.isOpen() && channel.isActive();
+    return tcpChannel != null && tcpChannel.isOpen() && tcpChannel.isActive();
   }
 
   @SuppressWarnings("all")

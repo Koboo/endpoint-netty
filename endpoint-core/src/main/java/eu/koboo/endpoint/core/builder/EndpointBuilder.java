@@ -28,14 +28,13 @@ public class EndpointBuilder {
     private Compression compression = Compression.NONE;
     private ErrorMode errorMode = ErrorMode.STACK_TRACE;
 
-    private String udsFile;
-
     private int writeTimeout = 15;
     private int readTimeout = 0;
 
     private boolean logging = false;
     private boolean framing = true;
     private boolean processing = true;
+    private boolean useUDS = true;
 
     private int autoReconnect = -1;
 
@@ -56,15 +55,8 @@ public class EndpointBuilder {
         return this;
     }
 
-    public EndpointBuilder useUDS() {
-        File dir = new File("tmp/endpoint-netty/");
-        if (!dir.exists())
-            dir.mkdirs();
-        return useUDS("/tmp/endpoint-netty/uds.sock");
-    }
-
-    public EndpointBuilder useUDS(String socketFile) {
-        this.udsFile = socketFile;
+    public EndpointBuilder useUDS(boolean value) {
+        this.useUDS = useUDS;
         return this;
     }
 
@@ -155,12 +147,8 @@ public class EndpointBuilder {
         return encryption;
     }
 
-    public boolean isUsingUDS() {
-        return udsFile != null;
-    }
-
-    public String getUDSFile() {
-        return udsFile;
+    public boolean isUseUDS() {
+        return useUDS;
     }
 
     public boolean isUsingTimeouts() {
