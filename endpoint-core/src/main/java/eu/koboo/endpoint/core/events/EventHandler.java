@@ -1,6 +1,5 @@
 package eu.koboo.endpoint.core.events;
 
-import eu.koboo.endpoint.core.AbstractEndpoint;
 import eu.koboo.endpoint.core.EndpointCore;
 import java.util.ArrayList;
 import java.util.List;
