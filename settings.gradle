@@ -2,5 +2,4 @@ rootProject.name = 'endpoint-netty'
 include 'endpoint-client'
 include 'endpoint-core'
 include 'endpoint-server'
-include 'endpoint-transferable'
 
