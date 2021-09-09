@@ -87,7 +87,7 @@ public class EndpointServer extends AbstractServer {
       tcpChannel = tcpBootstrap.bind(address).sync().channel();
       fireEvent(new LogEvent("Listening on tcp-address: 0.0.0.0:" + getPort()));
 
-      if(endpointBuilder.isUseUDS() && Epoll.isAvailable()) {
+      if (endpointBuilder.isUseUDS() && Epoll.isAvailable()) {
         DomainSocketAddress domainAddress = new DomainSocketAddress(EndpointCore.DEFAULT_UDS_PATH);
         udsChannel = udsBootstrap.bind(domainAddress).sync().channel();
         fireEvent(new LogEvent("Listening on uds-path: " + EndpointCore.DEFAULT_UDS_PATH));
