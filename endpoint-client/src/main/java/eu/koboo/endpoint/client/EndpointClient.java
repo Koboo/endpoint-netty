@@ -1,4 +1,3 @@
-
 package eu.koboo.endpoint.client;
 
 import eu.koboo.endpoint.core.EndpointCore;
@@ -104,7 +103,8 @@ public class EndpointClient extends AbstractClient {
 
       ChannelFuture future = connectFuture.addListener(connectListener).sync();
       if (!future.isSuccess()) {
-        fireEvent(new LogEvent("Couldn't connect to " + address + "! Trying to reconnect after " + builder().getAutoReconnect() + " seconds.."));
+        fireEvent(new LogEvent("Couldn't connect to " + address + "! Trying to reconnect after "
+            + builder().getAutoReconnect() + " seconds.."));
       }
 
       fireEvent(new LogEvent("Connected to server on address: " + address));
