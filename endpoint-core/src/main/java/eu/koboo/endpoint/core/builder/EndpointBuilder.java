@@ -2,7 +2,6 @@ package eu.koboo.endpoint.core.builder;
 
 import eu.koboo.endpoint.core.builder.param.ErrorMode;
 import eu.koboo.endpoint.core.codec.EndpointPacket;
-import eu.koboo.endpoint.core.primitive.PrimitivePacket;
 import eu.koboo.endpoint.core.util.Compression;
 
 import java.io.File;
@@ -37,7 +36,6 @@ public class EndpointBuilder {
     private boolean logging = false;
     private boolean framing = true;
     private boolean processing = true;
-    private boolean primitive = true;
 
     private int autoReconnect = -1;
 
@@ -102,11 +100,6 @@ public class EndpointBuilder {
         return this;
     }
 
-    public EndpointBuilder primitive(boolean primitive) {
-        this.primitive = primitive;
-        return this;
-    }
-
     public EndpointBuilder autoReconnect(int seconds) {
         this.autoReconnect = seconds;
         return this;
@@ -129,9 +122,6 @@ public class EndpointBuilder {
     }
 
     public EndpointBuilder registerPacket(int id, Supplier<? extends EndpointPacket> supplier) {
-        if(id == -100 && !supplier.get().getClass().getSimpleName().equalsIgnoreCase(PrimitivePacket.class.getSimpleName())) {
-            throw new IllegalArgumentException("Id '-100' is reserved for PrimitivePacket.class");
-        }
         if (supplierMap.containsKey(id)) {
             throw new IllegalArgumentException("Id '" + id + "' is already used.");
         }
@@ -195,10 +185,6 @@ public class EndpointBuilder {
 
     public boolean isProcessing() {
         return processing;
-    }
-
-    public boolean isPrimitive() {
-        return primitive;
     }
 
     public int getAutoReconnect() {
