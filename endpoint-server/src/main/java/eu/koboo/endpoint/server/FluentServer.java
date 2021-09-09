@@ -73,16 +73,16 @@ public class FluentServer extends EndpointServer {
         return this;
     }
 
-    public FluentServer sendPacket(Channel channel, Object object) {
-        ChannelFuture future = super.send(channel, object);
+    public FluentServer sendPacket(Channel channel, EndpointPacket packet) {
+        ChannelFuture future = super.send(channel, packet);
         if(future != null) {
             future.syncUninterruptibly();
         }
         return this;
     }
 
-    public FluentServer broadcastPacket(Object object) {
-        super.broadcast(object);
+    public FluentServer broadcastPacket(EndpointPacket packet) {
+        super.broadcast(packet);
         return this;
     }
 

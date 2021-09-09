@@ -51,6 +51,6 @@ public abstract class AbstractClient extends AbstractEndpoint {
         return port;
     }
 
-    public abstract ChannelFuture send(Object object);
+    public abstract ChannelFuture send(EndpointPacket object);
 
 }

@@ -77,8 +77,8 @@ public class FluentClient extends EndpointClient {
         return this;
     }
 
-    public FluentClient sendPacket(Object object) {
-        ChannelFuture future = super.send(object);
+    public FluentClient sendPacket(EndpointPacket packet) {
+        ChannelFuture future = super.send(packet);
         if (future != null) {
             future.syncUninterruptibly();
         }

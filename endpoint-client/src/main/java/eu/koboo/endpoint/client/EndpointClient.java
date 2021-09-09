@@ -6,8 +6,6 @@ import eu.koboo.endpoint.core.codec.EndpointPacket;
 import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
 import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
-import eu.koboo.endpoint.core.primitive.PrimitiveMap;
-import eu.koboo.endpoint.core.primitive.PrimitivePacket;
 import eu.koboo.endpoint.core.util.LocalThreadFactory;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -122,20 +120,11 @@ public class EndpointClient extends AbstractClient {
      * Write the given object to the server
      * and do something with the returned ChannelFuture.
      *
-     * @param object the packet, which get send to the server
+     * @param packet the packet, which get send to the server
      */
     @Override
-    public ChannelFuture send(Object object) {
+    public ChannelFuture send(EndpointPacket packet) {
         try {
-            EndpointPacket packet;
-            if(!(object instanceof EndpointPacket) && !(object instanceof PrimitiveMap)) {
-                throw new IllegalArgumentException("Object '" + object.getClass().getName() + "' doesn't implement " + EndpointPacket.class.getSimpleName() + " or " + PrimitiveMap.class.getSimpleName());
-            }
-            if(object instanceof PrimitiveMap) {
-                packet = new PrimitivePacket().setPrimitiveMap((PrimitiveMap) object);
-            } else {
-                packet = (EndpointPacket) object;
-            }
             if (isConnected()) {
                 return channel.writeAndFlush(packet);
             }
