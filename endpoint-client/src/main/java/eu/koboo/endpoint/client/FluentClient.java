@@ -10,7 +10,6 @@ import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
 import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
 import eu.koboo.endpoint.core.events.message.ErrorEvent;
 import io.netty.channel.ChannelFuture;
-
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 

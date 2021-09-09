@@ -1,16 +1,13 @@
 package eu.koboo.endpoint.test;
 
-import eu.koboo.endpoint.core.builder.EndpointBuilder;
-import eu.koboo.endpoint.core.builder.param.ErrorMode;
-import eu.koboo.endpoint.core.primitive.PrimitiveMap;
-import eu.koboo.endpoint.core.primitive.PrimitivePacket;
-import org.junit.Assert;
-
-import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+
+import eu.koboo.endpoint.core.builder.EndpointBuilder;
+import eu.koboo.endpoint.core.builder.param.ErrorMode;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.junit.Assert;
 
 public class TestConstants {
 

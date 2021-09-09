@@ -5,7 +5,6 @@ import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.codec.EndpointPacket;
 import eu.koboo.endpoint.core.events.message.LogEvent;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
-import eu.koboo.endpoint.core.util.LocalThreadFactory;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFactory;
@@ -15,19 +14,14 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollChannelOption;
-import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollMode;
 import io.netty.channel.epoll.EpollServerDomainSocketChannel;
-import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.concurrent.ThreadFactory;
 
 public class EndpointServer extends AbstractServer {
 

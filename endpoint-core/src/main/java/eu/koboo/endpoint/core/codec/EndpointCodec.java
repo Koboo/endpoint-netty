@@ -7,10 +7,9 @@ import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageCodec;
-
-import javax.crypto.SecretKey;
 import java.util.List;
 import java.util.function.Supplier;
+import javax.crypto.SecretKey;
 
 public class EndpointCodec extends ByteToMessageCodec<EndpointPacket> {
 

@@ -10,7 +10,6 @@ import eu.koboo.endpoint.core.util.BufUtils;
 import eu.koboo.endpoint.server.EndpointServer;
 import eu.koboo.endpoint.server.ServerBuilder;
 import io.netty.buffer.ByteBuf;
-
 import java.util.function.Consumer;
 
 public class UDSTest {

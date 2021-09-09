@@ -1,6 +1,10 @@
 
 package eu.koboo.endpoint.test.benchmark;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import eu.koboo.endpoint.client.ClientBuilder;
 import eu.koboo.endpoint.client.EndpointClient;
 import eu.koboo.endpoint.core.events.ReceiveEvent;
@@ -8,13 +12,10 @@ import eu.koboo.endpoint.server.EndpointServer;
 import eu.koboo.endpoint.server.ServerBuilder;
 import eu.koboo.endpoint.test.TestConstants;
 import eu.koboo.endpoint.test.TestRequest;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.Assert.*;
 
 public class BenchmarkTest {
 

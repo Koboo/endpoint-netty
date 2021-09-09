@@ -1,5 +1,9 @@
 package eu.koboo.endpoint.test.builder;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import eu.koboo.endpoint.client.ClientBuilder;
 import eu.koboo.endpoint.client.EndpointClient;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
@@ -12,8 +16,6 @@ import io.netty.channel.ChannelFuture;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public abstract class AbstractBuilderTest {
 

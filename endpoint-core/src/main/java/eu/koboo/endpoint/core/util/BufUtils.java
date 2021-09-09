@@ -2,7 +2,6 @@ package eu.koboo.endpoint.core.util;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.util.CharsetUtil;
-
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;

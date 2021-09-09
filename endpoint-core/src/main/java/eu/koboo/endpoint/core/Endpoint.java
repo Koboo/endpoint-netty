@@ -2,7 +2,6 @@ package eu.koboo.endpoint.core;
 
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.events.ConsumerEvent;
-
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 

@@ -1,7 +1,6 @@
 package eu.koboo.endpoint.core.events;
 
 import eu.koboo.endpoint.core.AbstractEndpoint;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

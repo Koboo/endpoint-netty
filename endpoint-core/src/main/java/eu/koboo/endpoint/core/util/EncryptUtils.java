@@ -1,10 +1,10 @@
 package eu.koboo.endpoint.core.util;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 
 public class EncryptUtils {
 

@@ -1,9 +1,10 @@
 package eu.koboo.endpoint.test.fluent;
 
+import static org.junit.Assert.assertTrue;
+
 import eu.koboo.endpoint.client.ClientBuilder;
 import eu.koboo.endpoint.client.FluentClient;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
-import eu.koboo.endpoint.server.EndpointServer;
 import eu.koboo.endpoint.server.FluentServer;
 import eu.koboo.endpoint.server.ServerBuilder;
 import eu.koboo.endpoint.test.TestConstants;
@@ -11,8 +12,6 @@ import eu.koboo.endpoint.test.TestRequest;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
 
 public class FluentTest {
 
