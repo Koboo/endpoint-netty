@@ -1,11 +1,13 @@
 package eu.koboo.endpoint.core;
 
+import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.util.LocalThreadFactory;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFactory;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ServerChannel;
 import io.netty.channel.epoll.Epoll;
+import io.netty.channel.epoll.EpollDomainSocketChannel;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.epoll.EpollSocketChannel;
@@ -18,7 +20,7 @@ import java.util.concurrent.ThreadFactory;
 public class EndpointCore {
 
   public static final int CORES = Runtime.getRuntime().availableProcessors();
-  public static final String DEFAULT_UDS_PATH = "tmp/endpoint-netty-uds.sock";
+  public static final String DEFAULT_UDS_PATH = "/tmp/endpoint-netty-uds.sock";
 
   static {
     File file = new File(DEFAULT_UDS_PATH);
@@ -36,8 +38,11 @@ public class EndpointCore {
     }
   }
 
-  public static ChannelFactory<? extends Channel> createClientFactory() {
+  public static ChannelFactory<? extends Channel> createClientFactory(EndpointBuilder builder, String host) {
     if (Epoll.isAvailable()) {
+      if(builder.isUseUDS() && host.equalsIgnoreCase("localhost")) {
+        return EpollDomainSocketChannel::new;
+      }
       return EpollSocketChannel::new;
     } else {
       return NioSocketChannel::new;
