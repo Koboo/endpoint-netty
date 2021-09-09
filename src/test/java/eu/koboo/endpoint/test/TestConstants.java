@@ -22,7 +22,7 @@ public class TestConstants {
         BUILDER = EndpointBuilder.builder()
                 .framing(true)
                 .processing(true)
-                .logging(false)
+                .logging(true)
                 .errorMode(ErrorMode.STACK_TRACE)
                 .registerPacket(1, TestRequest::new);
 

@@ -7,7 +7,6 @@ import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
 import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
 import eu.koboo.endpoint.core.events.message.ErrorEvent;
 import io.netty.channel.Channel;
-import io.netty.util.concurrent.DefaultEventExecutorGroup;
 import io.netty.util.concurrent.EventExecutorGroup;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,17 +17,14 @@ public abstract class AbstractEndpoint implements Endpoint {
 
   protected final EndpointBuilder endpointBuilder;
   protected final EventHandler eventBus;
-  protected final EventExecutorGroup executorGroup;
   protected final List<EventExecutorGroup> executorList;
   protected Channel tcpChannel;
   protected Channel udsChannel;
 
   public AbstractEndpoint(EndpointBuilder builder) {
     endpointBuilder = builder;
-    eventBus = new EventHandler(this);
-    executorGroup = new DefaultEventExecutorGroup(EndpointCore.CORES * 2);
+    eventBus = new EventHandler();
     executorList = new ArrayList<>();
-    executorList.add(executorGroup);
   }
 
   @Override
@@ -48,6 +44,7 @@ public abstract class AbstractEndpoint implements Endpoint {
         executorGroup.shutdownGracefully();
       }
 
+      eventBus.shutdown();
       return close;
     } catch (Exception e) {
       onException(getClass(), e);
@@ -130,7 +127,4 @@ public abstract class AbstractEndpoint implements Endpoint {
     return eventBus.hasListener(eventClass);
   }
 
-  public EventExecutorGroup executorGroup() {
-    return executorGroup;
-  }
 }

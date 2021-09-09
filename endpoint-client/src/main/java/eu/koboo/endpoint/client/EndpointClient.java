@@ -26,6 +26,7 @@ import java.util.concurrent.TimeUnit;
 
 public class EndpointClient extends AbstractClient {
 
+  private final EndpointInitializer initializer;
   private final Bootstrap bootstrap;
 
   protected EndpointClient(EndpointBuilder endpointBuilder, String host, int port) {
@@ -40,7 +41,7 @@ public class EndpointClient extends AbstractClient {
 
     executorList.add(group);
 
-    EndpointInitializer initializer = new EndpointInitializer(this, null);
+    initializer = new EndpointInitializer(this, null);
 
     // Create TCPBootstrap
     bootstrap = new Bootstrap()
@@ -116,6 +117,11 @@ public class EndpointClient extends AbstractClient {
     return super.start();
   }
 
+  @Override
+  public boolean stop() {
+    initializer.shutdown();
+    return super.stop();
+  }
 
   /**
    * Write the given object to the server and do something with the returned ChannelFuture.

@@ -1,6 +1,7 @@
 package eu.koboo.endpoint.core.handler;
 
 import eu.koboo.endpoint.core.AbstractEndpoint;
+import eu.koboo.endpoint.core.EndpointCore;
 import eu.koboo.endpoint.core.codec.EndpointCodec;
 import eu.koboo.endpoint.core.util.Compression;
 import io.netty.channel.Channel;
@@ -12,6 +13,8 @@ import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.util.concurrent.DefaultEventExecutorGroup;
+import io.netty.util.concurrent.EventExecutorGroup;
 
 public class EndpointInitializer extends ChannelInitializer<Channel> {
 
@@ -34,6 +37,7 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
     private static final LengthFieldPrepender LENGTH_FIELD_PREPENDER = new LengthFieldPrepender(4);
 
     private final AbstractEndpoint endpoint;
+    private final EventExecutorGroup processExecutor = new DefaultEventExecutorGroup(EndpointCore.CORES * 2);
     private final ChannelGroup channels;
 
     public EndpointInitializer(AbstractEndpoint endpoint, ChannelGroup channels) {
@@ -68,13 +72,17 @@ public class EndpointInitializer extends ChannelInitializer<Channel> {
 
             pipeline.addLast(CODEC_HANDLER, new EndpointCodec(endpoint));
 
-            if (endpoint.builder().isProcessing() && endpoint.executorGroup() != null) {
-                pipeline.addLast(endpoint.executorGroup(), ENDPOINT_HANDLER, new EndpointHandler(endpoint, channels));
+            if (endpoint.builder().isProcessing() && (!processExecutor.isShutdown() && !processExecutor.isTerminated())) {
+                pipeline.addLast(processExecutor, ENDPOINT_HANDLER, new EndpointHandler(endpoint, channels));
             } else {
                 pipeline.addLast(ENDPOINT_HANDLER, new EndpointHandler(endpoint, channels));
             }
         } catch (Exception e) {
             endpoint.onException(getClass(), e);
         }
+    }
+
+    public void shutdown() {
+        processExecutor.shutdownGracefully();
     }
 }

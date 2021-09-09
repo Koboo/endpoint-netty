@@ -100,6 +100,12 @@ public class EndpointServer extends AbstractServer {
     return false;
   }
 
+  @Override
+  public boolean stop() {
+    initializer.shutdown();
+    return super.stop();
+  }
+
   /**
    * Write the given packet to the channel.
    *
