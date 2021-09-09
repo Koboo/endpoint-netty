@@ -35,7 +35,7 @@ public class EndpointClient extends AbstractClient {
     int groupSize = 4 * EndpointCore.CORES;
 
     // Check and initialize the event-loop-groups
-    ChannelFactory<? extends Channel> channelFactory = EndpointCore.createClientFactory();
+    ChannelFactory<? extends Channel> channelFactory = EndpointCore.createClientFactory(builder(), getHost());
     EventLoopGroup group = EndpointCore.createEventLoopGroup(groupSize, "ClientTCP");
 
     executorList.add(group);
@@ -45,7 +45,6 @@ public class EndpointClient extends AbstractClient {
     // Create TCPBootstrap
     bootstrap = new Bootstrap()
         .group(group)
-        .channelFactory(channelFactory)
         .handler(initializer);
 
     // Check for extra epoll-options
@@ -73,6 +72,10 @@ public class EndpointClient extends AbstractClient {
           new IllegalStateException("Connectivity error! Connection is already established!"));
       return false;
     }
+
+
+    ChannelFactory<? extends Channel> channelFactory = EndpointCore.createClientFactory(builder(), getHost());
+    bootstrap.channelFactory(channelFactory);
 
     // Start the client and wait for the connection to be established.
     SocketAddress address = new InetSocketAddress(getHost(), getPort());
