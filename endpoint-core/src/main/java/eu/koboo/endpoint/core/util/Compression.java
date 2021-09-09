@@ -10,47 +10,47 @@ import io.netty.handler.codec.compression.ZlibWrapper;
 
 public enum Compression {
 
-    NONE {
-        public MessageToByteEncoder<ByteBuf> getEncoder() {
-            return null;
-        }
-
-        public ByteToMessageDecoder getDecoder() {
-            return null;
-        }
-    },
-    GZIP {
-        public MessageToByteEncoder<ByteBuf> getEncoder() {
-            return ZlibCodecFactory.newZlibEncoder(ZlibWrapper.GZIP, 9);
-        }
-
-        public ByteToMessageDecoder getDecoder() {
-            return ZlibCodecFactory.newZlibDecoder(ZlibWrapper.GZIP);
-        }
-    },
-    ZLIB {
-        public MessageToByteEncoder<ByteBuf> getEncoder() {
-            return ZlibCodecFactory.newZlibEncoder(ZlibWrapper.ZLIB, 9);
-        }
-
-        public ByteToMessageDecoder getDecoder() {
-            return ZlibCodecFactory.newZlibDecoder(ZlibWrapper.ZLIB);
-        }
-    },
-    SNAPPY {
-        public MessageToByteEncoder<ByteBuf> getEncoder() {
-            return new SnappyFrameEncoder();
-        }
-
-        public ByteToMessageDecoder getDecoder() {
-            return new SnappyFrameDecoder();
-        }
-    };
-
-    Compression() {
+  NONE {
+    public MessageToByteEncoder<ByteBuf> getEncoder() {
+      return null;
     }
 
-    public abstract MessageToByteEncoder<ByteBuf> getEncoder();
+    public ByteToMessageDecoder getDecoder() {
+      return null;
+    }
+  },
+  GZIP {
+    public MessageToByteEncoder<ByteBuf> getEncoder() {
+      return ZlibCodecFactory.newZlibEncoder(ZlibWrapper.GZIP, 9);
+    }
 
-    public abstract ByteToMessageDecoder getDecoder();
+    public ByteToMessageDecoder getDecoder() {
+      return ZlibCodecFactory.newZlibDecoder(ZlibWrapper.GZIP);
+    }
+  },
+  ZLIB {
+    public MessageToByteEncoder<ByteBuf> getEncoder() {
+      return ZlibCodecFactory.newZlibEncoder(ZlibWrapper.ZLIB, 9);
+    }
+
+    public ByteToMessageDecoder getDecoder() {
+      return ZlibCodecFactory.newZlibDecoder(ZlibWrapper.ZLIB);
+    }
+  },
+  SNAPPY {
+    public MessageToByteEncoder<ByteBuf> getEncoder() {
+      return new SnappyFrameEncoder();
+    }
+
+    public ByteToMessageDecoder getDecoder() {
+      return new SnappyFrameDecoder();
+    }
+  };
+
+  Compression() {
+  }
+
+  public abstract MessageToByteEncoder<ByteBuf> getEncoder();
+
+  public abstract ByteToMessageDecoder getDecoder();
 }

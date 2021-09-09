@@ -5,20 +5,20 @@ import io.netty.channel.Channel;
 
 public class ChannelActionEvent implements ConsumerEvent {
 
-    private final Channel ctx;
-    private final ChannelAction channelAction;
+  private final Channel ctx;
+  private final ChannelAction channelAction;
 
-    public ChannelActionEvent(Channel ctx, ChannelAction channelAction) {
-        this.ctx = ctx;
-        this.channelAction = channelAction;
-    }
+  public ChannelActionEvent(Channel ctx, ChannelAction channelAction) {
+    this.ctx = ctx;
+    this.channelAction = channelAction;
+  }
 
-    public Channel getChannel() {
-        return ctx;
-    }
+  public Channel getChannel() {
+    return ctx;
+  }
 
-    public ChannelAction getAction() {
-        return channelAction;
-    }
+  public ChannelAction getAction() {
+    return channelAction;
+  }
 
 }

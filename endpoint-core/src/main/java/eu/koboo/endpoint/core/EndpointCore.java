@@ -23,13 +23,13 @@ public class EndpointCore {
   static {
     File file = new File(DEFAULT_UDS_PATH);
     File parent = new File(file.getAbsolutePath().replaceFirst(file.getName(), ""));
-    if(parent.isDirectory() && !parent.exists()) {
+    if (parent.isDirectory() && !parent.exists()) {
       parent.mkdirs();
     }
   }
 
   public static ChannelFactory<? extends ServerChannel> createServerFactory() {
-    if(Epoll.isAvailable()) {
+    if (Epoll.isAvailable()) {
       return EpollServerSocketChannel::new;
     } else {
       return NioServerSocketChannel::new;
@@ -37,7 +37,7 @@ public class EndpointCore {
   }
 
   public static ChannelFactory<? extends Channel> createClientFactory() {
-    if(Epoll.isAvailable()) {
+    if (Epoll.isAvailable()) {
       return EpollSocketChannel::new;
     } else {
       return NioSocketChannel::new;

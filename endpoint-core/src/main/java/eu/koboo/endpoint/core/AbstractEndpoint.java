@@ -86,7 +86,8 @@ public abstract class AbstractEndpoint implements Endpoint {
         && udsChannel.isActive();
 
     // Only check the udsChannel if we want to use uds
-    return !isClient() && endpointBuilder.isUseUDS() ? (isTCPConnected && isUDSConnected) : isTCPConnected;
+    return !isClient() && endpointBuilder.isUseUDS() ? (isTCPConnected && isUDSConnected)
+        : isTCPConnected;
   }
 
   @SuppressWarnings("all")

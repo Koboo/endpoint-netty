@@ -6,15 +6,15 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class LocalThreadFactory implements ThreadFactory {
 
-    final AtomicLong counter;
-    final String prefix;
+  final AtomicLong counter;
+  final String prefix;
 
-    public LocalThreadFactory(String threadPrefix) {
-        prefix = threadPrefix;
-        counter = new AtomicLong();
-    }
+  public LocalThreadFactory(String threadPrefix) {
+    prefix = threadPrefix;
+    counter = new AtomicLong();
+  }
 
-    public Thread newThread(Runnable runnable) {
-        return new FastThreadLocalThread(runnable, prefix + "-" + counter.getAndIncrement());
-    }
+  public Thread newThread(Runnable runnable) {
+    return new FastThreadLocalThread(runnable, prefix + "-" + counter.getAndIncrement());
+  }
 }

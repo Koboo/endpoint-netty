@@ -4,24 +4,24 @@ import io.netty.channel.Channel;
 
 public class ReceiveEvent implements ConsumerEvent {
 
-    private final Channel ctx;
-    private final Object object;
+  private final Channel ctx;
+  private final Object object;
 
-    public ReceiveEvent(Channel ctx, Object object) {
-        this.ctx = ctx;
-        this.object = object;
-    }
+  public ReceiveEvent(Channel ctx, Object object) {
+    this.ctx = ctx;
+    this.object = object;
+  }
 
-    public Channel getChannel() {
-        return ctx;
-    }
+  public Channel getChannel() {
+    return ctx;
+  }
 
-    public Object getObject() {
-        return object;
-    }
+  public Object getObject() {
+    return object;
+  }
 
-    @SuppressWarnings("unchecked")
-    public <T> T getTypeObject() {
-        return (T) object;
-    }
+  @SuppressWarnings("unchecked")
+  public <T> T getTypeObject() {
+    return (T) object;
+  }
 }
