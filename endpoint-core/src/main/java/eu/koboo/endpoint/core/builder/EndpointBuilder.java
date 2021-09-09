@@ -44,7 +44,7 @@ public class EndpointBuilder {
     }
 
     public EndpointBuilder useUDS(boolean value) {
-        this.useUDS = useUDS;
+        this.useUDS = value;
         return this;
     }
 
