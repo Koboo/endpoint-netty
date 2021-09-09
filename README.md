@@ -72,9 +72,6 @@ EndpointBuilder builder = EndpointBuilder.builder()
 * ``processing(boolean value)``
     * enables/disables asynchronous packet-processing by usage of ``EventExecutorGroup``
     * default: ``true`` (enabled)
-* ``primitive(boolean value)``
-    * enables/disables usage of ``PrimitiveMap``. (packetId of ``PrimitivePacket`` is ``-100``)
-    * default: ``true`` (enabled)
 * ``compression(Compression compression)``
     * Compressions: ``GZIP``, ``ZLIB``, ``SNAPPY`` and ``NONE``
     * default: ``Compression.NONE``
@@ -85,10 +82,10 @@ EndpointBuilder builder = EndpointBuilder.builder()
     * automatic reconnect after ``int seconds``
     * default: ``-1`` (disabled)
     * ``-1`` to disable reconnect (or use ``builder.disableReconnect()``)
-* ``useUDS(String udsFile)``
+* ``useUDS(boolean value)``
     * Try to use Unix-Domain-Sockets (short: ``UDS``)
-    * default: ``null`` (disabled)
-    * default-path: ``tmp/endpoint-netty/uds.sock``
+    * default: ``false`` (disabled)
+    * default-path: ``tmp/endpoint-netty-uds.sock``
 * ``password(String password)``
     * Automatic encryption
     * Algorithms: ``AES-128`` and ``SHA-256``

@@ -4,22 +4,11 @@ import eu.koboo.endpoint.core.builder.param.ErrorMode;
 import eu.koboo.endpoint.core.codec.EndpointPacket;
 import eu.koboo.endpoint.core.util.Compression;
 
-import java.io.File;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 public class EndpointBuilder {
-
-    public static final int CORES = Runtime.getRuntime().availableProcessors();
-
-    /**
-     * Method is deprecated. Use #builder() instead!
-     */
-    @Deprecated
-    public static EndpointBuilder newBuilder() {
-        return builder();
-    }
 
     public static EndpointBuilder builder() {
         return new EndpointBuilder();
@@ -38,7 +27,7 @@ public class EndpointBuilder {
 
     private int autoReconnect = -1;
 
-    private String encryption;
+    private String encryptionPassword;
 
     private final Map<Integer, Supplier<? extends EndpointPacket>> supplierMap = new ConcurrentHashMap<>();
 
@@ -61,7 +50,7 @@ public class EndpointBuilder {
     }
 
     public EndpointBuilder password(String password) {
-        this.encryption = password;
+        this.encryptionPassword = password;
         return this;
     }
 
@@ -143,8 +132,8 @@ public class EndpointBuilder {
         return errorMode;
     }
 
-    public String getEncryption() {
-        return encryption;
+    public String getEncryptionPassword() {
+        return encryptionPassword;
     }
 
     public boolean isUseUDS() {

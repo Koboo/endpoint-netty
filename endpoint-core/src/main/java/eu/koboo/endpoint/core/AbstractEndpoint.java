@@ -21,6 +21,7 @@ public abstract class AbstractEndpoint implements Endpoint {
   protected final EventExecutorGroup executorGroup;
   protected final List<EventExecutorGroup> executorList;
   protected Channel tcpChannel;
+  protected Channel udsChannel;
 
   public AbstractEndpoint(EndpointBuilder builder) {
     endpointBuilder = builder;
@@ -63,6 +64,12 @@ public abstract class AbstractEndpoint implements Endpoint {
         tcpChannel.close().sync();
       }
 
+      // Only try to close the udsChannel if we want to use udsChannel
+      if (!isClient() && endpointBuilder.isUseUDS() && udsChannel != null && udsChannel.isOpen()
+          && udsChannel.isActive()) {
+        udsChannel.close().sync();
+      }
+
       return true;
     } catch (InterruptedException e) {
       onException(getClass(), e);
@@ -77,7 +84,12 @@ public abstract class AbstractEndpoint implements Endpoint {
 
   @Override
   public boolean isConnected() {
-    return tcpChannel != null && tcpChannel.isOpen() && tcpChannel.isActive();
+    boolean isTCPConnected = tcpChannel != null && tcpChannel.isOpen() && tcpChannel.isActive();
+    boolean isUDSConnected = udsChannel != null && udsChannel.isOpen()
+        && udsChannel.isActive();
+
+    // Only check the udsChannel if we want to use uds
+    return !isClient() && endpointBuilder.isUseUDS() ? (isTCPConnected && isUDSConnected) : isTCPConnected;
   }
 
   @SuppressWarnings("all")

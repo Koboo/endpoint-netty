@@ -19,8 +19,8 @@ public class EndpointCodec extends ByteToMessageCodec<EndpointPacket> {
 
     public EndpointCodec(Endpoint endpoint) {
         this.endpoint = endpoint;
-        if (endpoint.builder().getEncryption() != null)
-            secretKey = EncryptUtils.getKeyFromPassword(endpoint.builder().getEncryption());
+        if (endpoint.builder().getEncryptionPassword() != null)
+            secretKey = EncryptUtils.getKeyFromPassword(endpoint.builder().getEncryptionPassword());
         else
             secretKey = null;
     }

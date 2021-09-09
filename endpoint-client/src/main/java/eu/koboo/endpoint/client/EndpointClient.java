@@ -6,59 +6,48 @@ import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.codec.EndpointPacket;
 import eu.koboo.endpoint.core.events.endpoint.EndpointAction;
 import eu.koboo.endpoint.core.events.endpoint.EndpointActionEvent;
+import eu.koboo.endpoint.core.events.message.LogEvent;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
-import eu.koboo.endpoint.core.util.LocalThreadFactory;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFactory;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelFutureListener;
-import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollChannelOption;
-import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollMode;
-import io.netty.channel.epoll.EpollSocketChannel;
-import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import java.io.File;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
 public class EndpointClient extends AbstractClient {
 
   private final Bootstrap bootstrap;
+  private final EndpointInitializer initializer;
 
   protected EndpointClient(EndpointBuilder endpointBuilder, String host, int port) {
     super(endpointBuilder, host, port);
 
     // Get cores to calculate the event-loop-group sizes
-    int workerSize = 4 * EndpointCore.CORES;
+    int groupSize = 4 * EndpointCore.CORES;
 
     // Check and initialize the event-loop-groups
-    ThreadFactory localFactory = new LocalThreadFactory("EndpointClient");
-    ChannelFactory<? extends Channel> channelFactory;
-    EventLoopGroup group;
-    if (Epoll.isAvailable()) {
-      channelFactory = EpollSocketChannel::new;
-      group = new EpollEventLoopGroup(workerSize, localFactory);
-    } else {
-      channelFactory = NioSocketChannel::new;
-      group = new NioEventLoopGroup(workerSize, localFactory);
-    }
+    ChannelFactory<? extends Channel> channelFactory = EndpointCore.createClientFactory();
+    EventLoopGroup group = EndpointCore.createEventLoopGroup(groupSize, "ClientTCP");
 
     executorList.add(group);
 
-    // Create Bootstrap
+    initializer = new EndpointInitializer(this, null);
+
+    // Create TCPBootstrap
     bootstrap = new Bootstrap()
         .group(group)
         .channelFactory(channelFactory)
-        .handler(new EndpointInitializer(this, null))
-        .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT);
+        .handler(initializer);
 
     // Check for extra epoll-options
     if (Epoll.isAvailable()) {
@@ -88,6 +77,13 @@ public class EndpointClient extends AbstractClient {
 
     // Start the client and wait for the connection to be established.
     SocketAddress address = new InetSocketAddress(getHost(), getPort());
+    if(Epoll.isAvailable() && getHost().equalsIgnoreCase("localhost")) {
+      File udsFile = new File(EndpointCore.DEFAULT_UDS_PATH);
+      if(udsFile.exists()) {
+        address = new DomainSocketAddress(EndpointCore.DEFAULT_UDS_PATH);
+        fireEvent(new LogEvent("Found localhost! Using client-side unix-domain-socket!"));
+      }
+    }
 
     ChannelFuture connectFuture = bootstrap.connect(address);
 
