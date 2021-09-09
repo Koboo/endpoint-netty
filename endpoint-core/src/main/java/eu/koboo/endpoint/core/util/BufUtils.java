@@ -100,6 +100,7 @@ public class BufUtils {
         return output;
     }
 
+    @SuppressWarnings("all")
     public static long readVarLong(ByteBuf input) {
         int numRead = 0;
         long result = 0;

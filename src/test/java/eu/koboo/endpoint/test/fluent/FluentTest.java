@@ -46,7 +46,7 @@ public class FluentTest {
                 .onPacket(TestRequest.class, (c, p) -> {
                     TestConstants.assertRequest(p);
                     c.writeAndFlush(p).syncUninterruptibly();
-                    System.out.println("Server received! " + c.toString());
+                    System.out.println("Server received! " + c);
                 })
                 .bind();
 

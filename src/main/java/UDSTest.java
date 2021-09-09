@@ -42,7 +42,7 @@ public class UDSTest {
         server.registerEvent(ChannelActionEvent.class, eventConsumer);
         server.registerEvent(ReceiveEvent.class, event -> {
             if(event.getObject() instanceof UDSPacket) {
-                UDSPacket udsPacket = (UDSPacket) event.getTypeObject();
+                UDSPacket udsPacket = event.getTypeObject();
                 System.out.println("String: " + udsPacket.getTestString());
                 System.out.println("Long: " + udsPacket.getTestLong());
                 System.out.println("Int: " + udsPacket.getTestInt());
