@@ -6,10 +6,10 @@ import eu.koboo.endpoint.test.common.AbstractBuilderTest;
 
 public class EncryptCompressTest extends AbstractBuilderTest {
 
-    @Override
-    public EndpointBuilder changeBuilder(EndpointBuilder builder) {
-        return builder.logging(true)
-                .password("ThisIsMyPassword")
-                .compression(Compression.SNAPPY);
-    }
+  @Override
+  public EndpointBuilder changeBuilder(EndpointBuilder builder) {
+    return builder.logging(true)
+        .password("ThisIsMyPassword")
+        .compression(Compression.SNAPPY);
+  }
 }

@@ -5,10 +5,10 @@ import eu.koboo.endpoint.test.common.AbstractBuilderTest;
 
 public class NoProcessNoFramesTest extends AbstractBuilderTest {
 
-    @Override
-    public EndpointBuilder changeBuilder(EndpointBuilder builder) {
-        return builder.logging(false)
-                .framing(false)
-                .processing(false);
-    }
+  @Override
+  public EndpointBuilder changeBuilder(EndpointBuilder builder) {
+    return builder.logging(false)
+        .framing(false)
+        .processing(false);
+  }
 }

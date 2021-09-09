@@ -6,48 +6,48 @@ import io.netty.buffer.ByteBuf;
 
 public class TestRequest implements EndpointPacket {
 
-    String testString;
-    long testLong;
-    byte[] testBytes;
+  String testString;
+  long testLong;
+  byte[] testBytes;
 
-    public String getTestString() {
-        return testString;
-    }
+  public String getTestString() {
+    return testString;
+  }
 
-    public TestRequest setTestString(String testString) {
-        this.testString = testString;
-        return this;
-    }
+  public TestRequest setTestString(String testString) {
+    this.testString = testString;
+    return this;
+  }
 
-    public long getTestLong() {
-        return testLong;
-    }
+  public long getTestLong() {
+    return testLong;
+  }
 
-    public TestRequest setTestLong(long testLong) {
-        this.testLong = testLong;
-        return this;
-    }
+  public TestRequest setTestLong(long testLong) {
+    this.testLong = testLong;
+    return this;
+  }
 
-    public byte[] getTestBytes() {
-        return testBytes;
-    }
+  public byte[] getTestBytes() {
+    return testBytes;
+  }
 
-    public TestRequest setTestBytes(byte[] testBytes) {
-        this.testBytes = testBytes;
-        return this;
-    }
+  public TestRequest setTestBytes(byte[] testBytes) {
+    this.testBytes = testBytes;
+    return this;
+  }
 
-    @Override
-    public void read(ByteBuf byteBuf) {
-        this.testString = BufUtils.readString(byteBuf);
-        this.testLong = BufUtils.readVarLong(byteBuf);
-        this.testBytes = BufUtils.readArray(byteBuf);
-    }
+  @Override
+  public void read(ByteBuf byteBuf) {
+    this.testString = BufUtils.readString(byteBuf);
+    this.testLong = BufUtils.readVarLong(byteBuf);
+    this.testBytes = BufUtils.readArray(byteBuf);
+  }
 
-    @Override
-    public void write(ByteBuf byteBuf) {
-        BufUtils.writeString(testString, byteBuf);
-        BufUtils.writeVarLong(testLong, byteBuf);
-        BufUtils.writeArray(testBytes, byteBuf);
-    }
+  @Override
+  public void write(ByteBuf byteBuf) {
+    BufUtils.writeString(testString, byteBuf);
+    BufUtils.writeVarLong(testLong, byteBuf);
+    BufUtils.writeArray(testBytes, byteBuf);
+  }
 }

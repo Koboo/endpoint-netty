@@ -6,9 +6,9 @@ import eu.koboo.endpoint.test.common.AbstractBuilderTest;
 
 public class CompressTest extends AbstractBuilderTest {
 
-    @Override
-    public EndpointBuilder changeBuilder(EndpointBuilder builder) {
-        return builder.logging(false)
-                .compression(Compression.SNAPPY);
-    }
+  @Override
+  public EndpointBuilder changeBuilder(EndpointBuilder builder) {
+    return builder.logging(false)
+        .compression(Compression.SNAPPY);
+  }
 }

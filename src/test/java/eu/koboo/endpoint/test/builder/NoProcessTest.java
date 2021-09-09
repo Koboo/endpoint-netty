@@ -5,9 +5,9 @@ import eu.koboo.endpoint.test.common.AbstractBuilderTest;
 
 public class NoProcessTest extends AbstractBuilderTest {
 
-    @Override
-    public EndpointBuilder changeBuilder(EndpointBuilder builder) {
-        return builder.logging(false)
-                .processing(false);
-    }
+  @Override
+  public EndpointBuilder changeBuilder(EndpointBuilder builder) {
+    return builder.logging(false)
+        .processing(false);
+  }
 }

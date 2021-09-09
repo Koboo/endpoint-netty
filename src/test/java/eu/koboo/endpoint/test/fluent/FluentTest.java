@@ -15,64 +15,65 @@ import org.junit.Test;
 
 public class FluentTest {
 
-    public static FluentServer server;
-    public static FluentClient client;
+  public static FluentServer server;
+  public static FluentClient client;
 
-    @BeforeClass
-    public static void setupClass() {
-    }
+  @BeforeClass
+  public static void setupClass() {
+  }
 
-    @AfterClass
-    public static void afterClass() {
-    }
+  @AfterClass
+  public static void afterClass() {
+  }
 
-    @Test
-    public void test() throws Exception {
-        System.out.println("== Init-Sequence == ");
-        System.out.println("== 'FluentTest' == ");
+  @Test
+  public void test() throws Exception {
+    System.out.println("== Init-Sequence == ");
+    System.out.println("== 'FluentTest' == ");
 
-        System.out.println("== Endpoint-Build == ");
+    System.out.println("== Endpoint-Build == ");
 
-        EndpointBuilder builder = TestConstants.BUILDER.logging(false);
+    EndpointBuilder builder = TestConstants.BUILDER.logging(false);
 
-        System.out.println("== Server-Build == ");
+    System.out.println("== Server-Build == ");
 
-        server = ServerBuilder.fluentOf(builder)
-                .changePort(54321)
-                .onConnect(c -> System.out.println("Server connected! " + c.toString()))
-                .onDisconnect(c -> System.out.println("Server disconnected! " + c.toString()))
-                .onStart(() -> System.out.println("Server started!"))
-                .onStop(() -> System.out.println("Server stopped!"))
-                .onPacket(TestRequest.class, (c, p) -> {
-                    TestConstants.assertRequest(p);
-                    c.writeAndFlush(p).syncUninterruptibly();
-                    System.out.println("Server received! " + c);
-                })
-                .bind();
+    server = ServerBuilder.fluentOf(builder)
+        .changePort(54321)
+        .onConnect(c -> System.out.println("Server connected! " + c.toString()))
+        .onDisconnect(c -> System.out.println("Server disconnected! " + c.toString()))
+        .onStart(() -> System.out.println("Server started!"))
+        .onStop(() -> System.out.println("Server stopped!"))
+        .onPacket(TestRequest.class, (c, p) -> {
+          TestConstants.assertRequest(p);
+          c.writeAndFlush(p).syncUninterruptibly();
+          System.out.println("Server received! " + c);
+        })
+        .bind();
 
-        System.out.println("== Client-Build == ");
+    System.out.println("== Client-Build == ");
 
-        client = ClientBuilder.fluentOf(builder)
-                .changeAddress("localhost", 54321)
-                .onConnect(() -> {
-                    System.out.println("Client connected!");
-                    client.sendPacket(TestConstants.TEST_REQUEST);
-                })
-                .onDisconnect(() -> System.out.println("Client disconnected!"))
-                .onStart(() -> System.out.println("Client started!"))
-                .onStop(() -> System.out.println("Client stopped!"))
-                .onError((c, t) -> System.out.println("Client error: " + c.getSimpleName() + "/" + t.getClass().getSimpleName()))
-                .onPacket(TestRequest.class, p -> {
-                    System.out.println("Client received!");
-                    TestConstants.assertRequest(p);
+    client = ClientBuilder.fluentOf(builder)
+        .changeAddress("localhost", 54321)
+        .onConnect(() -> {
+          System.out.println("Client connected!");
+          client.sendPacket(TestConstants.TEST_REQUEST);
+        })
+        .onDisconnect(() -> System.out.println("Client disconnected!"))
+        .onStart(() -> System.out.println("Client started!"))
+        .onStop(() -> System.out.println("Client stopped!"))
+        .onError((c, t) -> System.out.println(
+            "Client error: " + c.getSimpleName() + "/" + t.getClass().getSimpleName()))
+        .onPacket(TestRequest.class, p -> {
+          System.out.println("Client received!");
+          TestConstants.assertRequest(p);
 
-                    System.out.println("== Stop-Sequence == ");
-                    assertTrue(client.stop());
-                    assertTrue(server.stop());
-                })
-                .connect();
+          System.out.println("== Stop-Sequence == ");
+          assertTrue(client.stop());
+          assertTrue(server.stop());
+        })
+        .connect();
 
-        Thread.sleep(20_000);
-    }
+    Thread.sleep(20_000);
+  }
 
 }

@@ -5,9 +5,9 @@ import eu.koboo.endpoint.test.common.AbstractBuilderTest;
 
 public class EncryptTest extends AbstractBuilderTest {
 
-    @Override
-    public EndpointBuilder changeBuilder(EndpointBuilder builder) {
-        return builder.logging(false)
-                .password("ThisIsMyStrongPassword");
-    }
+  @Override
+  public EndpointBuilder changeBuilder(EndpointBuilder builder) {
+    return builder.logging(false)
+        .password("ThisIsMyStrongPassword");
+  }
 }
