@@ -27,7 +27,6 @@ import java.util.concurrent.TimeUnit;
 public class EndpointClient extends AbstractClient {
 
   private final Bootstrap bootstrap;
-  private final EndpointInitializer initializer;
 
   protected EndpointClient(EndpointBuilder endpointBuilder, String host, int port) {
     super(endpointBuilder, host, port);
@@ -41,7 +40,7 @@ public class EndpointClient extends AbstractClient {
 
     executorList.add(group);
 
-    initializer = new EndpointInitializer(this, null);
+    EndpointInitializer initializer = new EndpointInitializer(this, null);
 
     // Create TCPBootstrap
     bootstrap = new Bootstrap()
@@ -61,14 +60,14 @@ public class EndpointClient extends AbstractClient {
   @Override
   public boolean start() {
 
-    if (getHost() == null || getPort() == -1) {
+    if (getHost() == null || getPort() < 1) {
       onException(getClass(), new RuntimeException(
           "Connectivity error! " + (getHost() == null ? "host-address is not set!"
               : "port is not set!")));
       return false;
     }
 
-    // Close the Channel if it's already connected
+    // Close the Channel if it's already connected!?
     if (isConnected()) {
       onException(getClass(),
           new IllegalStateException("Connectivity error! Connection is already established!"));
@@ -77,9 +76,9 @@ public class EndpointClient extends AbstractClient {
 
     // Start the client and wait for the connection to be established.
     SocketAddress address = new InetSocketAddress(getHost(), getPort());
-    if(Epoll.isAvailable() && getHost().equalsIgnoreCase("localhost")) {
+    if (Epoll.isAvailable() && getHost().equalsIgnoreCase("localhost")) {
       File udsFile = new File(EndpointCore.DEFAULT_UDS_PATH);
-      if(udsFile.exists()) {
+      if (udsFile.exists()) {
         address = new DomainSocketAddress(EndpointCore.DEFAULT_UDS_PATH);
         fireEvent(new LogEvent("Found localhost! Using client-side unix-domain-socket!"));
       }
@@ -89,9 +88,9 @@ public class EndpointClient extends AbstractClient {
 
     ChannelFutureListener connectListener = future -> {
       if (!future.isSuccess()) {
-          if (future.channel() != null && future.channel().isActive()) {
-              future.channel().close();
-          }
+        if (future.channel() != null && future.channel().isActive()) {
+          future.channel().close();
+        }
         start();
       } else {
         ChannelFutureListener closeListener = reconnectFuture -> scheduleReconnect();
@@ -101,10 +100,14 @@ public class EndpointClient extends AbstractClient {
     };
 
     try {
+
       ChannelFuture future = connectFuture.addListener(connectListener).sync();
-        if (!future.isSuccess()) {
-            throw new IllegalStateException("Connectivity error! Connection is not established!");
-        }
+      if (!future.isSuccess()) {
+        fireEvent(new LogEvent("Couldn't connect to " + address + "! Trying to reconnect after " + builder().getAutoReconnect() + " seconds.."));
+      }
+
+      fireEvent(new LogEvent("Connected to server on address: " + address));
+
       return super.start();
     } catch (InterruptedException e) {
       scheduleReconnect();

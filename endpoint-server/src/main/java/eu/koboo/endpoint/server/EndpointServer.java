@@ -3,6 +3,7 @@ package eu.koboo.endpoint.server;
 import eu.koboo.endpoint.core.EndpointCore;
 import eu.koboo.endpoint.core.builder.EndpointBuilder;
 import eu.koboo.endpoint.core.codec.EndpointPacket;
+import eu.koboo.endpoint.core.events.message.LogEvent;
 import eu.koboo.endpoint.core.handler.EndpointInitializer;
 import eu.koboo.endpoint.core.util.LocalThreadFactory;
 import io.netty.bootstrap.ServerBootstrap;
@@ -90,10 +91,12 @@ public class EndpointServer extends AbstractServer {
       // Start the server and wait for socket to be bind to the given port
       SocketAddress address = new InetSocketAddress(getPort());
       tcpChannel = tcpBootstrap.bind(address).sync().channel();
+      fireEvent(new LogEvent("Listening on tcp-address: 0.0.0.0:" + getPort()));
 
       if(endpointBuilder.isUseUDS() && Epoll.isAvailable()) {
         DomainSocketAddress domainAddress = new DomainSocketAddress(EndpointCore.DEFAULT_UDS_PATH);
         udsChannel = udsBootstrap.bind(domainAddress).sync().channel();
+        fireEvent(new LogEvent("Listening on uds-path: " + EndpointCore.DEFAULT_UDS_PATH));
       }
 
       return super.start();
