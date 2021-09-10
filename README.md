@@ -37,13 +37,6 @@ called **EndpointNetty**. The biggest difference between **EndpointNetty** and *
   * [Registering Events](#register-events)
   * [Unregistering Events](#unregister-events)
   * [Creating new Events](#create-new-events)  
-#### PrimitiveMap
-  * [What is a PrimitiveMap](#what-is-a-primitivemap)
-  * [Sending PrimitiveMap](#how-to-send-primitivemap)
-#### Transferable
-  * [What is a Transferable](#what-is-a-transferable)
-  * [Creating Transferable](#how-to-create-transferable)
-  * [En-/Decoding Transferable](#how-to-encode-or-decode-transferable)
 #### Build and Download
   * [Download](#add-as-dependency)  
   * [Build From Source](#build-from-source)
@@ -440,122 +433,6 @@ future.whenComplete((event, error) -> {
     // Do something, after event got processed.
 });
 ````
-# PrimitiveMap
-
-# What is a PrimitiveMap
-
-A ``PrimitiveMap`` allows the transfer of a key-value map, where the value 
-must be a primitive data type or a primitive array.
-
-````java
-PrimitiveMap primitiveMap = new PrimitiveMap();
-
-primitiveMap.put(String key, Object value);
-primitiveMap.append(String key, Object value);
-primitiveMap.get(String key);
-primitiveMap.get(String key, Class objectClass);
-primitiveMap.optional(String key);
-primitiveMap.optional(String key, Class objectClass);
-````
-
-Besides some additional methods, the PrimitiveMap inherits all methods of a ConcurrentHashMap.
-
-# How to send PrimitiveMap
-
-A ``PrimitiveMap`` can be easily sent via the ``send(primitiveMap)`` call. The respective endpoint automatically 
-packages the ``PrimitiveMap`` into a ``PrimitivePacket``, which can be received with a ``ReceiveEvent``.
-
-````java
-
-PrimitiveMap primitiveMap = new PrimitiveMap();
-
-primitiveMap.put("testString", TestConstants.testString);
-primitiveMap.put("testLong", TestConstants.testLong);
-primitiveMap.put("testBytes", TestConstants.testBytes);
-
-client.send(primitiveMap);
-
-````
-
-# Transferable
-
-## What is a Transferable
-
-The ``Transferable`` object specifies the ``readStream(DataInputStream input)`` and ``writeStream(DataOutputStream output)`` methods. 
-This allows the ``TransferCodec`` to read/write instances of the object from/to a ``DataOutputStream``/``DataInputStream``.
-The interface is defined as follows:
-
-````java
-public interface Transferable {
-
-  void readStream(DataInputStream input) throws Exception;
-
-  void writeStream(DataOutputStream output) throws Exception;
-
-  default Primitive read(DataInputStream input, Class<Primitive> primitiveClass) { /*...*/ }
-
-  default void write(DataOutputStream output, Object primitive) { /*...*/ }
-  
-  default byte[] readArray(DataInputStream input) { /*...*/ }
-  
-  default void writeArray(DataOutputStream output, byte[] bytes) { /*...*/ }
-
-}
-````
-
-The ``read(DataInputStream input, Class<Primitive> primitiveClass)`` and ``write(DataOutputStream output, Object object)``
-methods are declared as default in the ``Transferable`` interface, which saves some code.
-
-
-**Attention, both methods can only work with java primitives!**
-
-## How to create Transferable
-
-To define a new ``Transferable`` object, the corresponding class must implement the ``Transferable`` interface. 
-Then the data to be processed must be written/read to/from the respective stream.
-````java
-public class TransferObject extends TestRequest implements Transferable {
-
-    @Override
-    public void readStream(DataInputStream input) throws Exception {
-        setTestString(input.readUTF());
-        setTestLong(read(input, Long.class));
-        setTestBytes(readArray(input));
-    }
-
-    @Override
-    public void writeStream(DataOutputStream output) throws Exception {
-        output.writeUTF(getTestString());
-        write(output, getTestLong());
-        writeArray(output, getTestBytes());
-    }
-}
-````
-
-## How to encode or decode Transferable
-
-Here is the example how to define the ``TransferCodec`` and how to encode/decode with it.
-````java
-public class TransferableExample {
-    
-    public static void main(String[] args) {
-        TransferCodec transferCodec = new TransferCodec();
-        transferCodec
-              .register(1, new Supplier<Transferable>() {
-                  @Override 
-                  public Transferable get() {
-                    return new TransferObject();
-                  }
-              })
-              .register(2, TransferObject::new);
-        byte[] objectEncoded = transferCodec.encode(networkTestObject);
-        TransferObject objectDecoded = transferCodec.decode(objectEncoded);
-    }
-
-}
-````
-
-**Attention: if no supplier is registered for the ``Transferable``, the ``TransferCodec`` throws an ``NullPointerException``.**
 
 # Build and Download
 
@@ -588,9 +465,6 @@ repositories {
 dependencies {
     // !Always needed! 
     compile 'eu.koboo:endpoint-core:2.7'
-  
-   // (optional) transferable-related
-   compile 'eu.koboo:endpoint-transferable:2.7'
         
     // client-related     
     compile 'eu.koboo:endpoint-client:2.7'
@@ -606,13 +480,6 @@ dependencies {
    <dependency>
       <groupId>eu.koboo</groupId>
       <artifactId>endpoint-core</artifactId>
-      <version>2.7</version>
-   </dependency>
-   
-   <!-- (optional) transferable-related -->
-   <dependency>
-      <groupId>eu.koboo</groupId>
-      <artifactId>endpoint-transferable</artifactId>
       <version>2.7</version>
    </dependency>
    
