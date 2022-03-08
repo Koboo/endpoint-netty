@@ -12,7 +12,7 @@ Further information can be found in the following documentation.
 The [initial project](https://github.com/EsotericSoftware/kryonetty) was
 developed by [EsotericSoftware](https://github.com/EsotericSoftware).
 Since [KryoNetty](https://github.com/EsotericSoftware/kryonetty) did not work with [Netty 4](https://netty.io), 
-I ported to it and created a [fork](https://github.com/BinfluxDev/binflux-netty) to make my own customizations.
+I ported to it and created a [fork](https://github.com/Koboo/kryonetty) to make my own customizations.
 During the porting I already made some changes to achieve my set requirements. Since I put a big 
 focus on performance in the later development, the serialization by [Kryo](https://github.com/EsotericSoftware/kryo) was removed.
 
