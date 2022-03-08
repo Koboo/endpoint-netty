@@ -17,7 +17,7 @@ During the porting I already made some changes to achieve my set requirements. S
 focus on performance in the later development, the serialization by [Kryo](https://github.com/EsotericSoftware/kryo) was removed.
 
 I've decided to release a "customized version" and now this project is
-called **EndpointNetty**. The biggest difference between **EndpointNetty** and **BinfluxNetty** is: [Manual Packet-Encoding](#how-to-create-packets) instead of [Automatic serialization by Kryo](https://github.com/EsotericSoftware/kryo).
+called **EndpointNetty**. The biggest difference between **EndpointNetty** and **KryoNetty** is: [Manual Packet-Encoding](#how-to-create-packets) instead of [Automatic serialization by Kryo](https://github.com/EsotericSoftware/kryo).
 
 ## Overview
 
