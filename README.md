@@ -14,6 +14,7 @@ Further information can be found in the [project wiki](https://github.com/Koboo/
 
 * [Documentation](https://github.com/Koboo/endpoint-netty/wiki)
 * [Java Version](#java-version)
+* [License](https://github.com/Koboo/endpoint-netty/blob/master/LICENSE)
 * [Dependency](#add-as-dependency)
 * [Build From Source](#build-from-source)
 * [Netty](https://netty.io)  
